@@ -62,8 +62,23 @@ const getInsights = async (req: Request, res: Response) => {
       offset: offset,
     };
 
-    Object.keys(filters).forEach(key => {
-        apiParams[`filters[${key}]`] = filters[key];
+    // Exclude reserved keys to treat everything else as a potential filter or API param
+    const reservedKeys = ['dataset', 'limit', 'page', 'filters'];
+    const dynamicFilters = { ...filters };
+
+    // Merge any top-level keys that aren't reserved into dynamicFilters
+    // This allows users to send { dataset: '...', "State": "Telangana" } directly
+    Object.keys(req.body).forEach(key => {
+        if (!reservedKeys.includes(key)) {
+            dynamicFilters[key] = req.body[key];
+        }
+    });
+
+    Object.keys(dynamicFilters).forEach(key => {
+        // Data.gov.in allows sorting and other params too, but usually filters[field]
+        // If the key specifically starts with 'sort_' or matches known api params, handle accordingly?
+        // For now, assume everything else is a filter for a field.
+        apiParams[`filters[${key}]`] = dynamicFilters[key];
     });
 
     logger.info(`Fetching from Data.gov.in: ${dataset}`, { apiParams });
