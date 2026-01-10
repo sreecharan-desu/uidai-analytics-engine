@@ -19,7 +19,11 @@ interface QueryFilters {
 
 const getInsights = async (req: Request, res: Response) => {
   try {
-    const { dataset, filters = {}, limit = 100, page = 1 } = req.body;
+    let { dataset, filters = {}, limit = 100, page = 1 } = req.body;
+    
+    // Sanitize inputs
+    limit = Math.min(Math.max(parseInt(limit.toString()) || 100, 1), 1000);
+    page = Math.max(parseInt(page.toString()) || 1, 1);
 
     // Construct Cache Key based on inputs (including filters)
     // We sort keys to ensure stable cache key
