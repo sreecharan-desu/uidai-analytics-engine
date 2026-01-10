@@ -6,7 +6,7 @@ import logger from '../utils/logger';
 let cachedConnection: typeof mongoose | null = null;
 
 export const connectDB = async () => {
-    if (cachedConnection) {
+    if (cachedConnection && mongoose.connection.readyState === 1) {
         return cachedConnection;
     }
 
