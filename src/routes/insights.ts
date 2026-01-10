@@ -1,13 +1,15 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
-import NodeCache from 'node-cache';
-import { EnrolmentModel, DemographicModel, BiometricModel } from '../models/AadhaarData';
+import { Redis } from '@upstash/redis';
 import logger from '../utils/logger';
 import { config } from '../config';
 import { validateApiKey } from '../middleware/auth';
 
 const router = Router();
-const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 }); // 5 Minutes Cache
+const redis = new Redis({
+  url: config.upstashRedisRestUrl,
+  token: config.upstashRedisRestToken,
+});
 
 router.use(validateApiKey);
 
@@ -19,13 +21,38 @@ const getInsights = async (req: Request, res: Response) => {
   try {
     const { dataset, filters = {}, limit = 100, page = 1 } = req.body;
 
-    // 0. Check In-Memory Cache (L1 Cache) - < 5ms
-    const cacheKey = `${dataset}_${JSON.stringify(req.body)}`;
-    const cachedData = cache.get(cacheKey);
+    // Construct Cache Key based on inputs (including filters)
+    // We sort keys to ensure stable cache key
+    const filterKey = JSON.stringify(Object.keys(filters).sort().reduce((acc: any, key) => {
+        acc[key] = filters[key];
+        return acc;
+    }, {}));
+    
+    // Also include top level dynamic filters from body
+    const reservedKeys = ['dataset', 'limit', 'page', 'filters'];
+    const dynamicFilters: any = { ...filters };
+    Object.keys(req.body).forEach(key => {
+        if (!reservedKeys.includes(key)) {
+            dynamicFilters[key] = req.body[key];
+        }
+    });
+    
+    const stableDynamicKey = JSON.stringify(Object.keys(dynamicFilters).sort().reduce((acc: any, key) => {
+        acc[key] = dynamicFilters[key];
+        return acc;
+    }, {}));
 
-    if (cachedData) {
-        logger.info(`Serving from L1 Cache (Memory): ${cacheKey}`);
-        return res.status(200).json(cachedData);
+    const cacheKey = `insight:${dataset}:${page}:${limit}:${stableDynamicKey}`;
+
+    // 1. Check Redis (L2 Cache)
+    try {
+        const cachedResult: any = await redis.get(cacheKey);
+        if (cachedResult) {
+            logger.info(`Serving from Redis Cache: ${cacheKey}`);
+            return res.status(200).json({ ...cachedResult, meta: { ...cachedResult.meta, source: 'cache', from_cache: true } });
+        }
+    } catch (redisErr) {
+        logger.warn('Redis Cache Error', redisErr);
     }
 
     if (!dataset) {
@@ -33,83 +60,24 @@ const getInsights = async (req: Request, res: Response) => {
     }
 
     let resourceId;
-    let model;
     switch (dataset.toLowerCase()) {
       case 'enrolment':
         resourceId = config.resources.enrolment;
-        model = EnrolmentModel;
         break;
       case 'demographic':
         resourceId = config.resources.demographic;
-        model = DemographicModel;
         break;
       case 'biometric':
         resourceId = config.resources.biometric;
-        model = BiometricModel;
         break;
       default:
         return res.status(400).json({ error: 'Invalid dataset type.' });
     }
     
-    // Construct Filters
-    const reservedKeys = ['dataset', 'limit', 'page', 'filters'];
-    const dynamicFilters: any = { ...filters };
-
-    Object.keys(req.body).forEach(key => {
-        if (!reservedKeys.includes(key)) {
-            dynamicFilters[key] = req.body[key];
-        }
-    });
-
+    
     const offset = (Number(page) - 1) * Number(limit);
 
-    // 1. Check MongoDB (L2 Cache) - ~50-100ms
-    // We treat our Mongo DB as a persistent cache of the Gov API.
-    // Wrap in try-catch to ensure DB failure doesn't block API response
-    // Only attempt L2 if connection is strictly OPEN (1)
-    try {
-        if (require('mongoose').connection.readyState === 1) {
-            const dbQuery = { ...dynamicFilters, resource_id: resourceId };
-        
-            // We try to find enough records to satisfy the request
-            const dbDocs = await model.find(dbQuery)
-            .skip(offset)
-            .limit(limit)
-            .lean()
-            .maxTimeMS(2000); // Fail fast query after 2s
-
-            if (dbDocs.length > 0) {
-                const totalInDb = await model.countDocuments(dbQuery).maxTimeMS(2000);
-                
-                if (dbDocs.length === limit || totalInDb <= offset + dbDocs.length) {
-                    logger.info(`Serving from L2 Cache (MongoDB) for ${dataset}`);
-                    
-                    const responsePayload = {
-                    meta: {
-                        dataset,
-                        total: totalInDb, 
-                        page,
-                        limit,
-                        from_cache: true,
-                        fields: Object.keys(dbDocs[0]).filter(k => k !== '_id' && k !== 'resource_id' && k !== 'record_hash' && k !== 'ingestion_timestamp' && k !== 'source'),
-                        source: 'database'
-                    },
-                    data: dbDocs
-                    };
-                    
-                    cache.set(cacheKey, responsePayload);
-                    return res.status(200).json(responsePayload);
-                }
-            }
-        } else {
-            logger.warn('Mongoose not connected (readyState != 1). Skipping L2 Cache.');
-        }
-    } catch (dbErr) {
-        logger.warn('L2 Cache (Mongo) skipped due to error or timeout', dbErr);
-        // Continue to L3 (API)
-    }
-
-    // 2. Fetch from External API (L3 Source) - ~2s
+    // 2. Fetch from External API (L3 Source)
     const apiUrl = `https://api.data.gov.in/resource/${resourceId}`;
     const apiParams: any = {
       'api-key': config.dataGovApiKey,
@@ -124,7 +92,6 @@ const getInsights = async (req: Request, res: Response) => {
 
     logger.info(`Fetching from Data.gov.in: ${dataset}`, { apiParams });
 
-    // 2. Fetch from API
     const response = await axios.get(apiUrl, { params: apiParams });
     const data = response.data;
 
@@ -134,9 +101,6 @@ const getInsights = async (req: Request, res: Response) => {
 
     const records = data.records;
 
-    // 3. Cache in Mongo (Background) & In-Memory (Foreground)
-    
-    // Save to In-Memory Cache
     const responsePayload = {
       meta: {
         dataset,
@@ -144,35 +108,17 @@ const getInsights = async (req: Request, res: Response) => {
         page,
         limit,
         from_cache: false,
-        fields: data.field ? data.field.map((f: any) => f.id) : [] 
+        fields: data.field ? data.field.map((f: any) => f.id) : [],
+        source: 'api'
       },
       data: records
     };
     
-    // Set cache with flag true for next time
-    cache.set(cacheKey, { ...responsePayload, meta: { ...responsePayload.meta, from_cache: true } });
-
-    // Background Mongo Upsert
-    if (records && records.length > 0) {
-        const bulkOps = records.map((record: any) => {
-            const content = JSON.stringify(Object.keys(record).sort().reduce((acc:any,k)=> {acc[k]=record[k]; return acc}, {}));
-            const hash = require('crypto').createHash('md5').update(content).digest('hex');
-            
-            return {
-                updateOne: {
-                    filter: { resource_id: resourceId, record_hash: hash },
-                    update: { $setOnInsert: { 
-                        ...record, 
-                        resource_id: resourceId, 
-                        ingestion_timestamp: new Date(), 
-                        source: 'data.gov.in',
-                        record_hash: hash
-                    }},
-                    upsert: true
-                }
-            };
-        });
-        model.bulkWrite(bulkOps).catch(err => logger.error('Cache update failed', err));
+    // 3. Store in Redis
+    try {
+        await redis.set(cacheKey, responsePayload, { ex: 3600 * 24 }); // Cache for 24 hours
+    } catch (err) {
+        logger.warn('Failed to set Redis cache', err);
     }
 
     return res.status(200).json(responsePayload);
