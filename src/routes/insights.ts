@@ -4,9 +4,12 @@ import NodeCache from 'node-cache';
 import { EnrolmentModel, DemographicModel, BiometricModel } from '../models/AadhaarData';
 import logger from '../utils/logger';
 import { config } from '../config';
+import { validateApiKey } from '../middleware/auth';
 
 const router = Router();
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 }); // 5 Minutes Cache
+
+router.use(validateApiKey);
 
 interface QueryFilters {
   [key: string]: any;
