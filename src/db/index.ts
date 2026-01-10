@@ -20,6 +20,10 @@ export const connectDB = async () => {
         });
 
         cachedConnection = conn;
+        // Wait for connection to be fully established
+        if (conn.connection.readyState !== 1) {
+            await conn.connection.asPromise();
+        }
         logger.info('MongoDB connected successfully');
         return conn;
 
