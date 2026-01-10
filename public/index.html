@@ -4,258 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIDAI Aadhaar Insights API</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #6366f1;
-            --secondary: #a855f7;
-            --dark-bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-main);
-            overflow-x: hidden;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
             display: flex;
-            flex-direction: column;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
             text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
         }
-
-        /* Glassmorphism Header */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem 2rem;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .logo {
-            font-weight: 700;
+        h1 {
             font-size: 1.5rem;
-            background: linear-gradient(to right, #6366f1, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
         }
-
-        .nav-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-            margin-left: 2rem;
+        p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
         }
-        .nav-link:hover { color: var(--text-main); }
-
-        .btn-main {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        .btn {
+            display: inline-block;
+            background-color: #2563eb;
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 99px;
+            border-radius: 6px;
             text-decoration: none;
             font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: inline-block;
+            transition: background 0.2s;
         }
-        .btn-main:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
-        }
-
-        /* Hero Section */
-        h1 {
-            font-size: 4rem;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
-        h1 span {
-            display: block;
-            background: linear-gradient(to right, #6366f1, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 3rem;
-            line-height: 1.6;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 4rem;
-            width: 100%;
-        }
-
-        .feature-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 2rem;
-            border-radius: 1rem;
-            text-align: left;
-            transition: transform 0.3s, border-color 0.3s;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(99, 102, 241, 0.3);
-        }
-
-        .icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-            padding: 0.75rem;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 0.75rem;
-            color: #818cf8;
-        }
-
-        .feature-card h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
-        }
-
-        .feature-card p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .code-block {
-            background: #1e1e1e;
-            padding: 1.5rem;
-            border-radius: 1rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            text-align: left;
-            margin: 3rem auto 0;
-            width: 100%;
-            max-width: 700px;
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-        }
-
-        .code-header {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
-        .red { background: #ef4444; }
-        .yellow { background: #eab308; }
-        .green { background: #22c55e; }
-
-        code { color: #a5b4fc; }
-        .keyword { color: #c084fc; }
-        .string { color: #86efac; }
-        
-        .glow-point {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .container { padding: 6rem 1rem 2rem; }
-            header { padding: 1rem; }
+        .btn:hover {
+            background-color: #1d4ed8;
         }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="logo">Insights API</div>
-        <nav>
-            <a href="/docs" class="nav-link">Documentation</a>
-            <a href="https://github.com/sreecharan-desu/uidai-daily-data-sync" target="_blank" class="nav-link">GitHub</a>
-        </nav>
-    </header>
-
     <div class="container">
-        <div class="glow-point" style="top: 20%; left: 20%;"></div>
-        
-        <h1>Real-time Aadhaar <br><span>Data Insights</span></h1>
-        
-        <p class="subtitle">
-            Access demographic, enrolment, and biometric datasets instantly. 
-            <br>Powered by a 3-tier intelligent caching system for sub-millisecond latency.
-        </p>
-
-        <a href="/docs" class="btn-main">Explore API Docs &rarr;</a>
-
-        <div class="code-block">
-            <div class="code-header">
-                <div class="dot red"></div>
-                <div class="dot yellow"></div>
-                <div class="dot green"></div>
-            </div>
-            <pre><code><span class="keyword">curl</span> -X POST https://uidai.sreecharandesu.in/api/insights/query \
-  -H <span class="string">"x-api-key: YOUR_KEY"</span> \
-  -d '{
-    <span class="string">"dataset"</span>: <span class="string">"enrolment"</span>,
-    <span class="string">"District"</span>: <span class="string">"Hyderabad"</span>
-  }'</code></pre>
-        </div>
-
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="icon">⚡️</div>
-                <h3>Blazing Fast</h3>
-                <p>L1 Memory and L2 Database caching ensures 99% of requests are served in under 50ms.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🔒</div>
-                <h3>Secure</h3>
-                <p>Protected by API Key authentication to ensure only authorized clients access sensitive insights.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">📊</div>
-                <h3>Dynamic Filtering</h3>
-                <p>Filter by any column available in the source dataset directly from your request body.</p>
-            </div>
-        </div>
+        <h1>UIDAI Data Service</h1>
+        <p>A secure API for fetching real-time Aadhaar insights.</p>
+        <a href="/docs" class="btn">View API Documentation</a>
     </div>
-
 </body>
 </html>

@@ -1,0 +1,106 @@
+export const swaggerDocument = {
+  openapi: '3.0.0',
+  info: {
+    title: 'UIDAI Daily Data Sync API',
+    description: 'API for fetching and ingesting Aadhaar enrolment, demographic, and biometric data.',
+    version: '1.0.0'
+  },
+  servers: [
+    {
+      url: 'https://uidai.sreecharandesu.in/api',
+      description: 'Production Server'
+    },
+    {
+      url: 'http://localhost:3000/api',
+      description: 'Local Development Server'
+    }
+  ],
+  components: {
+    securitySchemes: {
+      CronSecret: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-CRON-SECRET'
+      },
+      ApiKey: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-API-KEY'
+      }
+    }
+  },
+  paths: {
+    '/insights/query': {
+      post: {
+        summary: 'Query Insights',
+        description: 'Fetch raw data directly from Data.gov.in (with local caching). Protected by Client API Key.',
+        security: [
+          {
+            ApiKey: []
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['dataset'],
+                properties: {
+                  dataset: {
+                    type: 'string',
+                    enum: ['enrolment', 'demographic', 'biometric']
+                  },
+                  page: {
+                    type: 'integer',
+                    default: 1
+                  },
+                  limit: {
+                    type: 'integer',
+                    default: 100
+                  },
+                  filters: {
+                    type: 'object',
+                    description: 'Key-value pairs for filtering (e.g. State="Telangana")',
+                    example: {
+                      State: 'Telangana'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Successful query',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    meta: {
+                      type: 'object'
+                    },
+                    data: {
+                      type: 'array',
+                      items: {
+                        type: 'object'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Bad Request'
+          },
+          '500': {
+            description: 'Server Error'
+          }
+        }
+      }
+    }
+  }
+};
