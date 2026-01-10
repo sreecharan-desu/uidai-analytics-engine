@@ -15,35 +15,7 @@ components:
       type: apiKey
       in: header
       name: X-CRON-SECRET
-    ApiKey:
-      type: apiKey
-      in: header
-      name: X-API-KEY
 
-paths:
-  /ingest/monthly:
-    post:
-      summary: Trigger Monthly Ingestion
-      description: Manually triggers the monthly data ingestion process for all datasets. Protected by Cron Secret.
-      security:
-        - CronSecret: []
-      responses:
-        '200':
-          description: Ingestion started/completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Ingestion completed
-                  results:
-                    type: object
-        '401':
-          description: Unauthorized
-        '500':
-          description: Server Error
 
   /insights/query:
     post:

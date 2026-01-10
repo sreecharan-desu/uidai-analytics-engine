@@ -23,11 +23,14 @@ import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';
 
+// Serve static files
+app.use(express.static(path.join(__dirname, '../public')));
+
 const swaggerDocument = yaml.load(path.join(__dirname, '../swagger.yaml'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
-  res.redirect('/docs');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Global error handler
@@ -41,7 +44,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // For Vercel, we might want to connect inside the handler or middleware to ensure connection is alive.
 // We'll wrap the route handling to ensure DB connection.
 
-// Middleware to ensure DB is connected
 // Middleware to ensure DB is connected before handling requests
 app.use(async (req, res, next) => {
     try {
