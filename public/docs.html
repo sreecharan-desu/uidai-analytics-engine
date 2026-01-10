@@ -322,7 +322,7 @@
             <div id="try-it-form" class="hidden" style="margin-top: 2rem; border-top: 1px dashed var(--border); padding-top: 2rem;">
                 <div class="form-group">
                     <label>X-API-KEY</label>
-                    <input type="text" id="api-key" placeholder="61c1713c4960ac786a29873e...">
+                    <input type="text" id="api-key" placeholder="kjszdjfnvdhfuvudhhvhdhvhlknkln">
                 </div>
                 <div class="form-group">
                     <label>Request Body (JSON)</label>
@@ -367,7 +367,7 @@
     });
 
     document.getElementById('btn-execute').addEventListener('click', async () => {
-        const apiKey = document.getElementById('api-key').value;
+        const apiKey = document.getElementById('api-key').value.trim();
         const bodyStr = document.getElementById('body').value;
         const respBox = document.getElementById('response');
         const loading = document.getElementById('loading');
@@ -388,7 +388,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': apiKey
+                    'X-API-KEY': apiKey
                 },
                 body: JSON.stringify(body)
             });
