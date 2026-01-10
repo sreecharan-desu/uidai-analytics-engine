@@ -2,40 +2,39 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-
 import insightsRoutes from './routes/insights';
-
 import logger from './utils/logger';
+import path from 'path';
 
 const app = express();
 
-app.use(helmet());
+// Security and Performance Middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'"],
+      "style-src": ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
+      "font-src": ["'self'", "fonts.gstatic.com"],
+    },
+  },
+}));
 app.use(cors());
 app.use(compression());
 app.use(express.json());
 
 // Routes
-
 app.use('/api/insights', insightsRoutes);
 
-// Swagger Documentation
-import swaggerUi from 'swagger-ui-express';
-import { swaggerDocument } from './swagger';
-import path from 'path';
-
-// Serve static files
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-const SWAGGER_OPTS = {
-  customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css",
-  customJs: [
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js"
-  ]
-};
+// Documentation Page (Custom Swagger)
+app.get('/docs', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/docs.html'));
+});
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, SWAGGER_OPTS));
-
+// Root Landing Page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
@@ -45,7 +44,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   logger.error('Unhandled Error', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
-
-
 
 export default app;

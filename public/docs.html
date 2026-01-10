@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIDAI API Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #49cc90;
+            --primary-bg: #e8f6f0;
+            --secondary: #61affe;
+            --secondary-bg: #e8f1ff;
+            --dark: #3b4151;
+            --gray: #9b9da2;
+            --bg: #fafafa;
+            --white: #ffffff;
+            --border: #e8e8e8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--dark);
+        }
+
+        header {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .info-section {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+        .version {
+            background: var(--gray);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            vertical-align: middle;
+        }
+
+        .endpoint {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 1rem;
+        }
+
+        .method {
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .path {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .endpoint-content {
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .try-it-out {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .try-it-out:hover { opacity: 0.9; }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            box-sizing: border-box;
+        }
+
+        .response-box {
+            background: #2d3139;
+            color: #d1d2d3;
+            padding: 1.5rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>UIDAI API Docs</h1>
+    </div>
+    <div style="font-size: 0.9rem;">
+        Servers: <span style="font-family: monospace;">https://uidai.sreecharandesu.in/api</span>
+    </div>
+</header>
+
+<div class="container">
+    <div class="info-section">
+        <h1>UIDAI Daily Data Sync API <span class="version">1.0.0</span></h1>
+        <p>Advanced API for fetching real-time Aadhaar insights from official sources with high-speed Redis caching.</p>
+    </div>
+
+    <div class="section-title">Endpoints</div>
+
+    <div class="endpoint">
+        <div class="endpoint-header" onclick="toggleEndpoint()">
+            <div class="method">POST</div>
+            <div class="path">/insights/query</div>
+            <div style="color: var(--gray)">Fetch Aadhaar insights with caching</div>
+        </div>
+        
+        <div class="endpoint-content" id="content">
+            <div class="section-title">Parameters</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Header</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>X-API-KEY</code></td>
+                        <td>string</td>
+                        <td>Your valid Client API Key (Required)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="section-title">Request Body</div>
+            <p>JSON object containing dataset and optional filters.</p>
+            <pre style="background: #f4f4f4; padding: 1rem; border-radius: 4px;">{
+  "dataset": "enrolment", 
+  "page": 1,
+  "limit": 10,
+  "filters": {
+    "State": "Telangana"
+  }
+}</pre>
+
+            <button class="try-it-out" onclick="showTryIt()">Try it out</button>
+
+            <div id="try-it-form" class="hidden">
+                <div class="form-group">
+                    <label>X-API-KEY</label>
+                    <input type="text" id="api-key" placeholder="Enter API Key">
+                </div>
+                <div class="form-group">
+                    <label>Body (JSON)</label>
+                    <textarea id="body" rows="10">{
+  "dataset": "enrolment",
+  "page": 1,
+  "limit": 5
+}</textarea>
+                </div>
+                <button class="try-it-out" style="background: var(--secondary)" onclick="executeApi()">Execute</button>
+                
+                <div id="response-container">
+                    <div class="section-title">Response</div>
+                    <div id="loading" class="hidden">Executing...</div>
+                    <div id="response" class="response-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/docs.js"></script>
+
+</body>
+</html>
