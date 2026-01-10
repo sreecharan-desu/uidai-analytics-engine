@@ -6,7 +6,7 @@ const rawDataSchema = new Schema(
     ingestion_timestamp: { type: Date, required: true, default: Date.now },
     source: { type: String, required: true, default: 'data.gov.in' },
   },
-  { strict: false, timestamps: false, versionKey: false }
+  { strict: false, timestamps: false, versionKey: false, bufferCommands: false }
 );
 
 // Compound indexes for faster L2 Cache lookups
