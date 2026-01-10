@@ -1,24 +1,17 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
     },
     {
-      "src": "/",
-      "dest": "/api/index.ts"
+      "source": "/",
+      "destination": "/api/index.ts"
     }
   ],
   "functions": {
     "api/index.ts": {
-      "runtime": "nodejs18.x",
       "maxDuration": 60
     }
   }

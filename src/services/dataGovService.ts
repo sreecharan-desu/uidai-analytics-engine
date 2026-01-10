@@ -105,7 +105,7 @@ export class DataGovService {
           return {
             updateOne: {
               filter: { resource_id: resourceId, record_hash: recordHash }, // unique identify by content
-              update: { $setOnInsert: ingestRecord },
+              update: { $setOnInsert: ingestRecord }, // Only insert if not exists. Do NOT update existing.
               upsert: true,
             },
           };
@@ -113,7 +113,10 @@ export class DataGovService {
 
         if (bulkOps.length > 0) {
           await model.bulkWrite(bulkOps);
-          totalIngested += bulkOps.length; // Count processed
+          totalIngested += bulkOps.length;
+          const progressMsg = `[${resourceId}] Ingested batch of ${bulkOps.length} records. Total so far: ${totalIngested}`;
+          console.log(progressMsg); // Force console log ensures visibility even if logger level varies
+          logger.info(progressMsg);
         }
 
         offset += limit;
