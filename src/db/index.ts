@@ -11,24 +11,34 @@ export const connectDB = async () => {
     }
 
     try {
-        const conn = await mongoose.connect(config.mongoUri, {
-            dbName: config.dbName,
-            maxPoolSize: 10, // Limit pool size for serverless
-            serverSelectionTimeoutMS: 5000, // Fail fast if DB unreachable
-            socketTimeoutMS: 45000,
-        });
+        // Enforce a hard timeout on the connection attempt
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('MongoDB Connection Timeout')), 2000)
+        );
+
+        const connectionPromise = async () => {
+             const conn = await mongoose.connect(config.mongoUri, {
+                dbName: config.dbName,
+                maxPoolSize: 10,
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 45000,
+            });
+            // Wait for readiness
+            if (conn.connection.readyState !== 1) {
+                await conn.connection.asPromise();
+            }
+            return conn;
+        };
+
+        const conn = await Promise.race([connectionPromise(), timeoutPromise]) as typeof mongoose;
 
         cachedConnection = conn;
-        // Wait for connection to be fully established
-        if (conn.connection.readyState !== 1) {
-            await conn.connection.asPromise();
-        }
         logger.info('MongoDB connected successfully');
         return conn;
 
     } catch (error) {
-        logger.error('MongoDB connection failed', error);
-        // Do not exit process in serverless, just throw
+        logger.warn('MongoDB connection failed or timed out. Skipping DB.', error);
+        // We throw so the caller knows DB is down and can skip L2 Cache logic
         throw error;
     }
 };

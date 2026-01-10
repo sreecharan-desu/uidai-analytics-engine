@@ -46,11 +46,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.use(async (req, res, next) => {
     try {
         await connectDB();
-        next();
     } catch (error) {
-        logger.error('DB Connection Middleware Error', error);
-        res.status(500).json({ error: 'Database Connection Failed' });
+        logger.warn('DB Connection failed in middleware. Proceeding without DB.', error);
+        // Do NOT fail the request. Proceed. The route handler handles missing DB.
     }
+    next();
 });
 
 export default app;
