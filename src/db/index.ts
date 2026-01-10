@@ -13,7 +13,6 @@ export const connectDB = async () => {
     try {
         const conn = await mongoose.connect(config.mongoUri, {
             dbName: config.dbName,
-            bufferCommands: false, // Disable buffering to fail fast if not connected
             maxPoolSize: 10, // Limit pool size for serverless
             serverSelectionTimeoutMS: 5000, // Fail fast if DB unreachable
             socketTimeoutMS: 45000,

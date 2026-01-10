@@ -65,50 +65,43 @@ const getInsights = async (req: Request, res: Response) => {
 
     // 1. Check MongoDB (L2 Cache) - ~50-100ms
     // We treat our Mongo DB as a persistent cache of the Gov API.
-    const dbQuery = { ...dynamicFilters, resource_id: resourceId };
-    
-    // We try to find enough records to satisfy the request
-    const dbDocs = await model.find(dbQuery)
-      .skip(offset)
-      .limit(limit)
-      .lean();
-
-    // If we have a FULL page of data, we trust it and return it.
-    // If we have PARTIAL data (less than limit), we might be at the end OR we might have missing valid data.
-    // To be safe/fast: If > 0, we return what we have? 
-    // Better: If length == limit, safe cache hit. 
-    // If length < limit, check valid total count? 
-    // Simply: If we found ANY data, use it? No, might simply be stale or incomplete.
-    // Strategy: If dbDocs.length === limit, we assume HIT.
-    // Use API fallback if 0.
-    
-    if (dbDocs.length > 0) {
-        // If we found data, let's verify if we need to fetch more from API
-        // If we found exactly 'limit', we good. 
-        // If we found less, it could be end of list.
-        const totalInDb = await model.countDocuments(dbQuery);
+    // Wrap in try-catch to ensure DB failure doesn't block API response
+    try {
+        const dbQuery = { ...dynamicFilters, resource_id: resourceId };
         
-        // If we have a full page OR we are at the end (total <= offset + length)
-        // Then valid HIT.
-        if (dbDocs.length === limit || totalInDb <= offset + dbDocs.length) {
-            logger.info(`Serving from L2 Cache (MongoDB) for ${dataset}`);
+        // We try to find enough records to satisfy the request
+        const dbDocs = await model.find(dbQuery)
+        .skip(offset)
+        .limit(limit)
+        .lean()
+        .maxTimeMS(2000); // Fail fast query after 2s
+
+        if (dbDocs.length > 0) {
+            const totalInDb = await model.countDocuments(dbQuery).maxTimeMS(2000);
             
-            const responsePayload = {
-              meta: {
-                dataset,
-                total: totalInDb, // This is DB total, might be less than API total but grows over time
-                page,
-                limit,
-                from_cache: true,
-                source: 'database'
-              },
-              data: dbDocs
-            };
-            
-            // Populating L1
-            cache.set(cacheKey, responsePayload);
-            return res.status(200).json(responsePayload);
+            if (dbDocs.length === limit || totalInDb <= offset + dbDocs.length) {
+                logger.info(`Serving from L2 Cache (MongoDB) for ${dataset}`);
+                
+                const responsePayload = {
+                meta: {
+                    dataset,
+                    total: totalInDb, 
+                    page,
+                    limit,
+                    from_cache: true,
+                    fields: Object.keys(dbDocs[0]).filter(k => k !== '_id' && k !== 'resource_id' && k !== 'record_hash' && k !== 'ingestion_timestamp' && k !== 'source'),
+                    source: 'database'
+                },
+                data: dbDocs
+                };
+                
+                cache.set(cacheKey, responsePayload);
+                return res.status(200).json(responsePayload);
+            }
         }
+    } catch (dbErr) {
+        logger.warn('L2 Cache (Mongo) skipped due to error or timeout', dbErr);
+        // Continue to L3 (API)
     }
 
     // 2. Fetch from External API (L3 Source) - ~2s
