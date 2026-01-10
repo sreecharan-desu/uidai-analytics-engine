@@ -20,13 +20,12 @@ app.use('/api/insights', insightsRoutes);
 
 // Swagger Documentation
 import swaggerUi from 'swagger-ui-express';
-import yaml from 'yamljs';
+import { swaggerDocument } from './swagger';
 import path from 'path';
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 
-const swaggerDocument = yaml.load(path.join(__dirname, '../swagger.yaml'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
