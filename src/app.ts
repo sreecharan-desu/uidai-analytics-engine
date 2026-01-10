@@ -42,10 +42,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // We'll wrap the route handling to ensure DB connection.
 
 // Middleware to ensure DB is connected
+// Middleware to ensure DB is connected before handling requests
 app.use(async (req, res, next) => {
-    // Basic check, usually connectDB handles idempotency
-    await connectDB();
-    next();
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        logger.error('DB Connection Middleware Error', error);
+        res.status(500).json({ error: 'Database Connection Failed' });
+    }
 });
 
 export default app;
