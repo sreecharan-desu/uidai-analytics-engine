@@ -99,7 +99,19 @@ const getInsights = async (req: Request, res: Response) => {
         throw new Error(data.message || 'Error fetching from Source API');
     }
 
-    const records = data.records;
+    const fields = data.field ? data.field.map((f: any) => f.id) : [];
+    
+    // Apply field selection if provided
+    let records = data.records;
+    if (req.body.select && Array.isArray(req.body.select)) {
+        records = records.map((record: any) => {
+            const filtered: any = {};
+            req.body.select.forEach((f: string) => {
+                if (record[f] !== undefined) filtered[f] = record[f];
+            });
+            return filtered;
+        });
+    }
 
     const responsePayload = {
       meta: {
@@ -108,7 +120,7 @@ const getInsights = async (req: Request, res: Response) => {
         page,
         limit,
         from_cache: false,
-        fields: data.field ? data.field.map((f: any) => f.id) : [],
+        fields: fields,
         source: 'api'
       },
       data: records
