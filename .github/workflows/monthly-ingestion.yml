@@ -1,0 +1,55 @@
+name: Monthly UIDAI Data Ingestion
+
+on:
+  schedule:
+    # Runs at 20:30 UTC on the 1st of every month
+    # Corresponds to 02:00 IST on the 2nd of the month (approximately)
+    # Achieving exact "1st 02:00 IST" (which is prev month last day UTC) via cron is complex.
+    - cron: '30 20 1 * *'
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Ingestion API
+        env:
+          API_URL: ${{ secrets.VERCEL_PROJECT_PRODUCTION_URL }} # or manually set
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Triggering ingestion..."
+          # Function URL should be configured in repo secrets or constructed.
+          # Assuming generic Vercel URL structure or passed via secret.
+          # Using 'curl' to make request
+          
+          # Ensure URL is available
+          if [ -z "$API_URL" ]; then
+            echo "API_URL secret is missing"
+            exit 1
+          fi
+
+          if [ -z "$CRON_SECRET" ]; then
+             echo "CRON_SECRET secret is missing"
+             exit 1
+          fi
+
+          FULL_URL="${API_URL}/api/ingest/monthly"
+          echo "Target: $FULL_URL"
+
+          response=$(curl -s -w "%{http_code}" -X POST "$FULL_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-CRON-SECRET: $CRON_SECRET")
+
+          http_code=${response: -3}
+          content=${response:0:${#response}-3}
+
+          echo "Response Status: $http_code"
+          echo "Response Body: $content"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Ingestion triggered successfully."
+            exit 0
+          else
+            echo "Ingestion failed with status $http_code"
+            exit 1
+          fi
