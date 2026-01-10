@@ -9,6 +9,11 @@ const rawDataSchema = new Schema(
   { strict: false, timestamps: false, versionKey: false }
 );
 
+// Compound indexes for faster L2 Cache lookups
+rawDataSchema.index({ resource_id: 1, record_hash: 1 }, { unique: true });
+rawDataSchema.index({ resource_id: 1, State: 1, District: 1 });
+rawDataSchema.index({ resource_id: 1, Pincode: 1 });
+
 // Create models for each collection
 export const EnrolmentModel = mongoose.model('aadhaar_enrolment_raw', rawDataSchema);
 export const DemographicModel = mongoose.model('aadhaar_demographic_update_raw', rawDataSchema);

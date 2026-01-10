@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import ingestRoutes from './routes/ingest';
 import insightsRoutes from './routes/insights';
 import { connectDB } from './db';
@@ -10,6 +11,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
+app.use(compression());
 app.use(express.json());
 
 // Routes
