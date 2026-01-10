@@ -145,7 +145,8 @@ const getInsights = async (req: Request, res: Response) => {
         total: data.total,
         page,
         limit,
-        from_cache: false 
+        from_cache: false,
+        fields: data.field ? data.field.map((f: any) => f.id) : [] 
       },
       data: records
     };
