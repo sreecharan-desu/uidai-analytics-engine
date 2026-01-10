@@ -29,7 +29,7 @@ const getInsights = async (req: Request, res: Response) => {
     }, {}));
     
     // Also include top level dynamic filters from body
-    const reservedKeys = ['dataset', 'limit', 'page', 'filters'];
+    const reservedKeys = ['dataset', 'limit', 'page', 'filters', 'select'];
     const dynamicFilters: any = { ...filters };
     Object.keys(req.body).forEach(key => {
         if (!reservedKeys.includes(key)) {
