@@ -90,6 +90,10 @@ export class DataGovService {
           break;
         }
 
+        if (offset === 0) {
+            logger.info(`[${resourceId}] API reports total records: ${data.total}`);
+        }
+
         // Prepare bulk operations
         const bulkOps = records.map((record) => {
           const recordHash = this.generateRecordHash(record);
@@ -123,11 +127,13 @@ export class DataGovService {
         
         // Safety break if fetched less than limit
         if (records.length < limit) {
+          logger.info(`[${resourceId}] Stopping: Fetched ${records.length} records, which is less than limit ${limit}`);
           hasMore = false;
         }
         
         // Total available in response
         if (data.total && offset >= data.total) {
+            logger.info(`[${resourceId}] Stopping: Offset ${offset} reached total ${data.total}`);
             hasMore = false;
         }
       }

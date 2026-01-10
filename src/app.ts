@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import ingestRoutes from './routes/ingest';
+import insightsRoutes from './routes/insights';
 import { connectDB } from './db';
 import logger from './utils/logger';
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api', ingestRoutes);
+app.use('/api/insights', insightsRoutes);
 
 app.get('/', (req, res) => {
   res.send('UIDAI Data Sync Service Running');
