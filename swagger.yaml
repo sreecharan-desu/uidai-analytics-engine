@@ -15,6 +15,10 @@ components:
       type: apiKey
       in: header
       name: X-CRON-SECRET
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-KEY
 
 paths:
   /ingest/monthly:
@@ -44,7 +48,9 @@ paths:
   /insights/query:
     post:
       summary: Query Insights
-      description: Fetch raw data directly from Data.gov.in (with local caching).
+      description: Fetch raw data directly from Data.gov.in (with local caching). Protected by Client API Key.
+      security:
+        - ApiKey: []
       requestBody:
         required: true
         content:

@@ -6,6 +6,7 @@ const requiredEnvVars = [
   'MONGODB_URI',
   'DB_NAME',
   'CRON_SECRET',
+  'CLIENT_API_KEY',
 ];
 
 const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
@@ -27,4 +28,5 @@ export const config = {
     demographic: '19eac040-0b94-49fa-b239-4f2fd8677d53',
     biometric: '65454dab-1517-40a3-ac1d-47d4dfe6891c',
   },
+  clientApiKey: process.env.CLIENT_API_KEY!,
 };
