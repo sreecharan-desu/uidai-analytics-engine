@@ -18,15 +18,16 @@ export const ingestMonthlyData = async (req: Request, res: Response) => {
 
   const results: Record<string, any> = {};
 
-  // Sequential execution
-  // 1. Enrolment
-  results.enrolment = await service.fetchAndIngest(config.resources.enrolment, EnrolmentModel);
-  
-  // 2. Demographic Update
-  results.demographic = await service.fetchAndIngest(config.resources.demographic, DemographicModel);
-  
-  // 3. Biometric Update
-  results.biometric = await service.fetchAndIngest(config.resources.biometric, BiometricModel);
+  // Run in parallel to maximize Vercel execution time utility
+  const [enrolmentResult, demographicResult, biometricResult] = await Promise.allSettled([
+    service.fetchAndIngest(config.resources.enrolment, EnrolmentModel),
+    service.fetchAndIngest(config.resources.demographic, DemographicModel),
+    service.fetchAndIngest(config.resources.biometric, BiometricModel)
+  ]);
+
+  results.enrolment = enrolmentResult.status === 'fulfilled' ? enrolmentResult.value : { status: 'error', error: enrolmentResult.reason };
+  results.demographic = demographicResult.status === 'fulfilled' ? demographicResult.value : { status: 'error', error: demographicResult.reason };
+  results.biometric = biometricResult.status === 'fulfilled' ? biometricResult.value : { status: 'error', error: biometricResult.reason };
 
   const hasFailure = Object.values(results).some(r => r.status === 'error');
   
