@@ -71,34 +71,35 @@ const getInsights = async (req: Request, res: Response) => {
         if (require('mongoose').connection.readyState === 1) {
             const dbQuery = { ...dynamicFilters, resource_id: resourceId };
         
-        // We try to find enough records to satisfy the request
-        const dbDocs = await model.find(dbQuery)
-        .skip(offset)
-        .limit(limit)
-        .lean()
-        .maxTimeMS(2000); // Fail fast query after 2s
+            // We try to find enough records to satisfy the request
+            const dbDocs = await model.find(dbQuery)
+            .skip(offset)
+            .limit(limit)
+            .lean()
+            .maxTimeMS(2000); // Fail fast query after 2s
 
-        if (dbDocs.length > 0) {
-            const totalInDb = await model.countDocuments(dbQuery).maxTimeMS(2000);
-            
-            if (dbDocs.length === limit || totalInDb <= offset + dbDocs.length) {
-                logger.info(`Serving from L2 Cache (MongoDB) for ${dataset}`);
+            if (dbDocs.length > 0) {
+                const totalInDb = await model.countDocuments(dbQuery).maxTimeMS(2000);
                 
-                const responsePayload = {
-                meta: {
-                    dataset,
-                    total: totalInDb, 
-                    page,
-                    limit,
-                    from_cache: true,
-                    fields: Object.keys(dbDocs[0]).filter(k => k !== '_id' && k !== 'resource_id' && k !== 'record_hash' && k !== 'ingestion_timestamp' && k !== 'source'),
-                    source: 'database'
-                },
-                data: dbDocs
-                };
-                
-                cache.set(cacheKey, responsePayload);
-                return res.status(200).json(responsePayload);
+                if (dbDocs.length === limit || totalInDb <= offset + dbDocs.length) {
+                    logger.info(`Serving from L2 Cache (MongoDB) for ${dataset}`);
+                    
+                    const responsePayload = {
+                    meta: {
+                        dataset,
+                        total: totalInDb, 
+                        page,
+                        limit,
+                        from_cache: true,
+                        fields: Object.keys(dbDocs[0]).filter(k => k !== '_id' && k !== 'resource_id' && k !== 'record_hash' && k !== 'ingestion_timestamp' && k !== 'source'),
+                        source: 'database'
+                    },
+                    data: dbDocs
+                    };
+                    
+                    cache.set(cacheKey, responsePayload);
+                    return res.status(200).json(responsePayload);
+                }
             }
         } else {
             logger.warn('Mongoose not connected (readyState != 1). Skipping L2 Cache.');
