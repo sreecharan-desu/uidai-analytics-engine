@@ -26,7 +26,11 @@ import path from 'path';
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css";
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customCssUrl: CSS_URL
+}));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
