@@ -3,382 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UIDAI API Documentation</title>
+    <title>UIDAI Aadhaar Insights API Docs</title>
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://uidai.sreecharandesu.in/docs">
     <meta property="og:title" content="UIDAI API Documentation">
-    <meta property="og:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints.">
+    <meta property="og:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints. High-performance data sync.">
     <meta property="og:image" content="https://uidai.sreecharandesu.in/og-image.png">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://uidai.sreecharandesu.in/docs">
-    <meta property="twitter:title" content="UIDAI API Documentation">
-    <meta property="twitter:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints.">
-    <meta property="twitter:image" content="https://uidai.sreecharandesu.in/og-image.png">
-
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #49cc90;
-            --primary-bg: #e8f6f0;
-            --secondary: #61affe;
-            --secondary-bg: #e8f1ff;
-            --dark: #3b4151;
-            --gray: #9b9da2;
-            --bg: #fafafa;
-            --white: #ffffff;
-            --border: #e8e8e8;
-            --code-bg: #f4f4f4;
+            --bg: #0b0f1a;
+            --card-bg: #161c2d;
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.2);
+            --secondary: #818cf8;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --code-bg: #011627;
         }
 
+        * { box-sizing: border-box; transition: all 0.2s ease-out; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             margin: 0;
             padding: 0;
             background-color: var(--bg);
-            color: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
         }
 
         header {
-            background-color: var(--dark);
-            color: var(--white);
-            padding: 1.5rem 2rem;
+            background: rgba(11, 15, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            max-width: 1100px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
         }
 
-        .info-section {
-            margin-bottom: 3rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 2rem;
-        }
-
-        h1 { margin: 0; font-size: 2rem; }
-        .version {
-            background: var(--gray);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            vertical-align: middle;
-        }
-
-        .endpoint {
-            background: var(--white);
+        .section {
+            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .endpoint-header {
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: #fff;
-        }
-
-        .method {
-            background: var(--primary);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .path {
-            font-family: 'Fira Code', monospace;
-            font-weight: 600;
-            font-size: 1.1rem;
-            flex-grow: 1;
-        }
-
-        .endpoint-content {
+            border-radius: 16px;
             padding: 2rem;
-            border-top: 1px solid var(--border);
-            background: #fff;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin: 2rem 0 1rem;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 0.5rem;
-            color: var(--dark);
-        }
-
-        .section-title:first-child { margin-top: 0; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2rem;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th { background: #fcfcfc; font-weight: 600; }
-
-        .try-it-out {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: opacity 0.2s;
-        }
-
-        .try-it-out:hover { opacity: 0.9; }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        textarea, input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: 'Fira Code', monospace;
-            box-sizing: border-box;
-            background: #fafafa;
-        }
-
-        pre {
-            background: var(--code-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            font-family: 'Fira Code', monospace;
-            overflow-x: auto;
-            border: 1px solid var(--border);
-            color: #444;
-        }
-
-        .response-box {
-            background: #2d3139;
-            color: #d1d2d3;
-            padding: 1.5rem;
-            border-radius: 8px;
-            font-family: 'Fira Code', monospace;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            margin-top: 1rem;
-            display: none;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
-        }
+        h1 { font-size: 2.5rem; margin-top: 0; margin-bottom: 1rem; }
+        h2 { font-size: 1.5rem; margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); }
 
         .dataset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-top: 1rem;
         }
 
         .dataset-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.03);
             padding: 1.5rem;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid var(--border);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dataset-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--primary);
+            transform: translateY(-5px);
         }
 
         .dataset-name {
+            font-size: 1.1rem;
             font-weight: 700;
-            color: var(--secondary);
-            margin-bottom: 0.5rem;
+            color: var(--primary);
             display: block;
+            margin-bottom: 0.5rem;
         }
 
-        .field-list {
+        .field-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
             font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
-            color: #666;
+            color: var(--text-dim);
         }
+
+        .endpoint-pill {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .method {
+            background: var(--primary);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+
+        .path { font-family: 'Fira Code', monospace; font-size: 1.1rem; color: var(--text); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        th { text-align: left; padding: 12px; color: var(--primary); border-bottom: 1px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .btn {
+            background: var(--primary);
+            color: #0b0f1a;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+        .btn-secondary { background: var(--secondary); color: white; }
+
+        .form-control {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            padding: 1rem;
+            width: 100%;
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .copy-abs {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .copy-abs:hover { background: rgba(255,255,255,0.2); }
+
+        .response-area {
+            margin-top: 2rem;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .hidden { display: none; }
         
         .badge {
-            display: inline-block;
-            padding: 2px 8px;
+            background: var(--primary);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 5px;
+            vertical-align: middle;
+            margin-left: 8px;
         }
-        .badge-new { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; }
     </style>
 </head>
 <body>
 
 <header>
-    <div>
-        <h1>UIDAI Aadhaar Insights API Docs</h1>
-    </div>
-    <div style="font-size: 0.9rem;">
-        Base URL: <span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">https://uidai.sreecharandesu.in/api</span>
+    <div class="logo">UIDAI API <span style="color: white; font-weight: 300;">Explorer</span></div>
+    <div style="font-size: 0.85rem; color: var(--text-dim);">
+        Base: <span style="font-family: monospace; color: var(--primary);">https://uidai.sreecharandesu.in/api</span>
     </div>
 </header>
 
-<div class="container">
-    <div class="info-section">
-        <h1>Overview</h1>
-        <p>Advanced API for fetching real-time Aadhaar insights from official source (data.gov.in) with high-speed Redis caching. Secured with API keys and optimized for serverless performance.</p>
+<div class="container" id="main-content">
+    <div class="section">
+        <h1 style="color: white;">API Documentation</h1>
+        <p style="color: var(--text-dim); max-width: 700px;">
+            Harness the power of real-time Aadhaar data sync. Our API provides ultra-fast access to enrolment, demographic, and biometric insights, cached globally with Redis.
+        </p>
     </div>
 
-    <div class="section-title">Available Datasets & Fields</div>
-    <div class="dataset-grid">
-        <div class="dataset-card">
-            <span class="dataset-name">enrolment</span>
-            <p style="font-size: 0.9rem;">New Aadhaar enrolments by age group.</p>
-            <div class="field-list">fields: ["date", "state", "district", "pincode", "age_0_5", "age_5_17", "age_18_greater"]</div>
-        </div>
-        <div class="dataset-card">
-            <span class="dataset-name">demographic</span>
-            <p style="font-size: 0.9rem;">Demographic updates (address, DOB, etc).</p>
-            <div class="field-list">fields: ["date", "state", "district", "pincode", "demo_age_5_17", "demo_age_17_"]</div>
-        </div>
-        <div class="dataset-card">
-            <span class="dataset-name">biometric</span>
-            <p style="font-size: 0.9rem;">Biometric updates (fingerprint, face, iris).</p>
-            <div class="field-list">fields: ["date", "state", "district", "pincode", "bio_age_5_17", "bio_age_17_"]</div>
-        </div>
-    </div>
-
-    <div class="section-title">Insights Query Endpoint</div>
-
-    <div class="endpoint">
-        <div class="endpoint-header">
-            <div class="method">POST</div>
-            <div class="path">/api/insights/query</div>
-            <div style="color: var(--gray); font-size: 0.9rem;">Search and filter insights</div>
-        </div>
-        
-        <div class="endpoint-content">
-            <div class="section-title">Authentication</div>
-            <table>
-                <thead>
-                    <tr><th>Header</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><code>X-API-KEY</code></td><td>string</td><td>Yes</td><td>Your confidential Client API key</td></tr>
-                </tbody>
-            </table>
-
-            <div class="section-title">Query Parameters (JSON Body)</div>
-            <table>
-                <thead>
-                    <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><code>dataset</code></td><td>string</td><td>One of: <code>enrolment</code>, <code>demographic</code>, <code>biometric</code></td></tr>
-                    <tr><td><code>select</code> <span class="badge badge-new">NEW</span></td><td>array</td><td>Array of fields to return (e.g. <code>["state", "age_0_5"]</code>)</td></tr>
-                    <tr><td><code>filters</code></td><td>object</td><td>Key-value pairs for hard filtering (e.g. <code>{"State": "Telangana"}</code>)</td></tr>
-                    <tr><td><code>limit</code></td><td>number</td><td>Records per page (default: 100)</td></tr>
-                    <tr><td><code>page</code></td><td>number</td><td>Page offset (default: 1)</td></tr>
-                </tbody>
-            </table>
-
-            <div class="section-title">Example Payload</div>
-            <pre>{
-  "dataset": "enrolment",
-  "select": ["state", "district", "age_0_5"],
-  "filters": {
-    "state": "Telangana"
-  },
-  "limit": 5
-}</pre>
-
-            <button class="try-it-out" id="btn-try">Try it out</button>
-
-            <div id="try-it-form" class="hidden" style="margin-top: 2rem; border-top: 1px dashed var(--border); padding-top: 2rem;">
-                <div class="form-group">
-                    <label>X-API-KEY</label>
-                    <input type="text" id="api-key" placeholder="kjszdjfnvdhfuvudhhvhdhvhlknkln">
+    <div class="section">
+        <h2>Datasets Explorer</h2>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 2rem;">Click a card to auto-fill the query builder below.</p>
+        <div class="dataset-grid">
+            <div class="dataset-card" onclick="autoFill('enrolment')">
+                <span class="dataset-name">Enrolment Data</span>
+                <p style="font-size: 0.85rem; color: var(--text-dim);">Historical and new Aadhaar registration counts.</p>
+                <div>
+                    <span class="field-tag">age_0_5</span><span class="field-tag">age_5_17</span><span class="field-tag">age_18_greater</span>
                 </div>
-                <div class="form-group">
-                    <label>Request Body (JSON)</label>
-                    <textarea id="body" rows="10">{
-  "dataset": "enrolment",
-  "select": ["state", "district", "age_0_5"],
-  "limit": 3
-}</textarea>
+            </div>
+            <div class="dataset-card" onclick="autoFill('demographic')">
+                <span class="dataset-name">Demographic Updates</span>
+                <p style="font-size: 0.85rem; color: var(--text-dim);">Address, date of birth, and identity modification stats.</p>
+                <div>
+                    <span class="field-tag">demo_age_5_17</span><span class="field-tag">demo_age_17_</span>
                 </div>
-                <button class="try-it-out" id="btn-execute" style="background: var(--secondary)">Execute Query</button>
-                
-                <div id="response-container">
-                    <div class="section-title">Result</div>
-                    <div id="loading" class="hidden">Connecting to server...</div>
-                    <div id="response" class="response-box"></div>
+            </div>
+            <div class="dataset-card" onclick="autoFill('biometric')">
+                <span class="dataset-name">Biometric Syncs</span>
+                <p style="font-size: 0.85rem; color: var(--text-dim);">Fingerprint and iris authentication/update records.</p>
+                <div>
+                    <span class="field-tag">bio_age_5_17</span><span class="field-tag">bio_age_17_</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="section-title">Implementation Examples</div>
-    
-    <div style="margin-bottom: 3rem;">
-        <label>cURL (Basic Query)</label>
-        <pre>curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
--H "Content-Type: application/json" \
--H "X-API-KEY: YOUR_KEY" \
--d '{"dataset": "enrolment", "limit": 1}'</pre>
+    <div class="section">
+        <h2>Query Lab</h2>
+        <div class="endpoint-pill">
+            <span class="method">POST</span>
+            <span class="path">/api/insights/query</span>
+        </div>
 
-        <label style="margin-top: 1rem; display: block;">cURL (Field Selection)</label>
-        <pre>curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
+        <h3>Configuration</h3>
+        <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">AUTHORIZATION</label>
+        <input type="text" id="api-key" class="form-control" placeholder="61c1713c4960ac786a29873e..." style="margin-bottom: 2rem;">
+
+        <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">JSON PAYLOAD</label>
+        <textarea id="body" class="form-control" rows="10">{
+  "dataset": "enrolment",
+  "select": ["state", "district", "age_0_5"],
+  "limit": 5
+}</textarea>
+
+        <button class="btn" id="btn-execute">⚡ Execute Request</button>
+
+        <div id="response-container" class="hidden response-area">
+            <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                Server Response 
+                <span id="timing-badge" style="font-size: 0.75rem; color: var(--text-dim); font-weight: 400;"></span>
+            </h3>
+            <div id="loading" class="hidden" style="color: var(--primary); margin: 1rem 0;">Processing on edge server...</div>
+            <pre id="response-code"></pre>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Quick Tutorials</h2>
+        <div style="margin-bottom: 3rem;">
+            <p style="color: var(--text-dim);">Get started instantly using the command line.</p>
+            
+            <label style="font-size: 0.8rem; font-weight: 700;">FETCH TELEANGANA ENROLMENTS</label>
+            <pre id="curl-1">curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
 -H "Content-Type: application/json" \
 -H "X-API-KEY: YOUR_KEY" \
--d '{"dataset": "biometric", "select": ["state", "bio_age_17_"], "limit": 1}'</pre>
+-d '{
+  "dataset": "enrolment",
+  "filters": { "state": "Telangana" },
+  "limit": 1
+}'<button class="copy-abs" onclick="copySnippet('curl-1')">Copy</button></pre>
+
+            <label style="font-size: 0.8rem; font-weight: 700; margin-top: 1.5rem; display: block;">SELECTIVE FIELDS <span class="badge">OPTIMIZED</span></label>
+            <pre id="curl-2">curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
+-H "Content-Type: application/json" \
+-H "X-API-KEY: YOUR_KEY" \
+-d '{
+  "dataset": "biometric",
+  "select": ["state", "bio_age_17_"],
+  "limit": 1
+}'<button class="copy-abs" onclick="copySnippet('curl-2')">Copy</button></pre>
+        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('btn-try').addEventListener('click', () => {
-        document.getElementById('try-it-form').classList.remove('hidden');
-        document.getElementById('btn-try').style.display = 'none';
-    });
+    const datasetConfigs = {
+        enrolment: { dataset: "enrolment", select: ["state", "district", "age_0_5"], limit: 5 },
+        demographic: { dataset: "demographic", select: ["state", "district", "demo_age_17_"], limit: 5 },
+        biometric: { dataset: "biometric", select: ["state", "district", "bio_age_17_"], limit: 5 }
+    };
+
+    function autoFill(type) {
+        document.getElementById('body').value = JSON.stringify(datasetConfigs[type], null, 2);
+        document.getElementById('body').focus();
+    }
+
+    function copySnippet(id) {
+        const text = document.getElementById(id).textContent.replace('Copy', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector(`#${id} .copy-abs`);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+    }
 
     document.getElementById('btn-execute').addEventListener('click', async () => {
         const apiKey = document.getElementById('api-key').value.trim();
         const bodyStr = document.getElementById('body').value;
-        const respBox = document.getElementById('response');
+        const respCode = document.getElementById('response-code');
         const loading = document.getElementById('loading');
+        const container = document.getElementById('response-container');
+        const timing = document.getElementById('timing-badge');
 
         if (!apiKey) {
-            alert('Please enter an API Key');
+            alert('Please enter your X-API-KEY');
             return;
         }
 
+        container.classList.remove('hidden');
         loading.classList.remove('hidden');
-        respBox.style.display = 'none';
+        respCode.style.display = 'none';
+        timing.textContent = '';
 
         try {
             const body = JSON.parse(bodyStr);
@@ -386,10 +376,7 @@
             
             const response = await fetch('/api/insights/query', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': apiKey
-                },
+                headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
                 body: JSON.stringify(body)
             });
 
@@ -397,12 +384,21 @@
             const data = await response.json();
 
             loading.classList.add('hidden');
-            respBox.style.display = 'block';
-            respBox.textContent = `// Response Time: ${duration}ms\n// Status: ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            respCode.style.display = 'block';
+            timing.textContent = `Completed in ${duration}ms • Status: ${response.status}`;
+            respCode.innerHTML = `<button class="copy-abs" id="btn-copy-resp">Copy JSON</button>` + JSON.stringify(data, null, 2);
+            
+            document.getElementById('btn-copy-resp').onclick = () => {
+                navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                    document.getElementById('btn-copy-resp').textContent = 'Copied!';
+                    setTimeout(() => document.getElementById('btn-copy-resp').textContent = 'Copy JSON', 2000);
+                });
+            };
+
         } catch (e) {
             loading.classList.add('hidden');
-            respBox.style.display = 'block';
-            respBox.textContent = 'Error: ' + e.message;
+            respCode.style.display = 'block';
+            respCode.textContent = '// Client Error\n' + e.message;
         }
     });
 </script>
