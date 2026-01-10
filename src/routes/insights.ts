@@ -66,8 +66,10 @@ const getInsights = async (req: Request, res: Response) => {
     // 1. Check MongoDB (L2 Cache) - ~50-100ms
     // We treat our Mongo DB as a persistent cache of the Gov API.
     // Wrap in try-catch to ensure DB failure doesn't block API response
+    // Only attempt L2 if connection is strictly OPEN (1)
     try {
-        const dbQuery = { ...dynamicFilters, resource_id: resourceId };
+        if (require('mongoose').connection.readyState === 1) {
+            const dbQuery = { ...dynamicFilters, resource_id: resourceId };
         
         // We try to find enough records to satisfy the request
         const dbDocs = await model.find(dbQuery)
@@ -98,6 +100,8 @@ const getInsights = async (req: Request, res: Response) => {
                 cache.set(cacheKey, responsePayload);
                 return res.status(200).json(responsePayload);
             }
+        } else {
+            logger.warn('Mongoose not connected (readyState != 1). Skipping L2 Cache.');
         }
     } catch (dbErr) {
         logger.warn('L2 Cache (Mongo) skipped due to error or timeout', dbErr);
