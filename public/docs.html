@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIDAI API Documentation</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://uidai.sreecharandesu.in/docs">
+    <meta property="og:title" content="UIDAI API Documentation">
+    <meta property="og:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints.">
+    <meta property="og:image" content="https://uidai.sreecharandesu.in/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://uidai.sreecharandesu.in/docs">
+    <meta property="twitter:title" content="UIDAI API Documentation">
+    <meta property="twitter:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints.">
+    <meta property="twitter:image" content="https://uidai.sreecharandesu.in/og-image.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -171,7 +186,7 @@
         <h1>UIDAI API Docs</h1>
     </div>
     <div style="font-size: 0.9rem;">
-        Servers: <span style="font-family: monospace;">https://uidai.sreecharandesu.in/api</span>
+        Server: <span style="font-family: monospace;">https://uidai.sreecharandesu.in/api</span>
     </div>
 </header>
 
@@ -184,9 +199,9 @@
     <div class="section-title">Endpoints</div>
 
     <div class="endpoint">
-        <div class="endpoint-header" onclick="toggleEndpoint()">
+        <div class="endpoint-header" id="query-header">
             <div class="method">POST</div>
-            <div class="path">/insights/query</div>
+            <div class="path">/api/insights/query</div>
             <div style="color: var(--gray)">Fetch Aadhaar insights with caching</div>
         </div>
         
@@ -220,7 +235,7 @@
   }
 }</pre>
 
-            <button class="try-it-out" onclick="showTryIt()">Try it out</button>
+            <button class="try-it-out" id="btn-try">Try it out</button>
 
             <div id="try-it-form" class="hidden">
                 <div class="form-group">
@@ -235,7 +250,7 @@
   "limit": 5
 }</textarea>
                 </div>
-                <button class="try-it-out" style="background: var(--secondary)" onclick="executeApi()">Execute</button>
+                <button class="try-it-out" id="btn-execute" style="background: var(--secondary)">Execute</button>
                 
                 <div id="response-container">
                     <div class="section-title">Response</div>
@@ -247,7 +262,52 @@
     </div>
 </div>
 
-<script src="/docs.js"></script>
+<script>
+    // Embedded script to comply with CSP and avoid 404
+    document.getElementById('btn-try').addEventListener('click', () => {
+        document.getElementById('try-it-form').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-execute').addEventListener('click', async () => {
+        const apiKey = document.getElementById('api-key').value;
+        const bodyStr = document.getElementById('body').value;
+        const respBox = document.getElementById('response');
+        const loading = document.getElementById('loading');
+
+        if (!apiKey) {
+            alert('Please enter an API Key');
+            return;
+        }
+
+        loading.classList.remove('hidden');
+        respBox.style.display = 'none';
+
+        try {
+            const body = JSON.parse(bodyStr);
+            const start = performance.now();
+            
+            const response = await fetch('/api/insights/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                },
+                body: JSON.stringify(body)
+            });
+
+            const duration = (performance.now() - start).toFixed(2);
+            const data = await response.json();
+
+            loading.classList.add('hidden');
+            respBox.style.display = 'block';
+            respBox.textContent = `// Response Time: ${duration}ms\n// Status: ${response.status}\n\n` + JSON.stringify(data, null, 2);
+        } catch (e) {
+            loading.classList.add('hidden');
+            respBox.style.display = 'block';
+            respBox.textContent = 'Error: ' + e.message;
+        }
+    });
+</script>
 
 </body>
 </html>
