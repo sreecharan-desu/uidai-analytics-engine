@@ -42,7 +42,11 @@ const getInsights = async (req: Request, res: Response) => {
         return acc;
     }, {}));
 
-    const cacheKey = `insight:${dataset}:${page}:${limit}:${stableDynamicKey}`;
+    const selectFields = req.body.select && Array.isArray(req.body.select) 
+        ? [...req.body.select].sort().join(',') 
+        : 'all';
+
+    const cacheKey = `insight:${dataset}:${page}:${limit}:${selectFields}:${stableDynamicKey}`;
 
     // 1. Check Redis (L2 Cache)
     try {
