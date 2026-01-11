@@ -30,6 +30,9 @@ app.use(express.json());
 app.use('/api/insights', insightsRoutes);
 app.use('/api/datasets', datasetsRoutes);
 
+import analyticsRoutes from './routes/analytics';
+app.use('/api/analytics', analyticsRoutes);
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
