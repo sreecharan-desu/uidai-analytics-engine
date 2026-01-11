@@ -10,7 +10,8 @@
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "sync:latest": "ts-node sync_data.ts",
-    "deploy:data": "./publish_data.sh"
+    "deploy:data": "./publish_data.sh",
+    "sync:deploy": "npm run sync:latest && npm run deploy:data"
   },
   "repository": {
     "type": "git",
