@@ -55,6 +55,7 @@
             font-weight: 700;
             background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -287,7 +288,6 @@
         <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">JSON PAYLOAD</label>
         <textarea id="body" class="form-control" rows="10">{
   "dataset": "enrolment",
-  "select": ["state", "district", "age_0_5"],
   "limit": 5
 }</textarea>
 
@@ -318,13 +318,13 @@
   "limit": 1
 }'<button class="copy-abs" onclick="copySnippet('curl-1')">Copy</button></pre>
 
-            <label style="font-size: 0.8rem; font-weight: 700; margin-top: 1.5rem; display: block;">SELECTIVE FIELDS <span class="badge">OPTIMIZED</span></label>
+            <label style="font-size: 0.8rem; font-weight: 700; margin-top: 1.5rem; display: block;">FILTER BY DISTRICT <span class="badge">POWERFUL</span></label>
             <pre id="curl-2">curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
 -H "Content-Type: application/json" \
 -H "X-API-KEY: YOUR_KEY" \
 -d '{
   "dataset": "biometric",
-  "select": ["state", "bio_age_17_"],
+  "district": "Hyderabad",
   "limit": 1
 }'<button class="copy-abs" onclick="copySnippet('curl-2')">Copy</button></pre>
         </div>
@@ -333,9 +333,9 @@
 
 <script>
     const datasetConfigs = {
-        enrolment: { dataset: "enrolment", select: ["state", "district", "age_0_5"], limit: 5 },
-        demographic: { dataset: "demographic", select: ["state", "district", "demo_age_17_"], limit: 5 },
-        biometric: { dataset: "biometric", select: ["state", "district", "bio_age_17_"], limit: 5 }
+        enrolment: { dataset: "enrolment", limit: 5 },
+        demographic: { dataset: "demographic", limit: 5 },
+        biometric: { dataset: "biometric", limit: 5 }
     };
 
     function autoFill(type) {
