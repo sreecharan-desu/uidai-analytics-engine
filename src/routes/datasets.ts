@@ -35,6 +35,7 @@ router.get('/:dataset', (req, res) => {
   }
 
   if (!fs.existsSync(filePath)) {
+     console.error(`[API] File not found. Checked: ${filePath}`);
      res.status(404).json({ error: `File not found: ${fileName}` });
      return;
   }
