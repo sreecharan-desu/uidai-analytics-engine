@@ -6,7 +6,7 @@ This document provides direct download links for the synced UIDAI Aadhaar datase
 
 ---
 
-## 📂 Full Datasets (Aggregated)
+## Full Datasets (Aggregated)
 These files contain the complete history available in the system.
 
 | Dataset | Description | Download Link |
@@ -17,7 +17,7 @@ These files contain the complete history available in the system.
 
 ---
 
-## 📅 Year-wise Datasets (Split)
+## Year-wise Datasets (Split)
 Optimized smaller files split by calendar year.
 
 ### 2025 Data
@@ -36,7 +36,7 @@ Optimized smaller files split by calendar year.
 
 ---
 
-## 🛠 Usage
+## Usage
 You can download these files directly in your browser or use command line tools:
 
 **Using curl:**
