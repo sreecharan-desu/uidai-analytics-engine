@@ -116,7 +116,9 @@ const getInsights = async (req: Request, res: Response) => {
 
     // Normalize 'state' and 'district' filters to Title Case to improve hit rate
     const toTitleCase = (str: string) => {
-        return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        // Handle common variations like '&' -> 'and' before title casing
+        const normalized = str.toLowerCase().replace(/\s*&\s*/g, ' and ');
+        return normalized.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     };
 
     Object.keys(dynamicFilters).forEach((key: string) => {

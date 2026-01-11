@@ -246,33 +246,7 @@
         </p>
     </div>
 
-    <div class="section">
-        <h2>Datasets Explorer</h2>
-        <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 2rem;">Click a card to auto-fill the query builder below.</p>
-        <div class="dataset-grid">
-            <div class="dataset-card" onclick="autoFill('enrolment')">
-                <span class="dataset-name">Enrolment Data</span>
-                <p style="font-size: 0.85rem; color: var(--text-dim);">Historical and new Aadhaar registration counts.</p>
-                <div>
-                    <span class="field-tag">age_0_5</span><span class="field-tag">age_5_17</span><span class="field-tag">age_18_greater</span>
-                </div>
-            </div>
-            <div class="dataset-card" onclick="autoFill('demographic')">
-                <span class="dataset-name">Demographic Updates</span>
-                <p style="font-size: 0.85rem; color: var(--text-dim);">Address, date of birth, and identity modification stats.</p>
-                <div>
-                    <span class="field-tag">demo_age_5_17</span><span class="field-tag">demo_age_17_</span>
-                </div>
-            </div>
-            <div class="dataset-card" onclick="autoFill('biometric')">
-                <span class="dataset-name">Biometric Syncs</span>
-                <p style="font-size: 0.85rem; color: var(--text-dim);">Fingerprint and iris authentication/update records.</p>
-                <div>
-                    <span class="field-tag">bio_age_5_17</span><span class="field-tag">bio_age_17_</span>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <div class="section">
         <h2>Query Lab</h2>
@@ -303,45 +277,11 @@
         </div>
     </div>
 
-    <div class="section">
-        <h2>Quick Tutorials</h2>
-        <div style="margin-bottom: 3rem;">
-            <p style="color: var(--text-dim);">Get started instantly using the command line.</p>
-            
-            <label style="font-size: 0.8rem; font-weight: 700;">FETCH TELEANGANA ENROLMENTS</label>
-            <pre id="curl-1">curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
--H "Content-Type: application/json" \
--H "X-API-KEY: YOUR_KEY" \
--d '{
-  "dataset": "enrolment",
-  "filters": { "state": "Telangana" },
-  "limit": 1
-}'<button class="copy-abs" onclick="copySnippet('curl-1')">Copy</button></pre>
 
-            <label style="font-size: 0.8rem; font-weight: 700; margin-top: 1.5rem; display: block;">FILTER BY DISTRICT <span class="badge">POWERFUL</span></label>
-            <pre id="curl-2">curl -X POST https://uidai.sreecharandesu.in/api/insights/query \
--H "Content-Type: application/json" \
--H "X-API-KEY: YOUR_KEY" \
--d '{
-  "dataset": "biometric",
-  "district": "Hyderabad",
-  "limit": 1
-}'<button class="copy-abs" onclick="copySnippet('curl-2')">Copy</button></pre>
-        </div>
-    </div>
 </div>
 
 <script>
-    const datasetConfigs = {
-        enrolment: { dataset: "enrolment", limit: 5 },
-        demographic: { dataset: "demographic", limit: 5 },
-        biometric: { dataset: "biometric", limit: 5 }
-    };
 
-    function autoFill(type) {
-        document.getElementById('body').value = JSON.stringify(datasetConfigs[type], null, 2);
-        document.getElementById('body').focus();
-    }
 
     function copySnippet(id) {
         const text = document.getElementById(id).textContent.replace('Copy', '').trim();
