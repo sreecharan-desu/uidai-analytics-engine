@@ -185,7 +185,7 @@
 
         <h3>Configuration</h3>
         <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">AUTHORIZATION</label>
-        <input type="text" id="api-key" class="form-control" placeholder="61c1713c4960ac786a29873e..." style="margin-bottom: 2rem;">
+        <input type="text" id="api-key" class="form-control" placeholder="YOUR_API_KEY" style="margin-bottom: 2rem;">
 
         <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">JSON PAYLOAD</label>
         <textarea id="body" class="form-control" rows="10">{
@@ -203,6 +203,26 @@
             <div id="loading" class="hidden" style="color: var(--primary); margin: 1rem 0;">Processing on edge server...</div>
             <pre id="response-code"></pre>
         </div>
+    </div>
+
+    <div class="section">
+        <h2>Request Parameters</h2>
+        <p style="color: var(--text-dim); margin-bottom: 2rem;">Universal parameters accepted in the request body.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>dataset</td><td>String</td><td><b>Required</b>. One of <code>enrolment</code>, <code>biometric</code>, <code>demographic</code>.</td></tr>
+                <tr><td>limit</td><td>Number</td><td>Max records to fetch (Max: 1000, Default: 100).</td></tr>
+                <tr><td>page</td><td>Number</td><td>Pagination offset (Default: 1).</td></tr>
+                <tr><td>filters</td><td>Object</td><td>Key-value pairs for specific field matching (e.g., <code>{"state": "Delhi"}</code>).</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <div class="section">
