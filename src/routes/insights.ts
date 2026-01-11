@@ -38,7 +38,7 @@ const getInsights = async (req: Request, res: Response) => {
           break;
         case 'biometric':
           // Placeholder fields for biometric until notebook is shared
-          defaultSelect = ["date", "state", "district", "pincode"];
+          defaultSelect = ["date", "state", "district", "pincode", "bio_age_5_17", "bio_age_17_"];
           break;
         default:
           defaultSelect = [];
@@ -119,7 +119,7 @@ const getInsights = async (req: Request, res: Response) => {
         return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     };
 
-    Object.keys(dynamicFilters).forEach(key => {
+    Object.keys(dynamicFilters).forEach((key: string) => {
         let value = dynamicFilters[key];
         
         // Apply normalization for specific fields
