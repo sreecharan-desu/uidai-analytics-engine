@@ -1,75 +1,92 @@
-# UIDAI Daily Data Sync Service
+# UIDAI Data Sync
 
-A production-ready backend service to ingest monthly Aadhaar datasets from data.gov.in into MongoDB.
+**High-Performance Aadhaar Data Intelligence Pipeline**
 
-## Features
+A production-grade backend service designed to ingest, cache, and serve monthly Aadhaar datasets (Enrolment, Biometric, Demographic) from `data.gov.in`. It provides a high-speed Insights API, leveraging Redis for L2 caching and MongoDB for raw persistence.
 
-- **Automated Ingestion**: Fetches Enrolment, Demographic, and Biometric datasets via data.gov.in API.
-- **Raw Storage**: Stores data exactly as received in separate MongoDB collections.
-- **Idempotency**: Prevents duplicate records using content-based hashing.
-- **Serverless**: Deployed on Vercel as a Serverless Function.
-- **Scheduled**: GitHub Actions workflow for monthly triggers.
+---
 
-## Tech Stack
+## 🚀 Key Features
 
-- Node.js 18.x
-- Express.js + TypeScript
-- MongoDB (Atlas)
-- Vercel
+-   **Automated Ingestion**: Scheduled monthly sync of Enrolment, Demographic, and Biometric datasets via GitHub Actions.
+-   **Smart Caching**: Multi-level caching strategy using **Redis (Upstash)** for sub-millisecond API response times.
+-   **Idempotency**: Content-based hashing ensures zero duplicate records in the database.
+-   **Serverless**: Optimized for **Vercel** serverless functions with fast cold-starts.
+-   **Developer Experience**: Built-in Swagger-like API explorer and comprehensive documentation at `/docs`.
 
-## Setup
+## 🛠️ Tech Stack
 
-1. **Clone the repository**
-2. **Install dependencies**: `npm install`
-3. **Environment Setup**:
-   Copy `.env.example` to `.env` and fill in the details.
-   ```bash
-   cp .env.example .env
-   ```
-   Required variables:
-   - `DATA_GOV_API_KEY`: Your API key from data.gov.in
-   - `MONGODB_URI`: Connection string
-   - `CRON_SECRET`: Shared secret for securing the ingestion endpoint
+-   **Runtime**: Node.js 18.x (serverless-compatible)
+-   **Framework**: Express.js + TypeScript
+-   **Database**: MongoDB Atlas (Raw Data Storage)
+-   **Caching**: Upstash Redis (L2 Cache)
+-   **Deploy**: Vercel
 
-4. **Local Development**:
-   ```bash
-   npm run dev
-   ```
-   Server runs on `http://localhost:3000`.
+---
 
-## Deployment (Vercel)
+## ⚡ Quick Start
 
-1. **Push to GitHub**.
-2. **Import project in Vercel**.
-3. **Configure Environment Variables** in Vercel project settings matching your `.env`.
-4. **Deploy**.
+### 1. clone
+```bash
+git clone https://github.com/sreecharan-desu/uidai-data-sync.git
+cd uidai-data-sync
+```
 
-## Scheduled Ingestion
+### 2. Install
+```bash
+npm install
+```
 
-The ingestion is triggered automatically via GitHub Actions.
+### 3. Environment
+Copy `.env.example` to `.env` and configure:
+```bash
+cp .env.example .env
+```
+**Required Variables:**
+- `DATA_GOV_API_KEY`: API Key from OGD Platform.
+- `MONGODB_URI`: MongoDB Connection String.
+- `UPSTASH_REDIS_REST_URL`: Redis URL.
+- `UPSTASH_REDIS_REST_TOKEN`: Redis Token.
+- `CLIENT_API_KEY`: Secret key for accessing the Insights API.
 
+### 4. Run Locally
+```bash
+npm run dev
+```
+Explore the API at `http://localhost:3000/docs`.
+
+---
+
+## 📡 API Endpoints
+
+### Insights API
+**`POST /api/insights/query`**
+Query cached analysis data with rich filtering.
+
+```json
+// Request
+{
+  "dataset": "enrolment",
+  "filters": { "state": "Maharashtra" },
+  "limit": 10
+}
+```
+
+---
+
+## 🗓️ Scheduled Ingestion
+Triggered automatically on the **1st of every month** via GitHub Actions.
 - **Workflow**: `.github/workflows/monthly-ingestion.yml`
-- **Schedule**: 1st of every month at 20:30 UTC (~ 02:00 IST on 2nd).
-- **Secrets Required in GitHub**:
-  - `VERCEL_PROJECT_PRODUCTION_URL`: The full base URL of your deployed Vercel app (e.g., `https://your-project.vercel.app`).
-  - `CRON_SECRET`: Must match the one in Vercel env.
 
-## API Endpoints
+## 📂 Project Structure
+```
+src/
+├── controllers/   # Request handlers & validation
+├── services/      # Core logic, caching & external API calls
+├── models/        # Mongoose schemas
+├── utils/         # Helpers (Logger, Redis, Transform)
+└── routes/        # API Routes
+```
 
-### POST `/api/ingest/monthly`
-
-Triggers the ingestion process for all datasets.
-
-- **Headers**: `X-CRON-SECRET: <your_secret>`
-- **Response**: JSON with status of each dataset ingestion.
-
-## Directory Structure
-
-- `src/`: Source code
-  - `config/`: Env config
-  - `controllers/`: API logic
-  - `models/`: Mongoose models
-  - `services/`: Data fetch and ingestion logic
-  - `utils/`: Helpers (Logger, etc.)
-- `api/`: Vercel entry point
-- `.github/`: CI/CD workflows
+---
+**License**: ISC

@@ -1,7 +1,7 @@
 {
-  "name": "uidai-daily-data-sync",
+  "name": "uidai-data-sync",
   "version": "1.0.0",
-  "description": "Automated nightly pipeline to fetch, extract, and persist fresh UIDAI Aadhaar enrollment datasets for reliable downstream analysis.",
+  "description": "Automated pipeline to fetch, extract, and persist fresh UIDAI Aadhaar enrollment datasets for reliable downstream analysis.",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -12,16 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sreecharan-desu/uidai-daily-data-sync.git"
+    "url": "git+https://github.com/sreecharan-desu/uidai-data-sync.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/sreecharan-desu/uidai-daily-data-sync/issues"
+    "url": "https://github.com/sreecharan-desu/uidai-data-sync/issues"
   },
-  "homepage": "https://github.com/sreecharan-desu/uidai-daily-data-sync#readme",
+  "homepage": "https://github.com/sreecharan-desu/uidai-data-sync#readme",
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
