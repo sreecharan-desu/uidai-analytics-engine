@@ -287,6 +287,34 @@
             </tbody>
         </table>
     </div>
+    <div class="section" style="border-bottom: none;">
+        <h2>Example Requests</h2>
+        <p style="color: var(--text-dim); margin-bottom: 2rem;">Copy and paste these payloads into the Query Lab above.</p>
+
+        <h3>1. Enrolment (All Parameters)</h3>
+        <pre id="ex-1">{
+  "dataset": "enrolment",
+  "limit": 10,
+  "page": 1,
+  "filters": {
+    "state": "Maharashtra",
+    "district": "Pune"
+  }
+}<button class="copy-abs" onclick="copySnippet('ex-1')">Copy</button></pre>
+
+        <h3>2. Biometric Data (Simple)</h3>
+        <pre id="ex-2">{
+  "dataset": "biometric",
+  "limit": 5
+}<button class="copy-abs" onclick="copySnippet('ex-2')">Copy</button></pre>
+
+        <h3>3. Demographic Data by District</h3>
+        <pre id="ex-3">{
+  "dataset": "demographic",
+  "filters": { "district": "Bangalore" },
+  "limit": 5
+}<button class="copy-abs" onclick="copySnippet('ex-3')">Copy</button></pre>
+    </div>
 </div>
 
 <script>
