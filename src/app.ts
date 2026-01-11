@@ -9,16 +9,18 @@ import path from 'path';
 const app = express();
 
 // Security and Performance Middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'"],
-      "style-src": ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
-      "font-src": ["'self'", "fonts.gstatic.com"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com'],
+        'font-src': ["'self'", 'fonts.gstatic.com'],
+      },
     },
-  },
-}));
+  }),
+);
 app.use(cors());
 app.use(compression());
 app.use(express.json());
@@ -37,9 +39,9 @@ app.get('/docs', (req, res) => {
 // Root Landing Page - Simplest JSON
 app.get('/', (req, res) => {
   res.json({
-    status: "healthy",
-    message: "UIDAI Insights API",
-    docs: "https://uidai.sreecharandesu.in/docs"
+    status: 'healthy',
+    message: 'UIDAI Insights API',
+    docs: 'https://uidai.sreecharandesu.in/docs',
   });
 });
 

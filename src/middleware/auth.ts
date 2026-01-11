@@ -12,7 +12,7 @@ export const validateApiKey = (req: Request, res: Response, next: NextFunction) 
     logger.warn('Unauthorized API access attempt', {
       receivedHeader: !!apiKey,
       lengthMismatch: received.length !== expected.length,
-      match: apiKey === expected
+      match: apiKey === expected,
     });
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing API Key' });
   }

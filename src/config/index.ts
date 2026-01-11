@@ -1,12 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const requiredEnvVars = [
-  'DATA_GOV_API_KEY',
-  'CLIENT_API_KEY',
-  'UPSTASH_REDIS_REST_URL',
-  'UPSTASH_REDIS_REST_TOKEN'
-];
+const requiredEnvVars = ['DATA_GOV_API_KEY', 'CLIENT_API_KEY', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
 
 const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
 
