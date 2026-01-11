@@ -27,6 +27,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api/insights', insightsRoutes);
+import datasetsRoutes from './routes/datasets';
+app.use('/api/datasets', datasetsRoutes);
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));

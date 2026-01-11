@@ -299,6 +299,27 @@
     </div>
 
     <div class="section">
+        <h2>CSV Downloads</h2>
+        <p style="color: var(--text-dim); margin-bottom: 2rem;">Direct access to full and year-wise CSV datasets. Authenticated/Public access depending on configuration.</p>
+
+        <h3>1. Full Dataset</h3>
+        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Method: <code style="color: var(--primary);">GET</code></p>
+        <pre id="dl-full">https://uidai.sreecharandesu.in/api/datasets/{dataset_name}
+<!-- Example -->
+https://uidai.sreecharandesu.in/api/datasets/biometric<button class="copy-abs" onclick="copySnippet('dl-full')">Copy</button></pre>
+
+        <h3>2. Split Dataset (Year-wise)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Method: <code style="color: var(--primary);">GET</code></p>
+        <pre id="dl-split">https://uidai.sreecharandesu.in/api/datasets/{dataset_name}?year={YYYY}
+<!-- Example -->
+https://uidai.sreecharandesu.in/api/datasets/enrolment?year=2025<button class="copy-abs" onclick="copySnippet('dl-split')">Copy</button></pre>
+
+        <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dim);">
+            <strong>Supported Datasets:</strong> <code style="color: var(--primary);">biometric</code>, <code style="color: var(--primary);">enrolment</code>, <code style="color: var(--primary);">demographic</code>
+        </p>
+    </div>
+
+    <div class="section">
         <h2>Dataset Reference</h2>
         <p style="color: var(--text-dim); margin-bottom: 2rem;">Overview of available datasets and their fields.</p>
 
