@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.ts",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
-    "sync:latest": "ts-node sync_data.ts"
+    "sync:latest": "ts-node sync_data.ts",
+    "deploy:data": "./publish_data.sh"
   },
   "repository": {
     "type": "git",
