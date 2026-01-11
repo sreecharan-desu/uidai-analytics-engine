@@ -3,6 +3,7 @@ import { config } from './src/config';
 import fs from 'fs';
 import readline from 'readline';
 import { splitByYear } from './split_by_year';
+import path from 'path';
 
 async function syncDataset(datasetName: string, resourceId: string, filename: string) {
   const apiUrl = `https://api.data.gov.in/resource/${resourceId}`;
@@ -154,10 +155,13 @@ async function syncDataset(datasetName: string, resourceId: string, filename: st
 }
 
 async function runSync() {
+    const publicDir = path.join(process.cwd(), 'public', 'datasets');
+    if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+
     const datasets = [
-        { name: 'enrolment', id: config.resources.enrolment, file: 'enrolment_full.csv' },
-        { name: 'demographic', id: config.resources.demographic, file: 'demographic_full.csv' },
-        { name: 'biometric', id: config.resources.biometric, file: 'biometric_full.csv' }
+        { name: 'enrolment', id: config.resources.enrolment, file: path.join(publicDir, 'enrolment_full.csv') },
+        { name: 'demographic', id: config.resources.demographic, file: path.join(publicDir, 'demographic_full.csv') },
+        { name: 'biometric', id: config.resources.biometric, file: path.join(publicDir, 'biometric_full.csv') }
     ];
 
     for (const ds of datasets) {

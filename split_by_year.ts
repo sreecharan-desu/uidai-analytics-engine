@@ -3,10 +3,11 @@ import readline from 'readline';
 import path from 'path';
 
 export async function splitByYear() {
+  const publicDir = path.join(process.cwd(), 'public', 'datasets');
   const files = [
-    'enrolment_full.csv',
-    'demographic_full.csv',
-    'biometric_full.csv'
+    path.join(publicDir, 'enrolment_full.csv'),
+    path.join(publicDir, 'demographic_full.csv'),
+    path.join(publicDir, 'biometric_full.csv')
   ];
 
   for (const filename of files) {
@@ -17,8 +18,9 @@ export async function splitByYear() {
 
     console.log(`\nProcessing ${filename}...`);
     
-    const baseName = filename.replace('_full.csv', '');
-    const outputDir = path.join(process.cwd(), 'split_data');
+    // BaseName needs to strip the directory path
+    const baseName = path.basename(filename).replace('_full.csv', '');
+    const outputDir = path.join(publicDir, 'split_data');
     
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });

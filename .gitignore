@@ -6,6 +6,15 @@ coverage
 .vercel
 .env*.local
 
-# Data files
+# Ignore all CSVs by default to avoid large file errors
 *.csv
+public/datasets/*.csv
+public/datasets/split_data/*.csv
 split_data/
+
+# Allow Enrolment Data (Small enough)
+!public/datasets/enrolment_full.csv
+!public/datasets/split_data/enrolment_*.csv
+
+# Allow 2026 Data (Small enough)
+!public/datasets/split_data/*_2026.csv
