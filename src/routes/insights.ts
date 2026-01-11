@@ -25,6 +25,26 @@ const getInsights = async (req: Request, res: Response) => {
     limit = Math.min(Math.max(parseInt(limit.toString()) || 100, 1), 1000);
     page = Math.max(parseInt(page.toString()) || 1, 1);
 
+    // Hardcoded fields per dataset as requested by the notebook
+    let defaultSelect: string[] = [];
+    if (dataset) {
+      switch (dataset.toLowerCase()) {
+        case 'enrolment':
+          defaultSelect = ["date", "state", "district", "pincode", "age_0_5", "age_5_17", "age_18_greater"];
+          break;
+        case 'demographic':
+          // Placeholder fields for demographic until notebook is shared
+          defaultSelect = ["date", "state", "district", "pincode"]; 
+          break;
+        case 'biometric':
+          // Placeholder fields for biometric until notebook is shared
+          defaultSelect = ["date", "state", "district", "pincode"];
+          break;
+        default:
+          defaultSelect = [];
+      }
+    }
+
     // Construct Cache Key based on inputs (including filters)
     // We sort keys to ensure stable cache key
     const filterKey = JSON.stringify(Object.keys(filters).sort().reduce((acc: any, key) => {
@@ -33,7 +53,8 @@ const getInsights = async (req: Request, res: Response) => {
     }, {}));
     
     // Also include top level dynamic filters from body
-    const reservedKeys = ['dataset', 'limit', 'page', 'filters', 'select'];
+    // 'select' is no longer a reserved key for user input, as we ignore it
+    const reservedKeys = ['dataset', 'limit', 'page', 'filters']; 
     const dynamicFilters: any = { ...filters };
     Object.keys(req.body).forEach(key => {
         if (!reservedKeys.includes(key)) {
@@ -46,11 +67,10 @@ const getInsights = async (req: Request, res: Response) => {
         return acc;
     }, {}));
 
-    const selectFields = req.body.select && Array.isArray(req.body.select) 
-        ? [...req.body.select].sort().join(',') 
-        : 'all';
+    // Use our internal defaultSelect for caching
+    const selectFieldsId = defaultSelect.length > 0 ? defaultSelect.sort().join(',') : 'all';
 
-    const cacheKey = `insight:${dataset}:${page}:${limit}:${selectFields}:${stableDynamicKey}`;
+    const cacheKey = `insight:${dataset}:${page}:${limit}:${selectFieldsId}:${stableDynamicKey}`;
 
     // 1. Check Redis (L2 Cache)
     try {
@@ -109,14 +129,16 @@ const getInsights = async (req: Request, res: Response) => {
 
     const fields = data.field ? data.field.map((f: any) => f.id) : [];
     
-    // Apply field selection if provided
+    // Apply INTERNAL field selection
     let records = data.records;
-    if (req.body.select && Array.isArray(req.body.select)) {
+    if (defaultSelect.length > 0) {
         records = records.map((record: any) => {
             const filtered: any = {};
-            req.body.select.forEach((f: string) => {
+            defaultSelect.forEach((f: string) => {
                 if (record[f] !== undefined) filtered[f] = record[f];
             });
+            // If the record has none of the selected fields, return it as is or empty? 
+            // Usually we want to return the subset.
             return filtered;
         });
     }
