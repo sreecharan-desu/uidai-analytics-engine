@@ -6,7 +6,7 @@ A production-grade backend service designed to ingest, cache, and serve monthly 
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 -   **Automated Ingestion**: Scheduled monthly sync of Enrolment, Demographic, and Biometric datasets via GitHub Actions.
 -   **Smart Caching**: Multi-level caching strategy using **Redis (Upstash)** for sub-millisecond API response times.
@@ -14,7 +14,7 @@ A production-grade backend service designed to ingest, cache, and serve monthly 
 -   **Serverless**: Optimized for **Vercel** serverless functions with fast cold-starts.
 -   **Developer Experience**: Built-in Swagger-like API explorer and comprehensive documentation at `/docs`.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 -   **Runtime**: Node.js 18.x (serverless-compatible)
 -   **Framework**: Express.js + TypeScript
@@ -24,7 +24,7 @@ A production-grade backend service designed to ingest, cache, and serve monthly 
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. clone
 ```bash
@@ -57,7 +57,7 @@ Explore the API at `http://localhost:3000/docs`.
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Insights API
 **`POST /api/insights/query`**
@@ -74,11 +74,11 @@ Query cached analysis data with rich filtering.
 
 ---
 
-## 🗓️ Scheduled Ingestion
+## Scheduled Ingestion
 Triggered automatically on the **1st of every month** via GitHub Actions.
 - **Workflow**: `.github/workflows/monthly-ingestion.yml`
 
-## 📂 Project Structure
+## Project Structure
 ```
 src/
 ├── controllers/   # Request handlers & validation
