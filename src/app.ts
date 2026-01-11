@@ -5,6 +5,7 @@ import compression from 'compression';
 import insightsRoutes from './routes/insights';
 import logger from './utils/logger';
 import path from 'path';
+import datasetsRoutes from './routes/datasets';
 
 const app = express();
 
@@ -27,7 +28,6 @@ app.use(express.json());
 
 // Routes
 app.use('/api/insights', insightsRoutes);
-import datasetsRoutes from './routes/datasets';
 app.use('/api/datasets', datasetsRoutes);
 
 // Serve static files from public directory
