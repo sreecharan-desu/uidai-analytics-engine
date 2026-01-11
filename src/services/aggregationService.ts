@@ -62,23 +62,19 @@ const normalizeState = (raw: string) => {
     return STATE_STANDARD_MAP[clean] || raw; // Fallback to raw if not found
 };
 
-const getDataPath = (dataset: string) => path.join(process.cwd(), 'public', 'datasets', `${dataset}_full.csv`);
-
 interface AggregationResult {
     total_updates: number;
     by_state: Record<string, number>;
     by_age_group: Record<string, number>;
+    by_month: Record<string, number>; // Added for Trend Analysis
 }
 
-// NOTE: This runs in-memory. For massive datasets, consider streaming or a DB.
-// Since we have ~100MB files, node can handle this in memory (with ~1GB heap).
 export const getAggregateInsights = async (dataset: string, year?: string): Promise<AggregationResult> => {
-    const cacheKey = `agg_v1:${dataset}:${year || 'all'}`;
+    const cacheKey = `agg_v2:${dataset}:${year || 'all'}`; // Bump version to v2
     const cached = await redis.get(cacheKey);
     if (cached) return cached as AggregationResult;
 
     const fileName = year ? `${dataset}_${year}.csv` : `${dataset}_full.csv`;
-    // Look in split_data if year is provided, else root datasets
     const subdir = year ? 'split_data' : '';
     const filePath = path.join(process.cwd(), 'public', 'datasets', subdir, fileName);
 
@@ -92,23 +88,38 @@ export const getAggregateInsights = async (dataset: string, year?: string): Prom
         const result: AggregationResult = {
             total_updates: 0,
             by_state: {},
-            by_age_group: {}
+            by_age_group: {},
+            by_month: {}
         };
 
-        Papa.parse(fs.createReadStream(filePath), {
+        const stream = fs.createReadStream(filePath);
+
+        Papa.parse(stream, {
             header: true,
-            worker: false, // Node standard stream
+            worker: false,
             step: (results) => {
                 const row: any = results.data;
-                // row keys depends on dataset. 
-                // Biometric: bio_age_5_17, bio_age_17_
-                // Enrolment: age_0_5, age_5_17, age_18_greater
-                // Demographic: demo_age_5_17, demo_age_17_
-
                 if (!row.state) return;
 
                 const state = normalizeState(row.state);
                 
+                // Parse Month (Assuming date format DD-MM-YYYY or YYYY-MM-DD)
+                let month = 'Unknown';
+                if (row.date) {
+                    // Try to parse month manually for speed
+                    const parts = row.date.split(/[-/]/); 
+                    if (parts.length === 3) {
+                         // Heuristic: If first part > 12, it's YYYY-MM-DD. If middle <= 12, it's month.
+                         // Standard data.gov.in format is usually DD-MM-YYYY
+                         if (parts[2].length === 4) { // DD-MM-YYYY
+                             month = parts[1];
+                         } else if (parts[0].length === 4) { // YYYY-MM-DD
+                             month = parts[1];
+                         }
+                    }
+                    // Map numeric month to Name (01 -> Jan) if needed, or keep 01
+                }
+
                 let count = 0;
                 let ageCounts: Record<string, number> = {};
 
@@ -145,9 +156,13 @@ export const getAggregateInsights = async (dataset: string, year?: string): Prom
                 Object.keys(ageCounts).forEach(g => {
                    result.by_age_group[g] = (result.by_age_group[g] || 0) + ageCounts[g];
                 });
+
+                // Month Aggregation
+                if (month !== 'Unknown') {
+                    result.by_month[month] = (result.by_month[month] || 0) + count;
+                }
             },
             complete: () => {
-                // Cache result for 24 hours
                 redis.set(cacheKey, result, { ex: 86400 }).catch(err => logger.error("Redis set error", err));
                 resolve(result);
             },
