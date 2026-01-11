@@ -114,8 +114,22 @@ const getInsights = async (req: Request, res: Response) => {
       offset: offset,
     };
 
+    // Normalize 'state' and 'district' filters to Title Case to improve hit rate
+    const toTitleCase = (str: string) => {
+        return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    };
+
     Object.keys(dynamicFilters).forEach(key => {
-        apiParams[`filters[${key}]`] = dynamicFilters[key];
+        let value = dynamicFilters[key];
+        
+        // Apply normalization for specific fields
+        if (key.toLowerCase() === 'state' || key.toLowerCase() === 'district') {
+            if (typeof value === 'string') {
+                value = toTitleCase(value);
+            }
+        }
+        
+        apiParams[`filters[${key}]`] = value;
     });
 
     logger.info(`Fetching from Data.gov.in: ${dataset}`, { apiParams });
