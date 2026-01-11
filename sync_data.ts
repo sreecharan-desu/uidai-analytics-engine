@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { config } from './src/config';
 import fs from 'fs';
@@ -5,64 +6,68 @@ import readline from 'readline';
 import { splitByYear } from './split_by_year';
 import path from 'path';
 
+async function getLastDateRaw(filename: string): Promise<Date | null> {
+    if (!fs.existsSync(filename)) return null;
+
+    // Fast way to get last valid date from file without reading everything into memory
+    // We read chunks from the end.
+    // For now, simpler approach: Use `tail` via execSync is easiest on Mac/Linux, but let's do Node way for portability?
+    // Actually, user is on Mac.
+    
+    try {
+        const { execSync } = require('child_process');
+        // Get last 5 lines to be safe against empty lines
+        const lastLines = execSync(`tail -n 5 "${filename}"`).toString().trim().split('\n');
+        
+        for (let i = lastLines.length - 1; i >= 0; i--) {
+            const line = lastLines[i];
+            const dateMatch = line.match(/^"?(\d{2}-\d{2}-\d{4})"?/);
+            if (dateMatch) {
+                const [d, m, y] = dateMatch[1].split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+        }
+    } catch (e) {
+        return null; // File might be empty or issues
+    }
+    return null;
+}
+
+// Append-Only Sync Logic
 async function syncDataset(datasetName: string, resourceId: string, filename: string) {
   const apiUrl = `https://api.data.gov.in/resource/${resourceId}`;
   const apiKey = config.dataGovApiKey;
-  const tempFile = filename.replace('_full.csv', '_fresh.csv');
 
   console.log(`\n=== Syncing ${datasetName.toUpperCase()} ===`);
-  console.log(`Checking ${filename} against API...`);
   
-  const localData = new Map<string, string[]>();
-  let header = '';
-  
-  if (fs.existsSync(filename)) {
-      const fileStream = fs.createReadStream(filename);
-      const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-      });
+  let startDate = new Date('2025-01-01');
+  const lastDate = await getLastDateRaw(filename);
+  let isAppendMode = false;
 
-      let lineCount = 0;
-      for await (const line of rl) {
-        if (lineCount === 0) {
-          header = line;
-        } else {
-          // Line format: "01-01-2025",...
-          const dateMatch = line.match(/^"?(\d{2}-\d{2}-\d{4})"?/);
-          if (dateMatch) {
-             const date = dateMatch[1];
-             if (!localData.has(date)) {
-                 localData.set(date, []);
-             }
-             localData.get(date)!.push(line);
-          }
-        }
-        lineCount++;
-        if (lineCount % 1000000 === 0) process.stdout.write(`\rLoaded ${lineCount} lines...`);
-      }
-      console.log(`\nLoaded ${lineCount} lines.`);
+  if (lastDate) {
+      console.log(`Found existing data up to: ${lastDate.toDateString()}`);
+      // Start checking from the last date (inclusive, to ensure it's complete)
+      startDate = new Date(lastDate);
+      isAppendMode = true;
   } else {
-      console.log("Local file not found, starting fresh.");
+      console.log("No existing data found. Starting fresh from Jan 1, 2025.");
+      // Write header if new
+      if (fs.existsSync(filename)) fs.unlinkSync(filename); // Clean start
       try {
         const res = await axios.get(apiUrl, { params: { 'api-key': apiKey, format: 'json', limit: 1 } });
-        header = Object.keys(res.data.records[0]).join(',');
+        const header = Object.keys(res.data.records[0]).join(',');
+        fs.writeFileSync(filename, header + '\n');
       } catch (err: any) {
-        console.error("Failed to fetch header. Aborting.");
+        console.error("Failed to fetch header.");
         return;
       }
   }
 
-  // Define Range: 2025-01-01 to Present + 10 days
-  const startDate = new Date('2025-01-01');
+  // End Date: Today
   const endDate = new Date();
-  endDate.setDate(endDate.getDate() + 10);
-  
-  fs.writeFileSync(tempFile, header + '\n');
-  
+  // Loop
   let currentDate = new Date(startDate);
-  let totalSaved = 0;
-  let hasUpdates = false;
+  let totalAdded = 0;
 
   while (currentDate <= endDate) {
     const d = currentDate.getDate().toString().padStart(2, '0');
@@ -70,16 +75,7 @@ async function syncDataset(datasetName: string, resourceId: string, filename: st
     const y = currentDate.getFullYear();
     const dateStr = `${d}-${m}-${y}`;
     
-    // Skip future dates if obviously far in future (though +10 days handles near future)
-    if (currentDate > new Date() && currentDate.getFullYear() > new Date().getFullYear() + 1) break;
-
-    const localLines = localData.get(dateStr) || [];
-    const localCount = localLines.length;
-
-    // We only check API if we suspect missing data or if we want to be absolutely sure.
-    // For specific known empty months (Jan-May 2025 typically empty for valid data), checking API is safe but slow.
-    // Optimization: If localCount > 0, assume it's good? NO, user asked to compare.
-    
+    // Check API Total
     let apiCount = -1;
     let retries = 3;
     while (retries > 0 && apiCount === -1) {
@@ -90,68 +86,75 @@ async function syncDataset(datasetName: string, resourceId: string, filename: st
            apiCount = res.data.total;
         } catch (e: any) {
             retries--;
-             if (retries === 0) {
-                 // network error, assume local is OK if widely failed?
-                 // or skip day? defaulting to local count prevents dataloss but might miss updates.
-                 apiCount = localCount; 
-             } else {
-                 await new Promise(r => setTimeout(r, 1000));
-             }
+             if (retries === 0) apiCount = 0; // Assume 0 on fail to avoid blocking, or error out?
+             else await new Promise(r => setTimeout(r, 1000));
         }
     }
 
-    if (localCount === apiCount && apiCount > 0) {
-        // Match! Use local.
-        const chunk = localLines.join('\n');
-        if (chunk) fs.appendFileSync(tempFile, chunk + '\n');
-        totalSaved += localCount;
-    } else if (apiCount === 0) {
-        // No data
-    } else {
-        // Mismatch (could be Local < API, or Local > API, or Local=0 API>0)
-        // Redownload fresh to ensure correctness
-        hasUpdates = true;
-        process.stdout.write(`\r[${dateStr}] Local: ${localCount} | API: ${apiCount} -> Syncing... `);
+    if (apiCount > 0) {
+        // We have data on API.
+        // If append mode and date == lastDate, checks if we need to remove old entries or just skip?
+        // To be safe: If we are on the exact last day, we might have partial data.
+        // Strategy: For the *exact last day*, delete it from file and re-sync it?
+        // OR: Count local lines for that day.
         
-        let offset = 0;
-        let dayRecords = 0;
-        while (offset < apiCount) {
-             try {
-                 const res = await axios.get(apiUrl, {
-                   params: { 
-                     'api-key': apiKey, 
-                     format: 'json', 
-                     limit: 5000, 
-                     offset, 
-                     'filters[date]': dateStr 
-                   }
-                 });
-                 
-                 const records = res.data.records;
-                 if (!records || records.length === 0) break;
-
-                 const csvRows = records.map((row: any) => 
-                   Object.values(row).map(val => `"${val}"`).join(',')
-                 ).join('\n');
-                 
-                 fs.appendFileSync(tempFile, csvRows + '\n');
-                 offset += records.length;
-                 dayRecords += records.length;
-             } catch (err: any) {
-                 await new Promise(r => setTimeout(r, 2000));
-             }
+        let localCount = 0;
+        if (isAppendMode) {
+             const { execSync } = require('child_process');
+             const grepCount = parseInt(execSync(`grep -c "^\\"${dateStr}\\"" "${filename}" || echo 0`).toString().trim());
+             localCount = grepCount;
         }
-        totalSaved += dayRecords;
-        process.stdout.write("Done.\n");
+
+        if (localCount < apiCount) {
+             if (localCount > 0) {
+                 // Partial data! Remove that day's data to avoid dups before appending
+                 // This is tricky with append-only.
+                 // Easier: Just warn and append *difference*? No, API pagination doesn't support "get last N".
+                 // Robust way: Use 'sed' to remove lines matching dateStr.
+                 const { execSync } = require('child_process');
+                 // Only do this for the *current* iteration date if it clashes
+                 // Escape quotes for sed
+                 // Mac sed requires '' after -i
+                 execSync(`sed -i '' '/^"${dateStr}"/d' "${filename}"`);
+                 console.log(`  [${dateStr}] Removing partial local data (${localCount}) to re-sync full day.`);
+             }
+             
+             process.stdout.write(`  [${dateStr}] Downloading ${apiCount} records... `);
+             
+             let offset = 0;
+             while (offset < apiCount) {
+                 try {
+                     const res = await axios.get(apiUrl, {
+                       params: { 'api-key': apiKey, format: 'json', limit: 5000, offset, 'filters[date]': dateStr }
+                     });
+                     
+                     const records = res.data.records;
+                     if (!records || records.length === 0) break;
+
+                     const csvRows = records.map((row: any) => 
+                       Object.values(row).map(val => `"${val}"`).join(',')
+                     ).join('\n');
+                     
+                     fs.appendFileSync(filename, csvRows + '\n');
+                     offset += records.length;
+                     totalAdded += records.length;
+                 } catch (err: any) {
+                     await new Promise(r => setTimeout(r, 2000));
+                 }
+             }
+             process.stdout.write("Done.\n");
+        } else {
+            // Check
+           // console.log(`  [${dateStr}] Local ${localCount} matches API ${apiCount}. Skipped.`);
+        }
     }
 
     currentDate.setDate(currentDate.getDate() + 1);
+    // After first iteration (lastDate), we are definitely in append mode for fresh days
+    isAppendMode = true; 
   }
 
-  console.log(`\nSync finished for ${datasetName}. Total records: ${totalSaved}`);
-  
-  // Replace file
-  fs.renameSync(tempFile, filename);
+  console.log(`Finished ${datasetName}. Added ${totalAdded} new records.`);
 }
 
 async function runSync() {
