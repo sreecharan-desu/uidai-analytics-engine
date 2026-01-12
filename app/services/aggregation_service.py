@@ -4,6 +4,7 @@ import csv
 import re
 import httpx
 import tempfile
+import asyncio
 from app.utils.logger import get_logger
 from app.utils.redis_client import redis_client
 from app.utils.state_data import STATE_STANDARD_MAP, VALID_STATES, LOWER_CASE_VALID_STATES
@@ -66,9 +67,28 @@ def normalize_district(raw):
     s = re.sub(r'\s+', ' ', s).strip()
     return s.title() 
 
+# Request Coalescing Map
+_inflight_requests = {}
+
 async def get_aggregate_insights(dataset: str, year: str = 'all'):
     cache_key = f"agg_v7:{dataset}:{year or 'all'}"
     
+    # Check In-flight
+    if cache_key in _inflight_requests:
+        return await _inflight_requests[cache_key]
+        
+    # Start new task
+    task = asyncio.create_task(_get_aggregate_insights_logic(dataset, year, cache_key))
+    _inflight_requests[cache_key] = task
+    
+    try:
+        data = await task
+        return data
+    finally:
+        # cleanup
+        _inflight_requests.pop(cache_key, None)
+
+async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str):
     # L1
     if cache_key in memory_cache:
         return memory_cache[cache_key]
@@ -108,14 +128,11 @@ async def get_aggregate_insights(dataset: str, year: str = 'all'):
             process_path = temp_file.name
             is_temp = True
             
-            async with httpx.AsyncClient(follow_redirects=True) as client:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=60.0) as client:
                 async with client.stream("GET", url) as response:
                     if response.status_code != 200:
                         raise ValueError(f"Failed to download dataset. Status: {response.status_code}")
                     
-                    # Write chunks to temp file
-                    # Note: synchronous write in async loop is blocking but acceptable for /tmp writing 
-                    # compared to complex async csv parsing
                     async for chunk in response.aiter_bytes():
                         temp_file.write(chunk)
             temp_file.close()
@@ -214,8 +231,11 @@ async def get_aggregate_insights(dataset: str, year: str = 'all'):
                     s_mon[month] = s_mon.get(month, 0) + count
         
         # Save to Cache
-        await redis_client.set(cache_key, json.dumps(result), ex=86400)
-        memory_cache[cache_key] = result
+        try:
+             await redis_client.set(cache_key, json.dumps(result), ex=86400)
+             memory_cache[cache_key] = result
+        except Exception as e:
+             logger.warning(f"Failed to set cache: {e}")
         
         # Cleanup Temp
         if is_temp and os.path.exists(process_path):
@@ -232,7 +252,6 @@ async def get_aggregate_insights(dataset: str, year: str = 'all'):
 async def prewarm_cache():
     logger.info("🔥 Pre-warming Analytics Cache...")
     datasets = ['enrolment', 'biometric', 'demographic']
-    import asyncio
     try:
         await asyncio.gather(*[get_aggregate_insights(ds, '2025') for ds in datasets])
         logger.info("✅ Cache Pre-warmed Successfully!")
