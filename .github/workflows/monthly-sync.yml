@@ -1,0 +1,37 @@
+name: Monthly UIDAI Data Sync
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # 1st of every month at midnight
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas requests python-dotenv
+
+      - name: Run Sync Script
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: python scripts/sync_data.py
+
+      - name: Upload to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create release if it doesn't exist, or update existing 'dataset-latest'
+          # We use the 'dataset-latest' tag as the rolling release
+          gh release upload dataset-latest public/datasets/*.csv public/datasets/split_data/*.csv --clobber || \
+          (gh release create dataset-latest public/datasets/*.csv public/datasets/split_data/*.csv --title "Dataset Latest" --notes "Automated monthly update from Data.gov.in")
