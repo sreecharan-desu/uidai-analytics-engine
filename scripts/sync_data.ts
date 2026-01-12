@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { config } from './src/config';
+import { config } from '../src/config';
 import fs from 'fs';
 import readline from 'readline';
 import { splitByYear } from './split_by_year';

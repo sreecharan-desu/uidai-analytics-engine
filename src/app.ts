@@ -15,9 +15,10 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        'script-src': ["'self'", "'unsafe-inline'"],
+        'script-src': ["'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com'],
         'style-src': ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com'],
         'font-src': ["'self'", 'fonts.gstatic.com'],
+        'img-src': ["'self'", 'data:', 'https:'],
       },
     },
   }),
