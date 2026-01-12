@@ -5,6 +5,7 @@ dist
 coverage
 .vercel
 .env*.local
+venv
 
 # Ignore all CSVs by default to avoid large file errors
 *.csv
