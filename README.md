@@ -105,6 +105,14 @@ This project is optimized for **Vercel**.
    ```
    *Vercel will automatically detect `api/index.py` and `vercel.json` configuration.*
 
-**Note on Serverless Limits**:
-- **Timeout**: Functions are configured with a **60s** timeout (MAX for Pro plan is higher, but 60s is safe default).
-- **Memory**: Standard 1024MB is sufficient due to streaming CSV logic.
+---
+
+## Automated Data Sync
+
+The project is configured to stay up-to-date with **Data.gov.in** automatically.
+
+- **Sync Script**: `scripts/sync_data.py` pulls the latest records, normalizes them using the Pincode-State map, and generates fresh CSVs.
+- **Monthly Sync (Cron)**: A GitHub Action (`.github/workflows/monthly-sync.yml`) runs on the **1st of every month**. It updates the `dataset-latest` release with the newest data.
+- **Manual Trigger**: You can trigger the sync manually from the **Actions** tab in GitHub.
+
+**Note**: Ensure `DATA_GOV_API_KEY` is added as a **GitHub Secret** in your repository settings.
