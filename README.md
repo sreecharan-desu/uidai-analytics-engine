@@ -1,92 +1,110 @@
-# UIDAI Data Sync
+# UIDAI Ecosystem Analytics API
 
-**High-Performance Aadhaar Data Intelligence Pipeline**
+A high-performance, serverless API for visualizing Aadhaar ecosystem metadata (Enrolment, Biometric Updates, Demographic Updates). Built with **Python FastAPI** and **Vercel Serverless Functions**.
 
-A production-grade backend service designed to ingest, cache, and serve monthly Aadhaar datasets (Enrolment, Biometric, Demographic) from `data.gov.in`. It provides a high-speed Insights API, leveraging Redis for L2 caching and MongoDB for raw persistence.
+## Overview
+
+This API aggregates millions of rows of open government data to provide real-time insights into the UIDAI ecosystem. It mirrors the official breakdown but adds granular slicing capabilities (State, District, Age Group, Monthly Trends) that are not easily accessible via raw CSVs.
+
+### Key Features
+- **High Performance**: Uses Upstash Redis (L2) and In-Memory caching (L1) for sub-millisecond response times.
+- **Granular Slicing**: Filter data by State, District, Dataset Type, and Year.
+- **Smart Recovery**: Automatically recovers valid State data from messy raw inputs using a Pincode fallback map.
+- **Streaming Export**: Supports CSV export for integration with Looker Studio or PowerBI.
 
 ---
-
-## Key Features
-
--   **Automated Ingestion**: Scheduled monthly sync of Enrolment, Demographic, and Biometric datasets via GitHub Actions.
--   **Smart Caching**: Multi-level caching strategy using **Redis (Upstash)** for sub-millisecond API response times.
--   **Idempotency**: Content-based hashing ensures zero duplicate records in the database.
--   **Serverless**: Optimized for **Vercel** serverless functions with fast cold-starts.
--   **Developer Experience**: Built-in Swagger-like API explorer and comprehensive documentation at `/docs`.
 
 ## Tech Stack
 
--   **Runtime**: Node.js 18.x (serverless-compatible)
--   **Framework**: Express.js + TypeScript
--   **Database**: MongoDB Atlas (Raw Data Storage)
--   **Caching**: Upstash Redis (L2 Cache)
--   **Deploy**: Vercel
-
----
-
-## Quick Start
-
-### 1. clone
-```bash
-git clone https://github.com/sreecharan-desu/uidai-data-sync.git
-cd uidai-data-sync
-```
-
-### 2. Install
-```bash
-npm install
-```
-
-### 3. Environment
-Copy `.env.example` to `.env` and configure:
-```bash
-cp .env.example .env
-```
-**Required Variables:**
-- `DATA_GOV_API_KEY`: API Key from OGD Platform.
-- `MONGODB_URI`: MongoDB Connection String.
-- `UPSTASH_REDIS_REST_URL`: Redis URL.
-- `UPSTASH_REDIS_REST_TOKEN`: Redis Token.
-- `CLIENT_API_KEY`: Secret key for accessing the Insights API.
-
-### 4. Run Locally
-```bash
-npm run dev
-```
-Explore the API at `http://localhost:3000/docs`.
+- **Runtime**: Python 3.11 (Vercel Serverless)
+- **Framework**: FastAPI (Async)
+- **Data Processing**: Native CSV Streaming (Memory Optimized)
+- **Caching**: Upstash Redis (Serverless-friendly HTTP client)
+- **Frontend**: Clean HTML5 Dashboard (Served statically)
 
 ---
 
 ## API Endpoints
 
-### Insights API
-**`POST /api/insights/query`**
-Query cached analysis data with rich filtering.
+### 1. Analytics (Public)
+Get aggregated metrics for dashboards.
+```http
+GET /api/analytics/{dataset}?year=2025
+```
+- **Methods**: `GET`
+- **Params**: 
+  - `dataset`: `enrolment` | `biometric` | `demographic`
+  - `year`: `2025` or `all`
+  - `format`: `json` (default) or `csv`
+  - `view`: `state` | `age` (for CSV export)
 
-```json
-// Request
-{
-  "dataset": "enrolment",
-  "filters": { "state": "Maharashtra" },
-  "limit": 10
-}
+### 2. Insights Query (Protected)
+Flexible query interface for raw record retrieval.
+```http
+POST /api/insights/query
+Headers: x-api-key: <CLIENT_API_KEY>
+```
+- **Body**: `{ "dataset": "biometric", "filters": {"state": "Goa"}, "limit": 50 }`
+
+### 3. Dataset Download (Public)
+Redirects to the formatted CSV file hosted on GitHub Releases.
+```http
+GET /api/datasets/{dataset}?year=2025
 ```
 
 ---
 
-## Scheduled Ingestion
-Triggered automatically on the **1st of every month** via GitHub Actions.
-- **Workflow**: `.github/workflows/monthly-ingestion.yml`
+## Environment Variables
 
-## Project Structure
-```
-src/
-├── controllers/   # Request handlers & validation
-├── services/      # Core logic, caching & external API calls
-├── models/        # Mongoose schemas
-├── utils/         # Helpers (Logger, Redis, Transform)
-└── routes/        # API Routes
-```
+Required for local development and deployment:
+
+| Variable | Description |
+|----------|-------------|
+| `DATA_GOV_API_KEY` | API Key for Open Govt Data Platform (OGD) |
+| `CLIENT_API_KEY` | Secret key for protecting internal query endpoints |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST Token |
+| `NODE_ENV` | `development` or `production` |
 
 ---
-**License**: ISC
+
+## Local Development
+
+1. **Clone & Setup**
+   ```bash
+   git clone <repo_url>
+   cd uidai-data-sync
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Environment**
+   Create a `.env` file with the variables listed above.
+
+3. **Run Server**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   Access Dashboard: `http://localhost:8000/dashboard`
+
+---
+
+## Deployment
+
+This project is optimized for **Vercel**.
+
+1. **Install Vercel CLI**
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Deploy**
+   ```bash
+   vercel
+   ```
+   *Vercel will automatically detect `api/index.py` and `vercel.json` configuration.*
+
+**Note on Serverless Limits**:
+- **Timeout**: Functions are configured with a **60s** timeout (MAX for Pro plan is higher, but 60s is safe default).
+- **Memory**: Standard 1024MB is sufficient due to streaming CSV logic.

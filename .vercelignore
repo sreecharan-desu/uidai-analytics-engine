@@ -1,0 +1,7 @@
+public/datasets/**/*.csv
+public/datasets/**/*.zip
+.git
+.DS_Store
+notebooks
+scripts
+src

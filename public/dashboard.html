@@ -134,7 +134,7 @@
         .kpi-row { display: contents; }
         
         /* KPI Cards */
-        .kpi-card { position: relative; overflow: hidden; }
+        .kpi-card { position: relative; overflow: hidden; cursor: pointer; transition: opacity 0.2s ease; }
         .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }
         .kpi-sub { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem; }
         .trend-up { color: var(--success); font-weight: 600; font-size: 0.75rem; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
@@ -318,6 +318,7 @@
                 biometric: null,
                 demographic: null
             },
+            filterDataset: 'combined', // 'combined', 'enrolment', 'biometric', 'demographic'
             combined: null
         };
 
@@ -415,9 +416,92 @@
             STATE.combined = combined;
         }
 
+        // --- DATA VIEW LOGIC ---
+        function getViewData(filterState) {
+            // Refactored: Always use dynamic aggregation to support Dataset Filtering
+            // (Even for 'all' India, we might need to filter by 'demographic' only)
+
+
+            // Case 2: Dynamic Aggregation (Handles State & Dataset Filter)
+            const view = {
+                total: 0,
+                by_state: {}, 
+                by_month: {},
+                by_age_group: {},
+                by_dataset: {
+                    enrolment: 0,
+                    biometric: 0,
+                    demographic: 0
+                }
+            };
+            
+            // Helper to merge state specific stats
+            const mergeStats = (datasetKey, sourceData) => {
+                // strict dataset filter
+                if (STATE.filterDataset !== 'combined' && STATE.filterDataset !== datasetKey) return;
+
+                let stData = null;
+                let dsTotal = 0;
+
+                if (filterState === 'all') {
+                     // Use global aggregates from sourceData
+                     stData = {
+                         by_month: sourceData.by_month,
+                         by_age_group: sourceData.by_age_group
+                     };
+                     dsTotal = sourceData.total_updates;
+
+                     // Merge State Breakdown for Matrix
+                     Object.entries(sourceData.by_state).forEach(([s, v]) => {
+                         view.by_state[s] = (view.by_state[s] || 0) + v;
+                     });
+                     
+                } else {
+                    // Specific State
+                    if (!sourceData || !sourceData.state_breakdown) return;
+                    stData = sourceData.state_breakdown[filterState];
+                    if (!stData) return; 
+
+                    dsTotal = sourceData.by_state[filterState] || 0;
+                    view.by_state[filterState] = (view.by_state[filterState] || 0) + dsTotal; // Single entry
+                }
+
+                // 1. Total for this dataset
+                view.by_dataset[datasetKey] = dsTotal;
+                view.total += dsTotal;
+
+                // 2. Month Merge
+                if(stData.by_month) {
+                    Object.entries(stData.by_month).forEach(([m, val]) => {
+                        if(!view.by_month[m]) {
+                             view.by_month[m] = { total: 0, enrolment: 0, biometric: 0, demographic: 0 };
+                        }
+                        view.by_month[m][datasetKey] = val;
+                        view.by_month[m].total += val;
+                    });
+                }
+
+                 // 3. Age Merge
+                if(stData.by_age_group) {
+                    Object.entries(stData.by_age_group).forEach(([age, val]) => {
+                        view.by_age_group[age] = (view.by_age_group[age] || 0) + val;
+                    });
+                }
+            };
+
+            mergeStats('enrolment', STATE.data.enrolment);
+            mergeStats('biometric', STATE.data.biometric);
+            mergeStats('demographic', STATE.data.demographic);
+
+            return view;
+        }
+
         // --- UI UPDATES ---
-        function updateUI() {
-            const data = STATE.combined;
+        function updateUI(data) {
+            if(!data) {
+                // Initial Load fallback
+                data = STATE.combined;
+            }
             if(!data) return;
 
             // 1. KPIs
@@ -427,12 +511,12 @@
             animateValue('kpiDemo', data.by_dataset.demographic);
 
             // 2. Charts
-            renderTrendChart();
-            renderMixChart();
-            renderAgeChart();
+            renderTrendChart(data);
+            renderMixChart(data);
+            renderAgeChart(data);
             
-            // 3. Matrix & District
-            renderMatrix();
+            // 3. Matrix & District (Pass data to matrix!)
+            renderMatrix(data);
             renderDistrictList();
         }
 
@@ -444,20 +528,20 @@
 
         // --- CHARTS ---
         let trendChart = null;
-        function renderTrendChart() {
+        function renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
             if (trendChart) trendChart.destroy();
 
             // Prepare Data
-            const months = Object.keys(STATE.combined.by_month).sort((a,b) => parseInt(a) - parseInt(b));
+            const months = Object.keys(data.by_month).sort((a,b) => parseInt(a) - parseInt(b));
             const monthNames = months.map(m => {
                  const d = new Date(); d.setMonth(parseInt(m)-1);
                  return d.toLocaleString('default', { month: 'short' });
             });
             
-            const dBio = months.map(m => STATE.combined.by_month[m].biometric);
-            const dEnrol = months.map(m => STATE.combined.by_month[m].enrolment);
-            const dDemo = months.map(m => STATE.combined.by_month[m].demographic);
+            const dBio = months.map(m => data.by_month[m].biometric || 0);
+            const dEnrol = months.map(m => data.by_month[m].enrolment || 0);
+            const dDemo = months.map(m => data.by_month[m].demographic || 0);
 
             trendChart = new Chart(ctx, {
                 type: 'bar',
@@ -485,7 +569,7 @@
         }
 
         let mixChart = null;
-        function renderMixChart() {
+        function renderMixChart(data) {
             const ctx = document.getElementById('mixChart').getContext('2d');
             if (mixChart) mixChart.destroy();
 
@@ -495,9 +579,9 @@
                     labels: ['Enrolment', 'Biometric', 'Demographic'],
                     datasets: [{
                         data: [
-                            STATE.combined.by_dataset.enrolment,
-                            STATE.combined.by_dataset.biometric,
-                            STATE.combined.by_dataset.demographic
+                            data.by_dataset.enrolment,
+                            data.by_dataset.biometric,
+                            data.by_dataset.demographic
                         ],
                         backgroundColor: [COLORS.enrol, COLORS.bio, COLORS.demo],
                         borderWidth: 0
@@ -515,19 +599,14 @@
         }
         
         let ageChart = null;
-        function renderAgeChart() {
+        function renderAgeChart(data) {
             // Aggregate ages logic
              const ctx = document.getElementById('ageChart').getContext('2d');
             if (ageChart) ageChart.destroy();
             
             // Simple aggregation of all datasets by age
-            // Note: Keys might differ? '0-5', '5-17', '18+' are standard now.
             const ageKeys = ['0-5', '5-17', '18+'];
-            const totals = ageKeys.map(k => {
-                return (STATE.data.enrolment.by_age_group[k]||0) + 
-                       (STATE.data.biometric.by_age_group[k]||0) + 
-                       (STATE.data.demographic.by_age_group[k]||0);
-            });
+            const totals = ageKeys.map(k => data.by_age_group[k] || 0);
 
             ageChart = new Chart(ctx, {
                 type: 'bar',
@@ -552,19 +631,19 @@
         }
 
         // --- MATRIX & LIST UTILS ---
-        function renderMatrix() {
+        function renderMatrix(data) {
             const tbody = document.getElementById('matrixBody');
             tbody.innerHTML = '';
             
-            // Sort states by total volume
-            const entries = Object.entries(STATE.combined.by_state).sort((a,b) => b[1] - a[1]);
-            const maxVal = entries[0][1];
+            // Sort states by total volume in current VIEW DATA
+            const entries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
+            const maxVal = entries[0] ? entries[0][1] : 0;
 
             entries.forEach(([st, val]) => {
                 const tr = document.createElement('tr');
                 tr.onclick = () => filterByState(st);
                 
-                const percent = (val / maxVal) * 100;
+                const percent = maxVal ? (val / maxVal) * 100 : 0;
                 
                 tr.innerHTML = `
                     <td>${st}</td>
@@ -608,7 +687,10 @@
 
             // Merge Districts for this state from all 3 datasets
             const dMap = {};
-            const addToMap = (dsData) => {
+            const addToMap = (datasetKey, dsData) => {
+                // Strict Dataset Filter
+                if (STATE.filterDataset !== 'combined' && STATE.filterDataset !== datasetKey) return;
+
                 if(dsData.by_district && dsData.by_district[targetState]) {
                     Object.entries(dsData.by_district[targetState]).forEach(([dName, val]) => {
                         dMap[dName] = (dMap[dName]||0) + val;
@@ -616,9 +698,9 @@
                 }
             };
             
-            addToMap(STATE.data.enrolment);
-            addToMap(STATE.data.biometric);
-            addToMap(STATE.data.demographic);
+            addToMap('enrolment', STATE.data.enrolment);
+            addToMap('biometric', STATE.data.biometric);
+            addToMap('demographic', STATE.data.demographic);
             
             const sorted = Object.entries(dMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
             
@@ -641,16 +723,42 @@
         function filterByState(st) {
             STATE.filterState = st;
             document.getElementById('stateSelect').value = st;
-            renderDistrictList();
-            renderMatrix(); // re-render to highlight
-            // Note: In a real PBI, dragging/clicking would filter charts too. 
-            // For now, we update the District list as the "Drill Down" action.
-            // Charts remain "All India" contexts in this version unless we want to filter them too.
-            // Let's filter charts for "Trends" if user wants? 
-            // Complexity warning: We need state-level monthly data, which our API MIGHT NOT send in `by_month`.
-            // Our API only sends `by_month` as global aggregation. 
-            // Limitation: Current API doesn't support "Get Monthly Trend FOR State X".
-            // So charts stay global (Context: "All India Ecosystem"). District list drills down.
+            
+            // 1. Get Context Data
+            const viewData = getViewData(st);
+            
+            // 2. Update Charts & KPIs
+            updateUI(viewData);
+        }
+
+        function filterByDataset(type) {
+            // Toggle off if same clicked
+            if (STATE.filterDataset === type) STATE.filterDataset = 'combined';
+            else STATE.filterDataset = type;
+
+            // Visual Update for KPIs
+            ['enrolment', 'biometric', 'demographic'].forEach(k => {
+                 // Reset styles (assuming kpiEnrol, kpiBio etc are IDs but clicks are on card, let's just use CSS classes)
+                 // Or simple opacity
+            });
+            const kpiIds = {
+                enrolment: 'kpiEnrol',
+                biometric: 'kpiBio',
+                demographic: 'kpiDemo'
+            };
+            
+            // Hardcoded Logic for quick visual feedback
+            const card1 = document.getElementById('kpiEnrol').parentElement;
+            const card2 = document.getElementById('kpiBio').parentElement;
+            const card3 = document.getElementById('kpiDemo').parentElement;
+            
+            card1.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment') ? '1' : '0.4';
+            card2.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric') ? '1' : '0.4';
+            card3.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic') ? '1' : '0.4';
+            
+            // Refresh
+            const viewData = getViewData(STATE.filterState);
+            updateUI(viewData);
         }
 
         document.getElementById('yearSelect').addEventListener('change', (e) => {
@@ -678,6 +786,11 @@
             });
         }
 
+        // --- LISTENERS ---
+        document.getElementById('kpiEnrol').parentElement.onclick = () => filterByDataset('enrolment');
+        document.getElementById('kpiBio').parentElement.onclick = () => filterByDataset('biometric');
+        document.getElementById('kpiDemo').parentElement.onclick = () => filterByDataset('demographic');
+        
         // Init
         initFullscreenHandlers();
         fetchAllData();
