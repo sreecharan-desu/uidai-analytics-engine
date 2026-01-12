@@ -733,29 +733,47 @@
 
         function filterByDataset(type) {
             // Toggle off if same clicked
+            const prevFilter = STATE.filterDataset;
             if (STATE.filterDataset === type) STATE.filterDataset = 'combined';
             else STATE.filterDataset = type;
 
             // Visual Update for KPIs
-            ['enrolment', 'biometric', 'demographic'].forEach(k => {
-                 // Reset styles (assuming kpiEnrol, kpiBio etc are IDs but clicks are on card, let's just use CSS classes)
-                 // Or simple opacity
-            });
-            const kpiIds = {
-                enrolment: 'kpiEnrol',
-                biometric: 'kpiBio',
-                demographic: 'kpiDemo'
+            const hero = document.querySelector('.area-hero');
+            const heroTitle = hero.querySelector('h1');
+            const heroLabel = hero.querySelector('.hero-stat div');
+            
+            // Define Theme colors for Hero
+            const themes = {
+                combined: { bg: 'linear-gradient(135deg, #4f46e5, #8b5cf6)', title: 'UIDAI Ecosystem Intelligence', label: 'TOTAL ECOSYSTEM TRANSACTIONS' },
+                enrolment: { bg: 'var(--c-enrol)', title: 'New Enrolment Intelligence', label: 'TOTAL NEW ENROLMENTS' },
+                biometric: { bg: 'var(--c-bio)', title: 'Biometric Update Analytics', label: 'TOTAL BIOMETRIC UPDATES' },
+                demographic: { bg: 'var(--c-demo)', title: 'Demographic Correction Hub', label: 'TOTAL DEMOGRAPHIC UPDATES' }
             };
+
+            const theme = themes[STATE.filterDataset];
+            hero.style.background = theme.bg;
+            heroTitle.innerText = theme.title;
+            heroLabel.innerText = theme.label;
+
+            // Opacity for cards
+            const cardEnrol = document.getElementById('kpiEnrol').parentElement;
+            const cardBio = document.getElementById('kpiBio').parentElement;
+            const cardDemo = document.getElementById('kpiDemo').parentElement;
             
-            // Hardcoded Logic for quick visual feedback
-            const card1 = document.getElementById('kpiEnrol').parentElement;
-            const card2 = document.getElementById('kpiBio').parentElement;
-            const card3 = document.getElementById('kpiDemo').parentElement;
+            const activeOpacity = '1';
+            const inactiveOpacity = '0.4';
+
+            cardEnrol.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment') ? activeOpacity : inactiveOpacity;
+            cardBio.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric') ? activeOpacity : inactiveOpacity;
+            cardDemo.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic') ? activeOpacity : inactiveOpacity;
             
-            card1.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment') ? '1' : '0.4';
-            card2.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric') ? '1' : '0.4';
-            card3.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic') ? '1' : '0.4';
-            
+            // Highlight active card border/shadow
+            [cardEnrol, cardBio, cardDemo].forEach(c => c.style.boxShadow = 'var(--shadow)');
+            if (STATE.filterDataset !== 'combined') {
+                const activeCard = document.getElementById(STATE.filterDataset === 'enrolment' ? 'kpiEnrol' : (STATE.filterDataset === 'biometric' ? 'kpiBio' : 'kpiDemo')).parentElement;
+                activeCard.style.boxShadow = `0 0 0 3px ${theme.bg === 'var(--c-enrol)' ? '#10b98144' : (theme.bg === 'var(--c-bio)' ? '#8b5cf644' : '#f59e0b44')}`;
+            }
+
             // Refresh
             const viewData = getViewData(STATE.filterState);
             updateUI(viewData);
