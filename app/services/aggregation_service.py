@@ -116,7 +116,7 @@ async def get_aggregate_insights(dataset: str, year: str = 'all'):
                     # Write chunks to temp file
                     # Note: synchronous write in async loop is blocking but acceptable for /tmp writing 
                     # compared to complex async csv parsing
-                    for chunk in response.iter_bytes():
+                    async for chunk in response.aiter_bytes():
                         temp_file.write(chunk)
             temp_file.close()
             logger.info(f"Downloaded to {process_path}")
