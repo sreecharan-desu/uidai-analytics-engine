@@ -71,23 +71,32 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
     
     all_new_records = []
     
-    # Initial request to get current total
     try:
+        # Initial request to get current total and first batch
         resp = requests.get(base_url, params=params, timeout=30)
         if resp.status_code != 200:
-            print(f"Error checking status: {resp.status_code}")
+            print(f"Error checking status for {dataset_name}: {resp.status_code}")
             return []
         
         data = resp.json()
-        current_total = int(data.get("total", 0))
+        if data.get("status") != "ok":
+            print(f"API returned error for {dataset_name}: {data.get('message')}")
+            return []
+
+        current_total = data.get("total")
+        if current_total is None:
+            print(f"Warning: API did not return total count for {dataset_name}. Skipping.")
+            return []
+            
+        current_total = int(current_total)
         
         if start_offset >= current_total:
             print(f"Dataset {dataset_name} is already up to date ({start_offset}/{current_total}).")
             return []
             
-        print(f"Syncing {current_total - start_offset} new records for {dataset_name} (Total: {current_total})...")
+        print(f"Syncing {dataset_name} ({resource_id})...")
+        print(f"Found {current_total - start_offset} new records (Total: {current_total}).")
         
-        # We already have the first batch from the status check
         records = data.get("records", [])
         all_new_records.extend(records)
         offset = start_offset + len(records)
@@ -95,7 +104,9 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
         while offset < current_total:
             params["offset"] = offset
             resp = requests.get(base_url, params=params, timeout=30)
-            if resp.status_code != 200: break
+            if resp.status_code != 200:
+                print(f"\nBatch fetch failed at offset {offset}")
+                break
             
             data = resp.json()
             records = data.get("records", [])
@@ -104,8 +115,6 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
             all_new_records.extend(records)
             offset += len(records)
             print(f"Progress: {offset}/{current_total} fetched...", end="\r")
-            
-            if os.getenv("TEST_MODE") == "true": break
 
     except Exception as e:
         print(f"Incremental fetch failed: {e}")
