@@ -25,7 +25,14 @@ class Settings:
         if not self.UPSTASH_REDIS_REST_TOKEN: missing.append("UPSTASH_REDIS_REST_TOKEN")
         
         if missing:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+            # On Vercel, if env vars are missing, we don't want to crash the whole function init 
+            # because it prevents debugging. We'll verify at runtime usage instead.
+            import logging
+            print(f"WARNING: Missing env vars: {', '.join(missing)}")
+            # raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
 
 config = Settings()
-config.validate()
+try:
+    config.validate()
+except Exception as e:
+    print(f"Config Validation Failed: {e}")
