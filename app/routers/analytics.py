@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Response, HTTPException
+from fastapi.responses import JSONResponse
 from app.services.aggregation_service import get_aggregate_insights
 from app.utils.logger import get_logger
 from datetime import datetime
@@ -37,12 +38,20 @@ async def get_analytics(dataset: str, year: str = None, format: str = None, view
             }
             return Response(content=output.getvalue(), media_type="text/csv", headers=headers)
             
-        return {
-            "dataset": dataset,
-            "year": year or 'all',
-            "generated_at": datetime.now().isoformat(),
-            "data": data
+        headers = {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600",
+            "X-Generated-At": datetime.now().isoformat()
         }
+        
+        return JSONResponse(
+            content={
+                "dataset": dataset,
+                "year": year or 'all',
+                "generated_at": datetime.now().isoformat(),
+                "data": data
+            },
+            headers=headers
+        )
         
     except ValueError as e:
         # e.g. Dataset file not found

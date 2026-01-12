@@ -143,93 +143,102 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
                 os.remove(process_path)
             raise ValueError(f"Download failed: {str(e)}")
 
-    logger.info(f"Processing aggregation for {file_name}...")
-    
-    result = {
-        "total_updates": 0,
-        "by_state": {},
-        "by_district": {},
-        "by_age_group": {},
-        "by_month": {},
-        "state_breakdown": {}
-    }
-    
+    logger.info(f"Processing high-performance aggregation for {file_name}...")
+    import pandas as pd
+    import numpy as np
+
     try:
-        with open(process_path, mode='r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            
-            for row in reader:
-                state_raw = row.get('state')
-                pincode = row.get('pincode')
-                
-                state = normalize_state(state_raw, pincode)
-                if not state:
-                    continue
-                    
-                district = normalize_district(row.get('district') or 'Unknown')
-                
-                date_str = row.get('date', '')
-                month = 'Unknown'
-                if date_str:
-                    parts = re.split(r'[-/]', date_str)
-                    if len(parts) == 3:
-                        if len(parts[2]) == 4: # dd-mm-yyyy
-                            month = parts[1]
-                        elif len(parts[0]) == 4: # yyyy-mm-dd
-                            month = parts[1]
-                            
-                count = 0
-                age_counts = {}
-                
-                if dataset == 'biometric':
-                    c1 = int(row.get('bio_age_5_17') or 0)
-                    c2 = int(row.get('bio_age_17_') or 0)
-                    count = c1 + c2
-                    age_counts['5-17'] = c1
-                    age_counts['18+'] = c2
-                elif dataset == 'enrolment':
-                    c1 = int(row.get('age_0_5') or 0)
-                    c2 = int(row.get('age_5_17') or 0)
-                    c3 = int(row.get('age_18_greater') or 0)
-                    count = c1 + c2 + c3
-                    age_counts['0-5'] = c1
-                    age_counts['5-17'] = c2
-                    age_counts['18+'] = c3
-                elif dataset == 'demographic':
-                    c1 = int(row.get('demo_age_5_17') or 0)
-                    c2 = int(row.get('demo_age_17_') or 0)
-                    count = c1 + c2
-                    age_counts['5-17'] = c1
-                    age_counts['18+'] = c2
-                    
-                if count == 0:
-                    continue
-                    
-                result['total_updates'] += count
-                
-                # By State
-                result['by_state'][state] = result['by_state'].get(state, 0) + count
-                
-                if state not in result['state_breakdown']:
-                    result['state_breakdown'][state] = {"by_age_group": {}, "by_month": {}}
-                
-                # By District
-                if state not in result['by_district']:
-                    result['by_district'][state] = {}
-                result['by_district'][state][district] = result['by_district'][state].get(district, 0) + count
-                
-                # By Age
-                for g, c in age_counts.items():
-                    result['by_age_group'][g] = result['by_age_group'].get(g, 0) + c
-                    s_age = result['state_breakdown'][state]['by_age_group']
-                    s_age[g] = s_age.get(g, 0) + c
-                    
-                # By Month
-                if month != 'Unknown':
-                    result['by_month'][month] = result['by_month'].get(month, 0) + count
-                    s_mon = result['state_breakdown'][state]['by_month']
-                    s_mon[month] = s_mon.get(month, 0) + count
+        # Load CSV efficiently
+        df = pd.read_csv(process_path, low_memory=False)
         
+        # 1. Normalize State vectorized
+        # Convert state and pincode to strings for mapping
+        df['state'] = df['state'].astype(str).str.lower().str.strip()
+        df['pincode'] = df['pincode'].astype(str).str.split('.').str[0] 
+        
+        # Basic state normalization via map
+        # Note: We still use the standard map for consistent naming
+        state_map_lower = {k.lower(): v for k, v in STATE_STANDARD_MAP.items()}
+        df['norm_state'] = df['state'].map(state_map_lower)
+        
+        # Pincode fallback for missing states
+        missing_mask = df['norm_state'].isna()
+        if missing_mask.any():
+            df.loc[missing_mask, 'norm_state'] = df.loc[missing_mask, 'pincode'].map(PINCODE_MAP)
+        
+        # Drop rows where state is still unknown or not in valid list
+        valid_set = set(VALID_STATES)
+        df = df[df['norm_state'].isin(valid_set)]
+        
+        if df.empty:
+            return result # Empty fallback
+
+        # 2. Extract Month from Date
+        df['date'] = df['date'].astype(str)
+        # Handle various formats: yyyy-mm-dd or dd-mm-yyyy
+        # Extract the middle part or first part depending on length
+        def extract_month(d):
+            parts = re.split(r'[-/]', d)
+            if len(parts) == 3:
+                return parts[1] # Usually month is middle in both standard formats
+            return 'Unknown'
+            
+        df['month'] = df['date'].apply(extract_month)
+
+        # 3. Calculate Counts based on dataset
+        if dataset == 'biometric':
+            df['count_5_17'] = pd.to_numeric(df['bio_age_5_17'], errors='coerce').fillna(0)
+            df['count_18plus'] = pd.to_numeric(df['bio_age_17_'], errors='coerce').fillna(0)
+            df['total'] = df['count_5_17'] + df['count_18plus']
+            age_groups = {'5-17': 'count_5_17', '18+': 'count_18plus'}
+        elif dataset == 'enrolment':
+            df['count_0_5'] = pd.to_numeric(df['age_0_5'], errors='coerce').fillna(0)
+            df['count_5_17'] = pd.to_numeric(df['age_5_17'], errors='coerce').fillna(0)
+            df['count_18plus'] = pd.to_numeric(df['age_18_greater'], errors='coerce').fillna(0)
+            df['total'] = df['count_0_5'] + df['count_5_17'] + df['count_18plus']
+            age_groups = {'0-5': 'count_0_5', '5-17': 'count_5_17', '18+': 'count_18plus'}
+        elif dataset == 'demographic':
+            df['count_5_17'] = pd.to_numeric(df['demo_age_5_17'], errors='coerce').fillna(0)
+            df['count_18plus'] = pd.to_numeric(df['demo_age_17_'], errors='coerce').fillna(0)
+            df['total'] = df['count_5_17'] + df['count_18plus']
+            age_groups = {'5-17': 'count_5_17', '18+': 'count_18plus'}
+        
+        # 4. Global Aggregates
+        result['total_updates'] = int(df['total'].sum())
+        
+        # By State
+        state_totals = df.groupby('norm_state')['total'].sum().to_dict()
+        result['by_state'] = {k: int(v) for k, v in state_totals.items()}
+        
+        # By Age Group (Global)
+        for label, col in age_groups.items():
+            result['by_age_group'][label] = int(df[col].sum())
+            
+        # By Month (Global)
+        month_totals = df[df['month'] != 'Unknown'].groupby('month')['total'].sum().to_dict()
+        result['by_month'] = {str(k): int(v) for k, v in month_totals.items()}
+        
+        # 5. By District (Per State)
+        df['district'] = df['district'].astype(str).str.replace('*', '').str.strip().str.title()
+        dist_agg = df.groupby(['norm_state', 'district'])['total'].sum().reset_index()
+        for idx, row in dist_agg.iterrows():
+            st, dst, val = row['norm_state'], row['district'], row['total']
+            if st not in result['by_district']: result['by_district'][st] = {}
+            result['by_district'][st][dst] = int(val)
+            
+        # 6. Detailed State Breakdown
+        # This is more complex but can be done efficiently
+        for label, col in age_groups.items():
+            s_age = df.groupby('norm_state')[col].sum().to_dict()
+            for st, val in s_age.items():
+                if st not in result['state_breakdown']: result['state_breakdown'][st] = {"by_age_group": {}, "by_month": {}}
+                result['state_breakdown'][st]['by_age_group'][label] = int(val)
+                
+        month_breakdown = df[df['month'] != 'Unknown'].groupby(['norm_state', 'month'])['total'].sum().reset_index()
+        for idx, row in month_breakdown.iterrows():
+            st, mon, val = row['norm_state'], row['month'], row['total']
+            result['state_breakdown'][st]['by_month'][str(mon)] = int(val)
+
         # Save to Cache
         try:
              await redis_client.set(cache_key, json.dumps(result), ex=86400)
@@ -244,7 +253,7 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
         return result
         
     except Exception as e:
-        logger.error(f"Error processing CSV: {e}")
+        logger.error(f"Error processing CSV with Pandas: {e}")
         if is_temp and os.path.exists(process_path):
             os.remove(process_path)
         raise ValueError(f"Processing failed: {str(e)}")
