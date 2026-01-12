@@ -9,7 +9,7 @@
     "dev": "nodemon src/server.ts",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
-    "sync:latest": "ts-node sync_data.ts",
+    "sync:latest": "ts-node scripts/sync_data.ts",
     "deploy:data": "./publish_data.sh",
     "sync:deploy": "npm run sync:latest && npm run deploy:data"
   },
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/sreecharan-desu/uidai-data-sync#readme",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/mongoose": "^5.11.96",
@@ -38,7 +39,8 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0"
   },
   "dependencies": {
     "@types/compression": "^1.8.1",

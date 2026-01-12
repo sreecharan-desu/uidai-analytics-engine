@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIDAI Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: radial-gradient(circle at top right, #1e293b 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-weight: 600; font-size: 2rem; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        select {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-big {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        .metric-label { color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Aadhaar Analytics</h1>
+        <div class="controls">
+            <select id="datasetSelect">
+                <option value="biometric">Biometric Updates</option>
+                <option value="enrolment">New Enrolments</option>
+                <option value="demographic">Demographic Updates</option>
+            </select>
+            <select id="yearSelect">
+                <option value="2025">2025</option>
+                <option value="all">All Time</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <div class="metric-label">Total Records</div>
+            <div class="metric-big" id="totalCount">-</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Top State</div>
+            <div class="metric-big" id="topState" style="font-size: 1.8rem;">-</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-label" style="margin-bottom: 1rem;">State-wise Distribution</div>
+        <div class="chart-container">
+            <canvas id="stateChart"></canvas>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="metric-label" style="margin-bottom: 1rem;">Age Group Breakdown</div>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+        <!-- Placeholder for Monthly Trends if available -->
+        <div class="card">
+            <div class="metric-label" style="margin-bottom: 1rem;">Monthly Trend</div>
+             <div class="chart-container" style="height: 300px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stateChartInst = null;
+    let ageChartInst = null;
+    let trendChartInst = null;
+
+    const datasetSelect = document.getElementById('datasetSelect');
+    const yearSelect = document.getElementById('yearSelect');
+
+    async function fetchData() {
+        const dataset = datasetSelect.value;
+        const year = yearSelect.value;
+        
+        document.getElementById('totalCount').innerText = 'Loading...';
+        
+        try {
+            const res = await fetch(`/api/analytics/${dataset}?year=${year}`);
+            const json = await res.json();
+            
+            if (json.data) {
+                updateUI(json.data);
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('totalCount').innerText = 'Error';
+        }
+    }
+
+    function updateUI(data) {
+        // 1. Metrics
+        document.getElementById('totalCount').innerText = data.total_updates.toLocaleString();
+        
+        // Find top state
+        const entries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
+        if (entries.length > 0) {
+            document.getElementById('topState').innerText = entries[0][0];
+        }
+
+        // 2. State Chart (Bar)
+        // Take top 15 states for readability
+        const top15 = entries.slice(0, 15);
+        
+        const ctxState = document.getElementById('stateChart').getContext('2d');
+        if (stateChartInst) stateChartInst.destroy();
+        
+        stateChartInst = new Chart(ctxState, {
+            type: 'bar',
+            data: {
+                labels: top15.map(e => e[0]),
+                datasets: [{
+                    label: 'Count',
+                    data: top15.map(e => e[1]),
+                    backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                    borderColor: '#38bdf8',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 3. Age Chart (Doughnut)
+        const ageEntries = Object.entries(data.by_age_group);
+        const ctxAge = document.getElementById('ageChart').getContext('2d');
+        if (ageChartInst) ageChartInst.destroy();
+
+        ageChartInst = new Chart(ctxAge, {
+            type: 'doughnut',
+            data: {
+                labels: ageEntries.map(e => e[0]),
+                datasets: [{
+                    data: ageEntries.map(e => e[1]),
+                    backgroundColor: [
+                        '#38bdf8', '#818cf8', '#c084fc', '#f472b6'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#e2e8f0' } }
+                }
+            }
+        });
+
+        // 4. Monthly Trend (Line) - if available
+        const monthEntries = data.by_month ? Object.entries(data.by_month) : [];
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        if (trendChartInst) trendChartInst.destroy();
+
+        if (monthEntries.length > 0) {
+            // Sort months? They might come as 01, 02...
+            monthEntries.sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+            
+            trendChartInst = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: monthEntries.map(e => e[0]),
+                    datasets: [{
+                        label: 'Updates',
+                        data: monthEntries.map(e => e[1]),
+                        borderColor: '#34d399',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(52, 211, 153, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                         y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                         x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    datasetSelect.addEventListener('change', fetchData);
+    yearSelect.addEventListener('change', fetchData);
+
+    // Initial Load
+    fetchData();
+
+</script>
+
+</body>
+</html>
