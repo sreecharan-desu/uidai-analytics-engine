@@ -128,7 +128,8 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
     
     # Pre-compute state map for speed
     state_map_lower = {k.lower(): v for k, v in STATE_STANDARD_MAP.items()}
-    valid_set = set(VALID_STATES)
+    # Use the target values of our map as the valid set to ensure we only aggregate what we normalized to.
+    valid_set = set(STATE_STANDARD_MAP.values())
 
     try:
         chunk_size = 50000 
