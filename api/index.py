@@ -1,4 +1,8 @@
+import sys
+import os
+
+# Ensure the root directory is in the python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.main import app
-# Vercel looks for 'app' variable by default, or we specify handler in vercel.json.
-# Usually 'handler = app' in vercel.json for Python.
 handler = app

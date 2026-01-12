@@ -67,4 +67,7 @@ async def startup_event():
     asyncio.create_task(prewarm_cache())
 
 # Mount Public folder for /datasets/ downloads or other assets
-app.mount("/", StaticFiles(directory="public", html=True), name="public")
+if os.path.exists("public"):
+    app.mount("/", StaticFiles(directory="public", html=True), name="public")
+else:
+    logger.warning("Public directory not found. Static files will not be served via FastAPI mount.")
