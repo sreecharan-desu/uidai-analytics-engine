@@ -532,27 +532,29 @@
             const ctx = document.getElementById('trendChart').getContext('2d');
             if (trendChart) trendChart.destroy();
 
-            // Prepare Data
             const months = Object.keys(data.by_month).sort((a,b) => parseInt(a) - parseInt(b));
             const monthNames = months.map(m => {
                  const d = new Date(); d.setMonth(parseInt(m)-1);
                  return d.toLocaleString('default', { month: 'short' });
             });
             
-            const dBio = months.map(m => data.by_month[m].biometric || 0);
-            const dEnrol = months.map(m => data.by_month[m].enrolment || 0);
-            const dDemo = months.map(m => data.by_month[m].demographic || 0);
+            // Filters datasets based on global state
+            const datasets = [];
+            const showAll = STATE.filterDataset === 'combined';
+            
+            if (showAll || STATE.filterDataset === 'enrolment') {
+                datasets.push({ label: 'Enrolment', data: months.map(m => data.by_month[m].enrolment || 0), backgroundColor: COLORS.enrol, stack: 'Stack 0' });
+            }
+            if (showAll || STATE.filterDataset === 'biometric') {
+                datasets.push({ label: 'Biometric', data: months.map(m => data.by_month[m].biometric || 0), backgroundColor: COLORS.bio, stack: 'Stack 0' });
+            }
+            if (showAll || STATE.filterDataset === 'demographic') {
+                datasets.push({ label: 'Demographic', data: months.map(m => data.by_month[m].demographic || 0), backgroundColor: COLORS.demo, stack: 'Stack 0' });
+            }
 
             trendChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: monthNames,
-                    datasets: [
-                        { label: 'Enrolment', data: dEnrol, backgroundColor: COLORS.enrol, stack: 'Stack 0' },
-                        { label: 'Biometric', data: dBio, backgroundColor: COLORS.bio, stack: 'Stack 0' },
-                        { label: 'Demographic', data: dDemo, backgroundColor: COLORS.demo, stack: 'Stack 0' }
-                    ]
-                },
+                data: { labels: monthNames, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -573,6 +575,11 @@
             const ctx = document.getElementById('mixChart').getContext('2d');
             if (mixChart) mixChart.destroy();
 
+            const highlightColor = (type) => {
+                if (STATE.filterDataset === 'combined') return COLORS[type.substring(0, 3).toLowerCase()];
+                return STATE.filterDataset === type ? COLORS[type.substring(0, 3).toLowerCase()] : '#e2e8f0';
+            };
+
             mixChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -583,7 +590,11 @@
                             data.by_dataset.biometric,
                             data.by_dataset.demographic
                         ],
-                        backgroundColor: [COLORS.enrol, COLORS.bio, COLORS.demo],
+                        backgroundColor: [
+                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment' ? COLORS.enrol : '#f1f5f9',
+                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric' ? COLORS.bio : '#f1f5f9',
+                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic' ? COLORS.demo : '#f1f5f9'
+                        ],
                         borderWidth: 0
                     }]
                 },
@@ -600,13 +611,18 @@
         
         let ageChart = null;
         function renderAgeChart(data) {
-            // Aggregate ages logic
              const ctx = document.getElementById('ageChart').getContext('2d');
             if (ageChart) ageChart.destroy();
             
-            // Simple aggregation of all datasets by age
             const ageKeys = ['0-5', '5-17', '18+'];
             const totals = ageKeys.map(k => data.by_age_group[k] || 0);
+            
+            const getActiveColor = () => {
+                if (STATE.filterDataset === 'enrolment') return COLORS.enrol;
+                if (STATE.filterDataset === 'biometric') return COLORS.bio;
+                if (STATE.filterDataset === 'demographic') return COLORS.demo;
+                return '#64748b'; // default slate for combined
+            };
 
             ageChart = new Chart(ctx, {
                 type: 'bar',
@@ -615,7 +631,7 @@
                     datasets: [{
                         label: 'Total Residents',
                         data: totals,
-                        backgroundColor: ['#94a3b8', '#64748b', '#475569'],
+                        backgroundColor: getActiveColor(),
                         borderRadius: 4,
                         barThickness: 30
                     }]
@@ -635,22 +651,29 @@
             const tbody = document.getElementById('matrixBody');
             tbody.innerHTML = '';
             
-            // Sort states by total volume in current VIEW DATA
             const entries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
             const maxVal = entries[0] ? entries[0][1] : 0;
+
+            const barColor = () => {
+                if (STATE.filterDataset === 'enrolment') return COLORS.enrol;
+                if (STATE.filterDataset === 'biometric') return COLORS.bio;
+                if (STATE.filterDataset === 'demographic') return COLORS.demo;
+                return '#8b5cf6'; // default bio violet for combined
+            };
 
             entries.forEach(([st, val]) => {
                 const tr = document.createElement('tr');
                 tr.onclick = () => filterByState(st);
                 
                 const percent = maxVal ? (val / maxVal) * 100 : 0;
+                const color = barColor();
                 
                 tr.innerHTML = `
                     <td>${st}</td>
                     <td class="matrix-val">${val.toLocaleString()}</td>
                     <td>
                         <div style="height: 4px; background: #e2e8f0; border-radius: 2px; width: 100%;">
-                            <div style="height: 100%; width: ${percent}%; background: ${st === STATE.filterState ? '#000' : 'var(--c-bio)'}; border-radius: 2px;"></div>
+                            <div style="height: 100%; width: ${percent}%; background: ${st === STATE.filterState ? '#000' : color}; border-radius: 2px;"></div>
                         </div>
                     </td>
                 `;
