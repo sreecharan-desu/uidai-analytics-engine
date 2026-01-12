@@ -2,8 +2,6 @@ import os
 import json
 import csv
 import re
-import httpx
-import tempfile
 import asyncio
 import time
 import glob
@@ -50,29 +48,11 @@ def normalize_district_text(x):
     x = re.sub(r'\s+', ' ', x).strip()
     return x
 
-def clean_stale_temp_files():
-    """Aggressively clean up stale CSV files in /tmp to prevent disk full errors."""
-    try:
-        temp_dir = tempfile.gettempdir()
-        # Find all csv files created by us (or just all csvs to be safe in this context)
-        # We assume our files usually have standard naming or random temp names.
-        # Let's target files older than 10 minutes.
-        now = time.time()
-        for f in glob.glob(os.path.join(temp_dir, "*.csv")):
-            try:
-                if os.stat(f).st_mtime < now - 600: # 10 mins
-                    os.remove(f)
-                    logger.info(f"Cleaned stale temp file: {f}")
-            except Exception:
-                pass
-    except Exception as e:
-        logger.warning(f"Failed to clean temp dir: {e}")
-
 # Request Coalescing Map
 _inflight_requests = {}
 
 async def get_aggregate_insights(dataset: str, year: str = 'all'):
-    cache_key = f"agg_v9:{dataset}:{year or 'all'}" # Bumped to v9 (Chunking Refactor)
+    cache_key = f"agg_v10:{dataset}:{year or 'all'}" # Bumped to v10 (Direct Stream)
     
     # Check In-flight
     if cache_key in _inflight_requests:
@@ -104,9 +84,6 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
     except Exception:
         pass
 
-    # Ensure disk space is available
-    clean_stale_temp_files()
-        
     # Determine File Source
     is_year_specific = (year and year != 'all')
     file_name = f"{dataset}_{year}.csv" if is_year_specific else f"{dataset}_full.csv"
@@ -119,7 +96,7 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
     ]
     
     process_path = ""
-    is_temp = False
+    is_github_url = False
     
     found = False
     for lp in possible_local_paths:
@@ -130,33 +107,12 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
             break
 
     if not found:
-        # Download from GitHub Release to /tmp
-        url = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/{file_name}"
-        logger.info(f"Downloading from GitHub: {url}")
+        # Stream directly from GitHub Release
+        process_path = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/{file_name}"
+        is_github_url = True
+        logger.info(f"Streaming directly from GitHub: {process_path}")
         
-        try:
-            # Use delete=False so we can close and re-open in Pandas
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
-            process_path = temp_file.name
-            is_temp = True
-            
-            async with httpx.AsyncClient(follow_redirects=True, timeout=120.0) as client:
-                async with client.stream("GET", url) as response:
-                    if response.status_code != 200:
-                        raise ValueError(f"Failed to download dataset. Status: {response.status_code}")
-                    
-                    async for chunk in response.aiter_bytes():
-                        temp_file.write(chunk)
-            temp_file.close()
-            logger.info(f"Downloaded to {process_path}")
-            
-        except Exception as e:
-            if is_temp and os.path.exists(process_path):
-                try: os.remove(process_path)
-                except: pass
-            raise ValueError(f"Download failed: {str(e)}")
-
-    logger.info(f"Processing aggregation with CHUNKING for {file_name}...")
+    logger.info(f"Processing aggregation with CHUNKING (Source: {'GitHub' if is_github_url else 'Local'})...")
     import pandas as pd
     import numpy as np
 
@@ -176,8 +132,14 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
 
     try:
         chunk_size = 50000 
-        # Read in chunks
-        for chunk in pd.read_csv(process_path, chunksize=chunk_size, low_memory=False):
+        
+        # Helper to execute blocking pandas read in thread if needed, but iterating chunks is tricky async.
+        # We will run synchronously for now as CPU bound work dominates.
+        # Direct read_csv handles URL internally.
+        
+        reader = pd.read_csv(process_path, chunksize=chunk_size, low_memory=False)
+        
+        for chunk in reader:
             
             # --- 1. Normalize State ---
             chunk['state_raw'] = chunk['state'].astype(str)
@@ -205,9 +167,7 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
             # --- 3. Extract Month ---
             chunk['date'] = chunk['date'].astype(str)
             # vectorized month extraction is hard with regex split, utilize apply for now or optimized string slicing
-            # Assuming standard formats, month is usually bits
             def extract_month_fast(s):
-                # optimized: finding separators
                 if '-' in s: parts = s.split('-')
                 elif '/' in s: parts = s.split('/')
                 else: return 'Unknown'
@@ -291,11 +251,6 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
     except Exception as e:
         logger.error(f"Error processing CSV Chunk: {e}")
         raise ValueError(f"Processing failed: {str(e)}")
-    finally:
-        # Cleanup Temp ALWAYS
-        if is_temp and os.path.exists(process_path):
-            try: os.remove(process_path)
-            except: pass
 
 
 async def prewarm_cache():
