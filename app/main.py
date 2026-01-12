@@ -53,13 +53,27 @@ def read_root():
         "docs": "https://uidai.sreecharandesu.in/docs"
     }
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+
 @app.get("/dashboard")
 def dashboard():
-    return FileResponse(os.path.join("public", "dashboard.html"))
+    path = os.path.join(PUBLIC_DIR, "dashboard.html")
+    if not os.path.exists(path):
+         # Fallback try local CWD 'public'
+         path = os.path.join("public", "dashboard.html")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return JSONResponse(status_code=404, content={"error": "Dashboard Not Found"})
 
 @app.get("/docs")
 def custom_docs():
-    return FileResponse(os.path.join("public", "docs.html"))
+    path = os.path.join(PUBLIC_DIR, "docs.html")
+    if not os.path.exists(path):
+         path = os.path.join("public", "docs.html")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return JSONResponse(status_code=404, content={"error": "Docs Not Found"})
 
 @app.on_event("startup")
 async def startup_event():
