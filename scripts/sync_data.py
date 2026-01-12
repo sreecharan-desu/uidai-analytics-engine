@@ -164,11 +164,32 @@ def process_and_merge(dataset_name, local_base_path, new_records):
                 
                 return norm
             
+                return norm
+            
             df_new['norm_state'] = df_new.apply(clean_state, axis=1)
-            # Strict Filter: Keep only Valid States
-            df_new = df_new[df_new['norm_state'].isin(VALID_STATES)]
+            
+            # Strict Filter: Keep only Valid States (ONLY for Enrolment as per User request)
+            if dataset_name == 'enrolment':
+                df_new = df_new[df_new['norm_state'].isin(VALID_STATES)]
+            else:
+                 # For others, just use the normalized value if available, else keep original (or partial map)
+                 # If clean_state returns None (not found), we might want to keep the raw value or just proceed.
+                 # Current clean_state returns None if not mapped.
+                 # Let's fill NaNs in 'norm_state' with original cleaned raw if strict filter is off?
+                 # Or just use the map where possible.
+                 pass
+
             # Update the original state column to the normalized value for consistency in the CSV
             if not df_new.empty:
+                # If we are not filtering, we still want to apply the standard map where it matched
+                # If it didn't match (NaN), current logic leaves it as NaN if we assign it.
+                # Let's fillna with original if strict mode is off.
+                if dataset_name != 'enrolment':
+                     # If norm_state is null, keep original but maybe basic clean it?
+                     # clean_state function creates a normalized version or None.
+                     # Let's use the 'norm_state' where present.
+                     df_new.loc[df_new['norm_state'].isna(), 'norm_state'] = df_new.loc[df_new['norm_state'].isna(), state_col]
+                
                 df_new[state_col] = df_new['norm_state']
                 df_new.drop(columns=['norm_state'], inplace=True)
         
