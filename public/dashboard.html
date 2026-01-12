@@ -3,294 +3,613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UIDAI Analytics Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>UIDAI Analytics - Executive View</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --accent-glow: rgba(56, 189, 248, 0.2);
+            /* Palette adapted from user image */
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-light: #e5e7eb;
+            
+            --primary: #8b5cf6; /* Purple/Violet */
+            --secondary: #10b981; /* Emerald */
+            --tertiary: #3b82f6; /* Blue */
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
             min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 80px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 2rem;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
+        }
+
+        .brand-icon {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-bottom: 3rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover { background-color: #f3f4f6; color: var(--primary); }
+        .nav-item.active { background-color: #f5f3ff; color: var(--primary); }
+        .nav-item i { font-size: 1.25rem; }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 80px;
+            flex: 1;
             padding: 2rem;
-            background-image: radial-gradient(circle at top right, #1e293b 0%, transparent 40%);
+            max-width: 1600px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
+        /* Header */
         header {
-            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        h1 { font-weight: 600; font-size: 2rem; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .controls {
-            display: flex;
-            gap: 1rem;
-        }
-
-        select {
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            outline: none;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
+        .header-left h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+        .header-left p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
-        .metric-big {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent-glow);
+        .select-wrapper {
+            position: relative;
+        }
+
+        select {
+            appearance: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
         }
         
-        .metric-label { color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .select-wrapper::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 0.75rem;
+        }
 
-        .chart-container {
+        .btn-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .section-subtitle { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .chart-wrapper {
             position: relative;
-            height: 400px;
+            height: 350px;
             width: 100%;
         }
 
-        .loading {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--accent);
+        /* Metrics Row */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
+
+        .metric-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary);
+            opacity: 0.5;
+        }
+
+        .metric-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; color: var(--text-main); }
+        .metric-label { font-size: 0.875rem; color: var(--text-muted); font-weight: 500; }
+        
+        .trend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .trend-up { background: #d1fae5; color: #059669; }
+        .trend-down { background: #fee2e2; color: #dc2626; }
+
+        /* Secondary Grid */
+        .secondary-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* District List */
+        .district-list {
+            margin-top: 1rem;
+        }
+        .district-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .district-item:last-child { border-bottom: none; }
+        .district-name { font-weight: 500; font-size: 0.9rem; }
+        .district-val { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        .district-bar { height: 4px; background: #e5e7eb; border-radius: 2px; width: 60px; margin-left: auto; margin-right: 1rem; position: relative; }
+        .district-fill { height: 100%; background: var(--secondary); border-radius: 2px; }
+
+        /* Icon Badge */
+        .icon-badge {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 0.75rem;
+        }
+        .bg-purple-light { background: #f5f3ff; color: var(--primary); }
+        .bg-green-light { background: #ecfdf5; color: var(--secondary); }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Aadhaar Analytics</h1>
-        <div class="controls">
-            <select id="datasetSelect">
-                <option value="biometric">Biometric Updates</option>
-                <option value="enrolment">New Enrolments</option>
-                <option value="demographic">Demographic Updates</option>
-            </select>
-            <select id="yearSelect">
-                <option value="2025">2025</option>
-                <option value="all">All Time</option>
-            </select>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand-icon">
+            <i class="fa-solid fa-layer-group"></i>
         </div>
-    </header>
-
-    <div class="grid">
-        <div class="card">
-            <div class="metric-label">Total Records</div>
-            <div class="metric-big" id="totalCount">-</div>
+        <div class="nav-item active" title="Dashboard">
+            <i class="fa-solid fa-house"></i>
         </div>
-        <div class="card">
-            <div class="metric-label">Top State</div>
-            <div class="metric-big" id="topState" style="font-size: 1.8rem;">-</div>
+        <div class="nav-item" title="Analytics">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="nav-item" title="Datasets">
+            <i class="fa-solid fa-database"></i>
+        </div>
+        <div class="nav-item" style="margin-top: auto; margin-bottom: 2rem;">
+            <i class="fa-solid fa-gear"></i>
         </div>
     </div>
 
-    <div class="card" style="margin-bottom: 2rem;">
-        <div class="metric-label" style="margin-bottom: 1rem;">State-wise Distribution</div>
-        <div class="chart-container">
-            <canvas id="stateChart"></canvas>
-        </div>
-    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <header>
+            <div class="header-left">
+                <h1>Analytics Dashboard</h1>
+                <p>Real-time insights across UIDAI datasets</p>
+            </div>
+            <div class="header-controls">
+                <div class="select-wrapper">
+                    <select id="datasetSelect">
+                        <option value="biometric">Biometric Updates</option>
+                        <option value="enrolment">New Enrolments</option>
+                        <option value="demographic">Demographic Updates</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <select id="yearSelect">
+                        <option value="2025" selected>2025</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <div class="btn-icon">
+                    <i class="fa-regular fa-bell"></i>
+                </div>
+                <div class="user-avatar">
+                   SD
+                </div>
+            </div>
+        </header>
 
-    <div class="grid">
-        <div class="card">
-            <div class="metric-label" style="margin-bottom: 1rem;">Age Group Breakdown</div>
-            <div class="chart-container" style="height: 300px;">
-                <canvas id="ageChart"></canvas>
+        <!-- Hero Chart -->
+        <div class="hero-section">
+            <div class="section-header">
+                <div>
+                   <div class="section-subtitle">Market Intelligence</div>
+                   <div class="section-title">
+                       Trend Analysis (Monthly)
+                   </div>
+                </div>
+                <div class="header-controls">
+                    <span class="trend-badge trend-up">
+                        <i class="fa-solid fa-arrow-trend-up"></i> Live Data
+                    </span>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="mainChart"></canvas>
             </div>
         </div>
-        <!-- Placeholder for Monthly Trends if available -->
-        <div class="card">
-            <div class="metric-label" style="margin-bottom: 1rem;">Monthly Trend</div>
-             <div class="chart-container" style="height: 300px;">
-                <canvas id="trendChart"></canvas>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Records Processed</div>
+                <div class="metric-value" id="totalCount">Loading...</div>
+                <span class="trend-badge trend-up">
+                    <i class="fa-solid fa-caret-up"></i> 100% Captured
+                </span>
+            </div>
+            <div class="metric-card">
+                 <div class="metric-label">Highest Volume State</div>
+                 <div class="metric-value" id="topState" style="font-size: 1.5rem;">-</div>
+                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;" id="topStateVal">0 records</div>
+            </div>
+            <div class="metric-card">
+                 <div class="metric-label">Key Age Demographic</div>
+                 <div class="metric-value" id="topAgeGroup">-</div>
+                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Highest activity group</div>
+            </div>
+        </div>
+
+        <!-- Secondary Section -->
+        <div class="secondary-grid">
+            <!-- Age Group Bar Chart -->
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <div class="icon-badge bg-purple-light"><i class="fa-solid fa-users"></i></div>
+                        Age Demographics
+                    </div>
+                </div>
+                <div style="height: 250px;">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+
+            <!-- District Intelligence List -->
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <div class="icon-badge bg-green-light"><i class="fa-solid fa-location-dot"></i></div>
+                        Top Districts
+                    </div>
+                </div>
+                <div class="district-list" id="districtList">
+                    <!-- Populated by JS -->
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Select a State to view districts</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    let stateChartInst = null;
-    let ageChartInst = null;
-    let trendChartInst = null;
+    <script>
+        // --- Configuration ---
+        const colors = {
+            purple: '#8b5cf6',
+            purpleLight: 'rgba(139, 92, 246, 0.1)',
+            green: '#10b981',
+            greenLight: 'rgba(16, 185, 129, 0.1)',
+            grid: '#f3f4f6',
+            text: '#6b7280'
+        };
 
-    const datasetSelect = document.getElementById('datasetSelect');
-    const yearSelect = document.getElementById('yearSelect');
+        let mainChart = null;
+        let ageChart = null;
 
-    async function fetchData() {
-        const dataset = datasetSelect.value;
-        const year = yearSelect.value;
-        
-        document.getElementById('totalCount').innerText = 'Loading...';
-        
-        try {
-            const res = await fetch(`/api/analytics/${dataset}?year=${year}`);
-            const json = await res.json();
+        const datasetSelect = document.getElementById('datasetSelect');
+        const yearSelect = document.getElementById('yearSelect');
+
+        // --- Fetch & Update ---
+        async function fetchData() {
+            const dataset = datasetSelect.value;
+            const year = yearSelect.value;
             
-            if (json.data) {
-                updateUI(json.data);
-            }
-        } catch (e) {
-            console.error(e);
-            document.getElementById('totalCount').innerText = 'Error';
-        }
-    }
-
-    function updateUI(data) {
-        // 1. Metrics
-        document.getElementById('totalCount').innerText = data.total_updates.toLocaleString();
-        
-        // Find top state
-        const entries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
-        if (entries.length > 0) {
-            document.getElementById('topState').innerText = entries[0][0];
-        }
-
-        // 2. State Chart (Bar)
-        // Take top 15 states for readability
-        const top15 = entries.slice(0, 15);
-        
-        const ctxState = document.getElementById('stateChart').getContext('2d');
-        if (stateChartInst) stateChartInst.destroy();
-        
-        stateChartInst = new Chart(ctxState, {
-            type: 'bar',
-            data: {
-                labels: top15.map(e => e[0]),
-                datasets: [{
-                    label: 'Count',
-                    data: top15.map(e => e[1]),
-                    backgroundColor: 'rgba(56, 189, 248, 0.6)',
-                    borderColor: '#38bdf8',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { color: '#94a3b8' }
-                    },
-                    x: {
-                        ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // 3. Age Chart (Doughnut)
-        const ageEntries = Object.entries(data.by_age_group);
-        const ctxAge = document.getElementById('ageChart').getContext('2d');
-        if (ageChartInst) ageChartInst.destroy();
-
-        ageChartInst = new Chart(ctxAge, {
-            type: 'doughnut',
-            data: {
-                labels: ageEntries.map(e => e[0]),
-                datasets: [{
-                    data: ageEntries.map(e => e[1]),
-                    backgroundColor: [
-                        '#38bdf8', '#818cf8', '#c084fc', '#f472b6'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#e2e8f0' } }
-                }
-            }
-        });
-
-        // 4. Monthly Trend (Line) - if available
-        const monthEntries = data.by_month ? Object.entries(data.by_month) : [];
-        const ctxTrend = document.getElementById('trendChart').getContext('2d');
-        if (trendChartInst) trendChartInst.destroy();
-
-        if (monthEntries.length > 0) {
-            // Sort months? They might come as 01, 02...
-            monthEntries.sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+            // UI Loading State
+            document.getElementById('totalCount').innerText = '...';
             
-            trendChartInst = new Chart(ctxTrend, {
+            try {
+                const res = await fetch(`/api/analytics/${dataset}?year=${year}`);
+                const json = await res.json();
+                
+                if (json.data) {
+                    updateDashboard(json.data);
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('totalCount').innerText = 'ERR';
+            }
+        }
+
+        function updateDashboard(data) {
+            // 1. Metrics Cards
+            document.getElementById('totalCount').innerText = data.total_updates.toLocaleString();
+
+            const stateEntries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
+            if (stateEntries.length > 0) {
+                document.getElementById('topState').innerText = stateEntries[0][0];
+                document.getElementById('topStateVal').innerText = stateEntries[0][1].toLocaleString() + ' records';
+            } else {
+                document.getElementById('topState').innerText = '-';
+            }
+
+            const ageEntries = Object.entries(data.by_age_group).sort((a,b) => b[1] - a[1]);
+            if (ageEntries.length > 0) {
+                document.getElementById('topAgeGroup').innerText = getLabelForAgeKey(ageEntries[0][0]);
+            }
+
+            // 2. Charts
+            renderMainChart(data.by_month);
+            renderAgeChart(data.by_age_group);
+            renderDistrictList(data.by_district, stateEntries[0]?.[0]); // Default to top state
+        }
+
+        // --- Visualizations ---
+        function renderMainChart(monthlyData) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (mainChart) mainChart.destroy();
+
+            // Transform Data
+            // Ensure months are sorted 01-12
+            const labels = Object.keys(monthlyData || {}).sort((a,b) => parseInt(a) - parseInt(b));
+            const values = labels.map(m => monthlyData[m]);
+            
+            // Friendly Month Names
+            const monthNames = labels.map(m => {
+                const date = new Date();
+                date.setMonth(parseInt(m) - 1);
+                return date.toLocaleString('default', { month: 'short' });
+            });
+
+            // Gradient Fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colors.purpleLight);
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+            mainChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: monthEntries.map(e => e[0]),
+                    labels: monthNames,
                     datasets: [{
-                        label: 'Updates',
-                        data: monthEntries.map(e => e[1]),
-                        borderColor: '#34d399',
-                        tension: 0.4,
+                        label: 'Volume',
+                        data: values,
+                        borderColor: colors.purple,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        tension: 0.4, // Smooth curve
                         fill: true,
-                        backgroundColor: 'rgba(52, 211, 153, 0.1)'
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: colors.purple,
+                        pointBorderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                         y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
-                         x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#fff',
+                            titleColor: '#111827',
+                            bodyColor: '#6b7280',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toLocaleString() + ' updates';
+                                }
+                            }
+                        }
                     },
-                    plugins: { legend: { display: false } }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: colors.grid,
+                                borderDash: [4, 4],
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: colors.text,
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: colors.text,
+                                font: { size: 11 }
+                            }
+                        }
+                    }
                 }
             });
         }
-    }
 
-    datasetSelect.addEventListener('change', fetchData);
-    yearSelect.addEventListener('change', fetchData);
+        function renderAgeChart(ageData) {
+            const ctx = document.getElementById('ageChart').getContext('2d');
+            if (ageChart) ageChart.destroy();
 
-    // Initial Load
-    fetchData();
+            const labels = Object.keys(ageData);
+            const values = Object.values(ageData);
 
-</script>
+            ageChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.map(l => getLabelForAgeKey(l)),
+                    datasets: [{
+                        label: 'Population',
+                        data: values,
+                        backgroundColor: [colors.purple, colors.green, colors.tertiary],
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: colors.text } }
+                    }
+                }
+            });
+        }
 
+        function renderDistrictList(districtData, selectedState) {
+            const container = document.getElementById('districtList');
+            container.innerHTML = '';
+
+            if (!districtData || !selectedState || !districtData[selectedState]) {
+                container.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 1rem;">No granular district data available.</div>';
+                return;
+            }
+
+            const districts = districtData[selectedState];
+            // Sort by count
+            const sorted = Object.entries(districts).sort((a,b) => b[1] - a[1]).slice(0, 5); // Top 5
+            
+            const maxVal = sorted[0][1];
+
+            sorted.forEach(([name, count]) => {
+                const percent = (count / maxVal) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'district-item';
+                item.innerHTML = `
+                    <div class="district-name">${name}</div>
+                    <div class="district-bar">
+                        <div class="district-fill" style="width: ${percent}%"></div>
+                    </div>
+                    <div class="district-val">${count.toLocaleString()}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- Helpers ---
+        function getLabelForAgeKey(key) {
+            if (key === '0-5') return 'Infants (0-5)';
+            if (key === '5-17') return 'School Age (5-17)';
+            if (key === '18+') return 'Adults (18+)';
+            return key;
+        }
+
+        // --- Listeners ---
+        datasetSelect.addEventListener('change', fetchData);
+        yearSelect.addEventListener('change', fetchData);
+
+        // --- Init ---
+        fetchData();
+
+    </script>
 </body>
 </html>
