@@ -141,14 +141,25 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
         
         for chunk in reader:
             
-            # --- 1. Normalize State ---
+            # --- 1. Vectorized State Normalization ---
+            # Ensure string type
             chunk['state_raw'] = chunk['state'].astype(str)
             chunk['pincode'] = chunk['pincode'].astype(str).str.split('.').str[0]
             
-            chunk['state_cleaned'] = chunk['state_raw'].apply(normalize_state_text)
+            # Vectorized cleaning: lower -> strip -> remove special chars -> squash spaces
+            chunk['state_cleaned'] = (
+                chunk['state_raw']
+                .str.lower()
+                .str.strip()
+                .str.replace(r'[^a-z0-9 ]', ' ', regex=True)
+                .str.replace(r'\s+', ' ', regex=True)
+                .str.strip()
+            )
+
+            # Map
             chunk['norm_state'] = chunk['state_cleaned'].map(state_map_lower)
             
-            # Fallback
+            # Fallback (Vectorized)
             missing_mask = chunk['norm_state'].isna()
             if missing_mask.any():
                 chunk.loc[missing_mask, 'norm_state'] = chunk.loc[missing_mask, 'pincode'].map(PINCODE_MAP)
@@ -158,22 +169,27 @@ async def _get_aggregate_insights_logic(dataset: str, year: str, cache_key: str)
             if chunk.empty:
                 continue
 
-            # --- 2. Normalize District ---
+            # --- 2. Vectorized District Normalization ---
             chunk['district_raw'] = chunk['district'].astype(str)
-            chunk['district_norm'] = chunk['district_raw'].apply(normalize_district_text)
+            chunk['district_norm'] = (
+                chunk['district_raw']
+                .str.lower()
+                .str.strip()
+                .str.replace('*', '', regex=False)
+                .str.replace(r'[^a-z0-9 \-\(\)\.]', ' ', regex=True)
+                .str.replace(r'\s+', ' ', regex=True)
+                .str.strip()
+            )
+            
             chunk['district_clean'] = chunk['district_norm'].replace(DISTRICT_ALIAS_MAP)
             chunk['district'] = chunk['district_clean'].str.title()
             
-            # --- 3. Extract Month ---
+            # --- 3. Vectorized Month Extraction ---
             chunk['date'] = chunk['date'].astype(str)
-            # vectorized month extraction is hard with regex split, utilize apply for now or optimized string slicing
-            def extract_month_fast(s):
-                if '-' in s: parts = s.split('-')
-                elif '/' in s: parts = s.split('/')
-                else: return 'Unknown'
-                return parts[1] if len(parts) == 3 else 'Unknown'
-
-            chunk['month'] = chunk['date'].apply(extract_month_fast)
+            # Assuming dd-mm-yyyy or yyyy-mm-dd, split on - or / and take 2nd part
+            chunk['month'] = chunk['date'].str.split(r'[-/]', regex=True).str[1]
+            # Handle potential failures (e.g. malformed date) by filling Unknown
+            chunk['month'] = chunk['month'].fillna('Unknown')
 
             # --- 4. Calculate Columns ---
             if dataset == 'biometric':
