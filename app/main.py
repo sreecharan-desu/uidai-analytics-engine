@@ -25,6 +25,19 @@ app.add_middleware(
 )
 
 @app.middleware("http")
+async def kill_switch_middleware(request: Request, call_next):
+    # Check if Kill Switch is active via Env Var
+    if os.getenv("KILL_SWITCH") == "true":
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "Service Temporarily Suspended",
+                "message": "The project has been paused to prevent excessive usage. Please contact the administrator."
+            }
+        )
+    return await call_next(request)
+
+@app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
