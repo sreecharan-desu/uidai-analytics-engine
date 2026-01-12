@@ -138,20 +138,71 @@ def process_and_merge(dataset_name, local_base_path, new_records):
     if new_records:
         df_new = pd.DataFrame(new_records)
         
-        # Normalize and find columns (reusing logic but simplified)
+    # Process New
+    if new_records:
+        df_new = pd.DataFrame(new_records)
+        
+        # --- 1. State Normalization ---
         state_col = 'state' if 'state' in df_new.columns else ('State' if 'State' in df_new.columns else None)
         pincode_col = 'pincode' if 'pincode' in df_new.columns else None
-        date_col = 'date' if 'date' in df_new.columns else None
-
-        if state_col:
-            df_new['norm_state'] = df_new.apply(lambda row: normalize_state(row.get(state_col), row.get(pincode_col)), axis=1)
-            df_new = df_new[df_new['norm_state'].notna()]
         
+        if state_col:
+            # Helper for explicit state cleaning to match notebook/service
+            state_map_lower = {k.lower(): v for k, v in STATE_STANDARD_MAP.items()}
+            
+            def clean_state(row):
+                raw = str(row.get(state_col, '')).lower().strip()
+                raw = re.sub(r'[^a-z0-9 ]', ' ', raw)
+                raw = re.sub(r'\s+', ' ', raw).strip()
+                
+                norm = state_map_lower.get(raw)
+                
+                # Fallback to Pincode Map
+                if not norm and pincode_col:
+                    pin = str(row.get(pincode_col, '')).split('.')[0]
+                    norm = PINCODE_MAP.get(pin)
+                
+                return norm
+            
+            df_new['norm_state'] = df_new.apply(clean_state, axis=1)
+            # Strict Filter: Keep only Valid States
+            df_new = df_new[df_new['norm_state'].isin(VALID_STATES)]
+            # Update the original state column to the normalized value for consistency in the CSV
+            if not df_new.empty:
+                df_new[state_col] = df_new['norm_state']
+                df_new.drop(columns=['norm_state'], inplace=True)
+        
+        if df_new.empty:
+            print("No valid records found after state filtering.")
+            return
+
+        # --- 2. District Normalization (Added to match Notebook) ---
+        from app.utils.state_data import DISTRICT_ALIAS_MAP
+        
+        dist_col = 'district' if 'district' in df_new.columns else ('District' if 'District' in df_new.columns else None)
+        
+        if dist_col:
+            def clean_district(val):
+                if not isinstance(val, str) and pd.isna(val): return 'Unknown'
+                x = str(val).lower().strip()
+                x = x.replace('*', '') # Remove asterisks
+                x = re.sub(r'[^a-z0-9 \-\(\)\.]', ' ', x)
+                x = re.sub(r'\s+', ' ', x).strip()
+                
+                # Alias Map
+                x = DISTRICT_ALIAS_MAP.get(x, x)
+                return x.title()
+                
+            df_new[dist_col] = df_new[dist_col].apply(clean_district)
+
+        # --- Year Extraction ---
+        date_col = 'date' if 'date' in df_new.columns else None
         if date_col:
             def get_year(d):
                 if not d: return None
                 parts = re.split(r'[-/]', str(d))
                 if len(parts) == 3:
+                     # Check first or last part for 4 digits
                     if len(parts[0]) == 4: return parts[0]
                     if len(parts[2]) == 4: return parts[2]
                 return None
@@ -160,9 +211,10 @@ def process_and_merge(dataset_name, local_base_path, new_records):
 
         # Merge
         df_final = pd.concat([df_base, df_new], ignore_index=True)
-        # Deduplicate just in case (optional but safe)
-        if 'date' in df_final.columns and 'pincode' in df_final.columns:
-             df_final.drop_duplicates(subset=[date_col, 'pincode', state_col], keep='last', inplace=True)
+        # Deduplicate
+        subset_cols = [c for c in [date_col, 'pincode', state_col] if c]
+        if subset_cols:
+             df_final.drop_duplicates(subset=subset_cols, keep='last', inplace=True)
     else:
         df_final = df_base
 
