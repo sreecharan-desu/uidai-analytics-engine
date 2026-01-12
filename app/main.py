@@ -56,15 +56,22 @@ def read_root():
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 
+from fastapi.responses import RedirectResponse
+
 @app.get("/dashboard")
 def dashboard():
+    # On Vercel, static files in 'public' are often not available to the function 
+    # but are served by Vercel's CDN. 
+    # Try finding it locally first (for local dev).
     path = os.path.join(PUBLIC_DIR, "dashboard.html")
     if not os.path.exists(path):
-         # Fallback try local CWD 'public'
          path = os.path.join("public", "dashboard.html")
+    
     if os.path.exists(path):
-        return FileResponse(path)
-    return JSONResponse(status_code=404, content={"error": "Dashboard Not Found"})
+         return FileResponse(path)
+    
+    # Fallback: Redirect to the static file hosted by Vercel
+    return RedirectResponse(url="/dashboard.html")
 
 @app.get("/docs")
 def custom_docs():
