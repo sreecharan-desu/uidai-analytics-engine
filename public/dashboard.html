@@ -3,635 +3,641 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UIDAI Analytics - Executive View</title>
+    <title>UIDAI Ecosystem - Intelligence Hub</title>
     
-    <!-- Favicon -->
+    <!-- Meta -->
     <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
-
-    <!-- Open Graph / Social Media -->
-    <meta property="og:title" content="UIDAI Analytics - Executive Dashboard">
-    <meta property="og:description" content="Real-time market intelligence and granulated insights for Aadhaar Enrolment, Biometric, and Demographic datasets.">
-    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
-    <meta property="og:url" content="https://uidai.sreecharandesu.in/dashboard">
-    <meta property="og:type" content="website">
+    <meta property="og:title" content="UIDAI Ecosystem - Intelligence Hub">
     <meta name="theme-color" content="#8b5cf6">
-    
-    <!-- Fonts -->
+
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+
     <style>
         :root {
-            /* Palette adapted from user image */
-            --bg-body: #f3f4f6;
+            --bg-body: #f8fafc;
             --bg-card: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-light: #e5e7eb;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
             
-            --primary: #8b5cf6; /* Purple/Violet */
-            --secondary: #10b981; /* Emerald */
-            --tertiary: #3b82f6; /* Blue */
+            --c-bio: #8b5cf6;   /* Violet */
+            --c-enrol: #10b981; /* Emerald */
+            --c-demo: #f59e0b;  /* Amber */
             
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --success: #10b981;
+            
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
+        /* Base */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
         body {
             background-color: var(--bg-body);
             background-image: 
-                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), 
-                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+                radial-gradient(#e2e8f0 1px, transparent 1px);
             background-size: 24px 24px;
             color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
+            padding-bottom: 2rem;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 80px;
+        /* Layout - PowerBI Style Grid */
+        .dashboard-container {
+            max-width: 14400px; /* Full width feel */
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 280px 1fr 1fr 1fr; /* Sidebar + 3 cols */
+            grid-template-areas: 
+                "filter hero hero hero"
+                "filter kpi1 kpi2 kpi3"
+                "list main main main"
+                "list main main main"
+                "list sec1 sec2 sec3";
+        }
+
+        /* Responsive overrides */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1fr;
+                grid-template-areas:
+                    "filter filter"
+                    "kpi1 kpi2"
+                    "kpi3 hero"
+                    "main main"
+                    "list list";
+            }
+        }
+
+        /* Components */
+        .panel {
             background: var(--bg-card);
-            border-right: 1px solid var(--border-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-top: 2rem;
-            position: fixed;
-            height: 100vh;
-            z-index: 10;
         }
 
-        .brand-icon {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            margin-bottom: 3rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .nav-item:hover { background-color: #f3f4f6; color: var(--primary); }
-        .nav-item.active { background-color: #f5f3ff; color: var(--primary); }
-        .nav-item i { font-size: 1.25rem; }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 80px;
-            flex: 1;
-            padding: 2rem;
-            max-width: 1600px;
-        }
-
-        /* Header */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .header-left h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
-        .header-left p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
-
-        .header-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .select-wrapper {
-            position: relative;
-        }
-
-        select {
-            appearance: none;
-            background: var(--bg-card);
-            border: 1px solid var(--border-light);
-            padding: 0.5rem 2.5rem 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            color: var(--text-main);
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-        }
+        /* Filter Panel (Sidebar) */
+        .area-filter { grid-area: filter; height: fit-content; }
+        .filter-header { font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .filter-group { margin-bottom: 1.5rem; }
+        .filter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
         
-        .select-wrapper::after {
-            content: '\f107';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
-            font-size: 0.75rem;
-        }
-
-        .btn-icon {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            border: 1px solid var(--border-light);
-            background: var(--bg-card);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .user-avatar {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-
-        /* Hero Section */
-        .hero-section {
-            background: var(--bg-card);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 2rem;
-            border: 1px solid var(--border-light);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-        .section-subtitle { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .chart-wrapper {
-            position: relative;
-            height: 350px;
+        .pbi-select {
             width: 100%;
-        }
-
-        /* Metrics Row */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
-            background: var(--primary);
-            opacity: 0.5;
-        }
-
-        .metric-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; color: var(--text-main); }
-        .metric-label { font-size: 0.875rem; color: var(--text-muted); font-weight: 500; }
-        
-        .trend-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .trend-up { background: #d1fae5; color: #059669; }
-        .trend-down { background: #fee2e2; color: #dc2626; }
-
-        /* Secondary Grid */
-        .secondary-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-        }
-
-        /* District List */
-        .district-list {
-            margin-top: 1rem;
-        }
-        .district-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .district-item:last-child { border-bottom: none; }
-        .district-name { font-weight: 500; font-size: 0.9rem; }
-        .district-val { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
-        .district-bar { height: 4px; background: #e5e7eb; border-radius: 2px; width: 60px; margin-left: auto; margin-right: 1rem; position: relative; }
-        .district-fill { height: 100%; background: var(--secondary); border-radius: 2px; }
-
-        /* Icon Badge */
-        .icon-badge {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 0.75rem;
-        }
-        .bg-purple-light { background: #f5f3ff; color: var(--primary); }
-        .bg-green-light { background: #ecfdf5; color: var(--secondary); }
-
-        /* Skeleton Loading */
-        .skeleton {
-            background: #e5e7eb;
-            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
             border-radius: 6px;
-            display: inline-block;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            background: #f8fafc;
+            outline: none;
+            cursor: pointer;
         }
-        .skeleton-text { height: 1.5rem; width: 60%; margin-bottom: 0.5rem; }
-        .skeleton-rect { height: 100%; width: 100%; }
+        .pbi-select:focus { border-color: var(--c-bio); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1); }
+
+        .kpi-row { display: contents; }
         
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        /* KPI Cards */
+        .kpi-card { position: relative; overflow: hidden; }
+        .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }
+        .kpi-sub { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem; }
+        .trend-up { color: var(--success); font-weight: 600; font-size: 0.75rem; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Specific Areas */
+        .area-hero { grid-area: hero; background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: white; display: flex; align-items: center; justify-content: space-between; padding: 2rem; }
+        .hero-title h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .hero-title p { opacity: 0.9; font-size: 0.95rem; }
+        .hero-stat { text-align: right; }
+        .hero-big-num { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+        
+        .area-kpi1 { grid-area: kpi1; border-top: 4px solid var(--c-enrol); }
+        .area-kpi2 { grid-area: kpi2; border-top: 4px solid var(--c-bio); }
+        .area-kpi3 { grid-area: kpi3; border-top: 4px solid var(--c-demo); }
+
+        /* Main Chart Area */
+        .area-main { grid-area: main; min-height: 400px; }
+        
+        /* List Area (PowerBI Matrix) */
+        .area-list { grid-area: list; max-height: 800px; overflow: hidden; display: flex; flex-direction: column; }
+        .matrix-table-container { flex: 1; overflow-y: auto; margin-top: 1rem; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .matrix-table th { text-align: left; padding: 0.75rem; background: #f8fafc; position: sticky; top: 0; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+        .matrix-table td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
+        .matrix-table tr:hover { background: #f1f5f9; cursor: pointer; }
+        .matrix-val { font-family: 'Courier New', monospace; font-weight: 600; text-align: right; }
+        .matrix-bar-cell { width: 60px; }
+        
+        /* Secondary Charts */
+        .area-sec1 { grid-area: sec1; min-height: 250px; } /* Donut */
+        .area-sec2 { grid-area: sec2; min-height: 250px; } /* Age */
+        .area-sec3 { grid-area: sec3; min-height: 250px; } /* District Top 5 */
+
+        /* Chart Header */
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .chart-title { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+        .chart-action { color: var(--text-muted); cursor: pointer; font-size: 0.85rem; }
+
+        /* Skeleton */
+        .skeleton { background: #f1f5f9; animation: pulse 1.5s infinite; border-radius: 4px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
     </style>
 </head>
 <body>
 
-    <!-- Main Content -->
-    <div class="main-content" style="margin-left: 0; padding: 2rem; max-width: 1200px; margin: 0 auto;">
+    <div class="dashboard-container">
         
-        <header>
-            <div class="header-left">
-                <h1>Analytics Dashboard</h1>
-                <p>Real-time insights across UIDAI datasets</p>
+        <!-- Filter Panel -->
+        <div class="panel area-filter">
+            <div class="filter-header">
+                <i class="fa-solid fa-filter"></i> Filters
             </div>
-            <div class="header-controls">
-                <div class="select-wrapper">
-                    <select id="datasetSelect">
-                        <option value="biometric">Biometric Updates</option>
-                        <option value="enrolment">New Enrolments</option>
-                        <option value="demographic">Demographic Updates</option>
-                    </select>
-                </div>
-                <div class="select-wrapper">
-                    <select id="yearSelect">
-                        <option value="2025" selected>2025</option>
-                        <option value="all">All Time</option>
-                    </select>
-                </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">Fiscal Year</div>
+                <select id="yearSelect" class="pbi-select">
+                    <option value="2025" selected>2025</option>
+                    <option value="all">All Available History</option>
+                </select>
             </div>
-        </header>
 
-        <!-- Hero Chart -->
-        <div class="hero-section">
-            <div class="section-header">
-                <div>
-                   <div class="section-title">
-                       Trend Analysis (Monthly)
-                   </div>
-                </div>
+            <div class="filter-group">
+                <div class="filter-label">State / Region</div>
+                <select id="stateSelect" class="pbi-select">
+                    <option value="all">All India</option>
+                    <!-- Populated via JS -->
+                </select>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="mainChart"></canvas>
+
+            <div class="filter-group" style="margin-top:auto; padding-top: 2rem; border-top: 1px solid var(--border);">
+                <div class="filter-label">Data Sources</div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #ecfdf5; color: var(--c-enrol); border-radius: 4px; font-weight: 600;">Enrolment</span>
+                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #f5f3ff; color: var(--c-bio); border-radius: 4px; font-weight: 600;">Biometric</span>
+                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #fffbeb; color: var(--c-demo); border-radius: 4px; font-weight: 600;">Demographic</span>
+                </div>
             </div>
         </div>
 
-        <!-- Metrics Cards -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-label">Total Records Processed</div>
-                <div class="metric-value" id="totalCount">Loading...</div>
+        <!-- Hero Header -->
+        <div class="panel area-hero">
+            <div class="hero-title">
+                <h1>UIDAI Ecosystem Intelligence</h1>
+                <p>Consolidated view of Aadhaar lifecycle events (Enrolment → Update → Biometric)</p>
             </div>
-            <div class="metric-card">
-                 <div class="metric-label">Highest Volume State</div>
-                 <div class="metric-value" id="topState" style="font-size: 1.5rem;">-</div>
-                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;" id="topStateVal">0 records</div>
-            </div>
-            <div class="metric-card">
-                 <div class="metric-label">Key Age Demographic</div>
-                 <div class="metric-value" id="topAgeGroup">-</div>
-                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Highest activity group</div>
+            <div class="hero-stat">
+                <div style="font-size: 0.85rem; opacity: 0.8;">TOTAL ECOSYSTEM TRANSACTIONS</div>
+                <div class="hero-big-num" id="grandTotal">-</div>
             </div>
         </div>
 
-        <!-- Secondary Section -->
-        <div class="secondary-grid">
-            <!-- Age Group Bar Chart -->
-            <div class="card">
-                <div class="section-header">
-                    <div class="section-title">
-                        <div class="icon-badge bg-purple-light"><i class="fa-solid fa-users"></i></div>
-                        Age Demographics
-                    </div>
-                </div>
-                <div style="height: 250px;">
-                    <canvas id="ageChart"></canvas>
-                </div>
-            </div>
+        <!-- KPI Cards -->
+        <div class="panel kpi-card area-kpi1">
+            <div class="filter-label" style="color: var(--c-enrol);">New Enrolments</div>
+            <div class="kpi-value" id="kpiEnrol">-</div>
+            <div class="kpi-sub"><span class="trend-up">Fresh Intake</span></div>
+        </div>
 
-            <!-- District Intelligence List -->
-            <div class="card">
-                <div class="section-header">
-                    <div class="section-title">
-                        <div class="icon-badge bg-green-light"><i class="fa-solid fa-location-dot"></i></div>
-                        Top Districts
-                    </div>
-                </div>
-                <div class="district-list" id="districtList">
-                    <!-- Populated by JS -->
-                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Select a State to view districts</div>
-                </div>
+        <div class="panel kpi-card area-kpi2">
+            <div class="filter-label" style="color: var(--c-bio);">Biometric Updates</div>
+            <div class="kpi-value" id="kpiBio">-</div>
+            <div class="kpi-sub"><span class="trend-up">Security Updates</span></div>
+        </div>
+
+        <div class="panel kpi-card area-kpi3">
+            <div class="filter-label" style="color: var(--c-demo);">Demographic Updates</div>
+            <div class="kpi-value" id="kpiDemo">-</div>
+            <div class="kpi-sub"><span class="trend-up">Corrections</span></div>
+        </div>
+
+        <!-- State Matrix List -->
+        <div class="panel area-list">
+            <div class="chart-header">
+                <div class="chart-title">Geographic Breakdown</div>
+            </div>
+            <div class="matrix-table-container">
+                <table class="matrix-table" id="matrixTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">State</th>
+                            <th style="text-align: right">Total</th>
+                            <th style="width: 60px"></th> <!-- Bar -->
+                        </tr>
+                    </thead>
+                    <tbody id="matrixBody">
+                        <!-- JS Populated -->
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <!-- Main Trend Chart -->
+        <div class="panel area-main">
+            <div class="chart-header">
+                <div class="chart-title">Ecosystem Trends (Monthly Volume)</div>
+                <div class="chart-action"><i class="fa-solid fa-expand"></i></div>
+            </div>
+            <div style="flex: 1; position: relative;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Secondary Charts -->
+        <div class="panel area-sec1">
+            <div class="chart-header">
+                <div class="chart-title">Service Mix</div>
+            </div>
+            <div style="flex: 1; position: relative;">
+                <canvas id="mixChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel area-sec2">
+             <div class="chart-header">
+                <div class="chart-title">Age Demographics</div>
+            </div>
+            <div style="flex: 1; position: relative;">
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel area-sec3">
+             <div class="chart-header">
+                <div class="chart-title">Top Districts</div>
+            </div>
+            <div id="districtList" style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                <!-- JS populated -->
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- Configuration ---
-        const colors = {
-            purple: '#8b5cf6',
-            purpleLight: 'rgba(139, 92, 246, 0.1)',
-            green: '#10b981',
-            greenLight: 'rgba(16, 185, 129, 0.1)',
-            grid: '#f3f4f6',
-            text: '#6b7280'
+        // --- GLOBAL STATE ---
+        const STATE = {
+            year: '2025',
+            filterState: 'all', // 'all' or specific state name
+            data: {
+                enrolment: null,
+                biometric: null,
+                demographic: null
+            },
+            combined: null
         };
 
-        let mainChart = null;
-        let ageChart = null;
+        // --- COLORS ---
+        const COLORS = {
+            enrol: '#10b981',
+            bio: '#8b5cf6',
+            demo: '#f59e0b',
+            grid: '#e2e8f0',
+            text: '#64748b'
+        };
 
-        const datasetSelect = document.getElementById('datasetSelect');
-        const yearSelect = document.getElementById('yearSelect');
+        // --- SKELETON LOADER ---
+        function setSkeletons() {
+            const els = ['grandTotal', 'kpiEnrol', 'kpiBio', 'kpiDemo'];
+            els.forEach(id => {
+                document.getElementById(id).innerHTML = `<div class="skeleton" style="height: 2rem; width: 60%;"></div>`;
+            });
+        }
 
-        // --- Fetch & Update ---
-        async function fetchData() {
-            setLoadingState();
-            
-            const dataset = datasetSelect.value;
-            const year = yearSelect.value;
+        // --- FETCH LOGIC ---
+        async function fetchAllData() {
+            setSkeletons();
             
             try {
-                const res = await fetch(`/api/analytics/${dataset}?year=${year}`);
-                const json = await res.json();
-                
-                if (json.data) {
-                    updateDashboard(json.data);
+                // Parallel Fetch
+                const [enrolRes, bioRes, demoRes] = await Promise.all([
+                    fetch(`/api/analytics/enrolment?year=${STATE.year}`).then(r => r.json()),
+                    fetch(`/api/analytics/biometric?year=${STATE.year}`).then(r => r.json()),
+                    fetch(`/api/analytics/demographic?year=${STATE.year}`).then(r => r.json())
+                ]);
+
+                STATE.data.enrolment = enrolRes.data;
+                STATE.data.biometric = bioRes.data;
+                STATE.data.demographic = demoRes.data;
+
+                processCombinedData();
+                updateUI();
+                populateStateDropdown(); 
+
+            } catch (err) {
+                console.error("Fetch failed", err);
+                // Handle Error
+            }
+        }
+
+        // --- DATA PROCESSING ---
+        function processCombinedData() {
+            // Combine logic
+            const combined = {
+                total: 0,
+                by_state: {},
+                by_month: {},
+                by_age_group: {},
+                by_dataset: {
+                    enrolment: STATE.data.enrolment.total_updates,
+                    biometric: STATE.data.biometric.total_updates,
+                    demographic: STATE.data.demographic.total_updates
                 }
-            } catch (e) {
-                console.error(e);
-                document.getElementById('totalCount').innerText = 'ERR';
-            }
-        }
-
-        function setLoadingState() {
-            // Metrics Skeletons
-            document.getElementById('totalCount').innerHTML = '<div class="skeleton skeleton-text" style="width: 120px; height: 2.5rem;"></div>';
-            document.getElementById('topState').innerHTML = '<div class="skeleton skeleton-text" style="width: 150px; height: 2rem;"></div>';
-            document.getElementById('topStateVal').innerHTML = '<div class="skeleton skeleton-text" style="width: 80px; height: 1rem;"></div>';
-            document.getElementById('topAgeGroup').innerHTML = '<div class="skeleton skeleton-text" style="width: 100px; height: 2rem;"></div>';
-
-            // Charts Skeletons
-            // destroy existing charts if any to clear canvas
-            if (mainChart) mainChart.destroy();
-            if (ageChart) ageChart.destroy();
+            };
             
-            // Note: We can't easily put HTML inside canvas, so we might overlay or just accept canvas clear.
-            // Better: clear canvas container or check if we want to overlay a div.
-            // For simplicity, we'll leave charts blank (cleared) during load or show a small loader if strictly needed.
-            // But user asked for skeletons. Let's do district list skeleton.
+            combined.total = combined.by_dataset.enrolment + combined.by_dataset.biometric + combined.by_dataset.demographic;
+
+            // Merge States
+            const allStates = new Set([
+                ...Object.keys(STATE.data.enrolment.by_state),
+                ...Object.keys(STATE.data.biometric.by_state),
+                ...Object.keys(STATE.data.demographic.by_state)
+            ]);
             
-            const districtContainer = document.getElementById('districtList');
-            districtContainer.innerHTML = Array(5).fill(0).map(() => `
-                <div class="district-item">
-                    <div class="skeleton skeleton-text" style="width: 40%; height: 1rem; margin:0;"></div>
-                    <div class="skeleton skeleton-text" style="width: 20%; height: 1rem; margin:0;"></div>
-                </div>
-            `).join('');
-        }
-
-        function updateDashboard(data) {
-            // 1. Metrics Cards
-            document.getElementById('totalCount').innerText = data.total_updates.toLocaleString();
-
-            const stateEntries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
-            if (stateEntries.length > 0) {
-                document.getElementById('topState').innerText = stateEntries[0][0];
-                document.getElementById('topStateVal').innerText = stateEntries[0][1].toLocaleString() + ' records';
-            } else {
-                document.getElementById('topState').innerText = '-';
-            }
-
-            const ageEntries = Object.entries(data.by_age_group).sort((a,b) => b[1] - a[1]);
-            if (ageEntries.length > 0) {
-                document.getElementById('topAgeGroup').innerText = getLabelForAgeKey(ageEntries[0][0]);
-            }
-
-            // 2. Charts
-            renderMainChart(data.by_month);
-            renderAgeChart(data.by_age_group);
-            renderDistrictList(data.by_district, stateEntries[0]?.[0]); // Default to top state
-        }
-
-        // --- Visualizations ---
-        function renderMainChart(monthlyData) {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if (mainChart) mainChart.destroy();
-
-            // Transform Data
-            // Ensure months are sorted 01-12
-            const labels = Object.keys(monthlyData || {}).sort((a,b) => parseInt(a) - parseInt(b));
-            const values = labels.map(m => monthlyData[m]);
-            
-            // Friendly Month Names
-            const monthNames = labels.map(m => {
-                const date = new Date();
-                date.setMonth(parseInt(m) - 1);
-                return date.toLocaleString('default', { month: 'short' });
+            allStates.forEach(st => {
+                combined.by_state[st] = 
+                    (STATE.data.enrolment.by_state[st] || 0) + 
+                    (STATE.data.biometric.by_state[st] || 0) + 
+                    (STATE.data.demographic.by_state[st] || 0);
             });
 
-            // Gradient Fill
-            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, colors.purpleLight);
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            // Merge Months (Assuming keys are '01', '02' etc)
+            const allMonths = new Set([
+                ...Object.keys(STATE.data.enrolment.by_month || {}),
+                ...Object.keys(STATE.data.biometric.by_month || {}),
+                ...Object.keys(STATE.data.demographic.by_month || {})
+            ]);
+            
+            allMonths.forEach(m => {
+                combined.by_month[m] = {
+                    total: 0,
+                    enrolment: STATE.data.enrolment.by_month?.[m] || 0,
+                    biometric: STATE.data.biometric.by_month?.[m] || 0,
+                    demographic: STATE.data.demographic.by_month?.[m] || 0
+                };
+                combined.by_month[m].total = combined.by_month[m].enrolment + combined.by_month[m].biometric + combined.by_month[m].demographic;
+            });
 
-            mainChart = new Chart(ctx, {
-                type: 'line',
+            STATE.combined = combined;
+        }
+
+        // --- UI UPDATES ---
+        function updateUI() {
+            const data = STATE.combined;
+            if(!data) return;
+
+            // 1. KPIs
+            animateValue('grandTotal', data.total);
+            animateValue('kpiEnrol', data.by_dataset.enrolment);
+            animateValue('kpiBio', data.by_dataset.biometric);
+            animateValue('kpiDemo', data.by_dataset.demographic);
+
+            // 2. Charts
+            renderTrendChart();
+            renderMixChart();
+            renderAgeChart();
+            
+            // 3. Matrix & District
+            renderMatrix();
+            renderDistrictList();
+        }
+
+        function animateValue(id, end) {
+            const el = document.getElementById(id);
+            el.innerText = end.toLocaleString();
+            el.classList.remove('skeleton');
+        }
+
+        // --- CHARTS ---
+        let trendChart = null;
+        function renderTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+
+            // Prepare Data
+            const months = Object.keys(STATE.combined.by_month).sort((a,b) => parseInt(a) - parseInt(b));
+            const monthNames = months.map(m => {
+                 const d = new Date(); d.setMonth(parseInt(m)-1);
+                 return d.toLocaleString('default', { month: 'short' });
+            });
+            
+            const dBio = months.map(m => STATE.combined.by_month[m].biometric);
+            const dEnrol = months.map(m => STATE.combined.by_month[m].enrolment);
+            const dDemo = months.map(m => STATE.combined.by_month[m].demographic);
+
+            trendChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: monthNames,
-                    datasets: [{
-                        label: 'Volume',
-                        data: values,
-                        borderColor: colors.purple,
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        tension: 0.4, // Smooth curve
-                        fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: colors.purple,
-                        pointBorderWidth: 2
-                    }]
+                    datasets: [
+                        { label: 'Enrolment', data: dEnrol, backgroundColor: COLORS.enrol, stack: 'Stack 0' },
+                        { label: 'Biometric', data: dBio, backgroundColor: COLORS.bio, stack: 'Stack 0' },
+                        { label: 'Demographic', data: dDemo, backgroundColor: COLORS.demo, stack: 'Stack 0' }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#fff',
-                            titleColor: '#111827',
-                            bodyColor: '#6b7280',
-                            borderColor: '#e5e7eb',
-                            borderWidth: 1,
-                            padding: 12,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y.toLocaleString() + ' updates';
-                                }
-                            }
-                        }
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: colors.grid,
-                                borderDash: [4, 4],
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: colors.text,
-                                font: { size: 11 }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: colors.text,
-                                font: { size: 11 }
-                            }
-                        }
+                        x: { grid: { display: false } },
+                        y: { grid: { color: '#f1f5f9' }, stacked: true }
+                    },
+                    plugins: {
+                        legend: { position: 'top', align: 'end' }
                     }
                 }
             });
         }
 
-        function renderAgeChart(ageData) {
-            const ctx = document.getElementById('ageChart').getContext('2d');
-            if (ageChart) ageChart.destroy();
+        let mixChart = null;
+        function renderMixChart() {
+            const ctx = document.getElementById('mixChart').getContext('2d');
+            if (mixChart) mixChart.destroy();
 
-            const labels = Object.keys(ageData);
-            const values = Object.values(ageData);
+            mixChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Enrolment', 'Biometric', 'Demographic'],
+                    datasets: [{
+                        data: [
+                            STATE.combined.by_dataset.enrolment,
+                            STATE.combined.by_dataset.biometric,
+                            STATE.combined.by_dataset.demographic
+                        ],
+                        backgroundColor: [COLORS.enrol, COLORS.bio, COLORS.demo],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+        
+        let ageChart = null;
+        function renderAgeChart() {
+            // Aggregate ages logic
+             const ctx = document.getElementById('ageChart').getContext('2d');
+            if (ageChart) ageChart.destroy();
+            
+            // Simple aggregation of all datasets by age
+            // Note: Keys might differ? '0-5', '5-17', '18+' are standard now.
+            const ageKeys = ['0-5', '5-17', '18+'];
+            const totals = ageKeys.map(k => {
+                return (STATE.data.enrolment.by_age_group[k]||0) + 
+                       (STATE.data.biometric.by_age_group[k]||0) + 
+                       (STATE.data.demographic.by_age_group[k]||0);
+            });
 
             ageChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels.map(l => getLabelForAgeKey(l)),
+                    labels: ageKeys,
                     datasets: [{
-                        label: 'Population',
-                        data: values,
-                        backgroundColor: [colors.purple, colors.green, colors.tertiary],
-                        borderRadius: 6,
-                        barThickness: 40
+                        label: 'Total Residents',
+                        data: totals,
+                        backgroundColor: ['#94a3b8', '#64748b', '#475569'],
+                        borderRadius: 4,
+                        barThickness: 30
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: colors.text } }
-                    }
+                    scales: { x: { display: false }, y: { grid: { display:false } } }
                 }
             });
         }
 
-        function renderDistrictList(districtData, selectedState) {
-            const container = document.getElementById('districtList');
-            container.innerHTML = '';
-
-            if (!districtData || !selectedState || !districtData[selectedState]) {
-                container.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 1rem;">No granular district data available.</div>';
-                return;
-            }
-
-            const districts = districtData[selectedState];
-            // Sort by count
-            const sorted = Object.entries(districts).sort((a,b) => b[1] - a[1]).slice(0, 5); // Top 5
+        // --- MATRIX & LIST UTILS ---
+        function renderMatrix() {
+            const tbody = document.getElementById('matrixBody');
+            tbody.innerHTML = '';
             
-            const maxVal = sorted[0][1];
+            // Sort states by total volume
+            const entries = Object.entries(STATE.combined.by_state).sort((a,b) => b[1] - a[1]);
+            const maxVal = entries[0][1];
 
-            sorted.forEach(([name, count]) => {
-                const percent = (count / maxVal) * 100;
+            entries.forEach(([st, val]) => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => filterByState(st);
                 
-                const item = document.createElement('div');
-                item.className = 'district-item';
-                item.innerHTML = `
-                    <div class="district-name">${name}</div>
-                    <div class="district-bar">
-                        <div class="district-fill" style="width: ${percent}%"></div>
-                    </div>
-                    <div class="district-val">${count.toLocaleString()}</div>
+                const percent = (val / maxVal) * 100;
+                
+                tr.innerHTML = `
+                    <td>${st}</td>
+                    <td class="matrix-val">${val.toLocaleString()}</td>
+                    <td>
+                        <div style="height: 4px; background: #e2e8f0; border-radius: 2px; width: 100%;">
+                            <div style="height: 100%; width: ${percent}%; background: ${st === STATE.filterState ? '#000' : 'var(--c-bio)'}; border-radius: 2px;"></div>
+                        </div>
+                    </td>
                 `;
-                container.appendChild(item);
+                if(STATE.filterState === st) tr.style.background = '#f1f5f9';
+                tbody.appendChild(tr);
             });
         }
 
-        // --- Helpers ---
-        function getLabelForAgeKey(key) {
-            if (key === '0-5') return 'Infants (0-5)';
-            if (key === '5-17') return 'School Age (5-17)';
-            if (key === '18+') return 'Adults (18+)';
-            return key;
+        function populateStateDropdown() {
+             const sel = document.getElementById('stateSelect');
+             // Clear existing except first
+             sel.innerHTML = '<option value="all">All India</option>';
+             const states = Object.keys(STATE.combined.by_state).sort();
+             states.forEach(st => {
+                 const opt = document.createElement('option');
+                 opt.value = st;
+                 opt.innerText = st;
+                 sel.appendChild(opt);
+             });
         }
 
-        // --- Listeners ---
-        datasetSelect.addEventListener('change', fetchData);
-        yearSelect.addEventListener('change', fetchData);
+        // --- DISTRICT DEEP DIVE ---
+        function renderDistrictList() {
+            // Find top districts for Current Filter State (or top state if All)
+            let targetState = STATE.filterState;
+            if (targetState === 'all') {
+                // If All, use highest volume state
+                const entries = Object.entries(STATE.combined.by_state).sort((a,b) => b[1] - a[1]);
+                targetState = entries[0][0];
+            }
+            
+            const cont = document.getElementById('districtList');
+            cont.innerHTML = `<div style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; color:var(--text-muted); border-bottom:1px solid #eee;">Focus: ${targetState}</div>`;
 
-        // --- Init ---
-        fetchData();
+            // Merge Districts for this state from all 3 datasets
+            const dMap = {};
+            const addToMap = (dsData) => {
+                if(dsData.by_district && dsData.by_district[targetState]) {
+                    Object.entries(dsData.by_district[targetState]).forEach(([dName, val]) => {
+                        dMap[dName] = (dMap[dName]||0) + val;
+                    });
+                }
+            };
+            
+            addToMap(STATE.data.enrolment);
+            addToMap(STATE.data.biometric);
+            addToMap(STATE.data.demographic);
+            
+            const sorted = Object.entries(dMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            
+            sorted.forEach(([d, v]) => {
+                const el = document.createElement('div');
+                el.style.padding = '0.5rem';
+                el.style.borderBottom = '1px solid #f8fafc';
+                el.style.display = 'flex';
+                el.style.justifyContent = 'space-between';
+                el.style.fontSize = '0.85rem';
+                el.innerHTML = `
+                    <span>${d}</span>
+                    <span style="font-weight:600;">${v.toLocaleString()}</span>
+                `;
+                cont.appendChild(el);
+            });
+        }
+        
+        // --- INTERACTION ---
+        function filterByState(st) {
+            STATE.filterState = st;
+            document.getElementById('stateSelect').value = st;
+            renderDistrictList();
+            renderMatrix(); // re-render to highlight
+            // Note: In a real PBI, dragging/clicking would filter charts too. 
+            // For now, we update the District list as the "Drill Down" action.
+            // Charts remain "All India" contexts in this version unless we want to filter them too.
+            // Let's filter charts for "Trends" if user wants? 
+            // Complexity warning: We need state-level monthly data, which our API MIGHT NOT send in `by_month`.
+            // Our API only sends `by_month` as global aggregation. 
+            // Limitation: Current API doesn't support "Get Monthly Trend FOR State X".
+            // So charts stay global (Context: "All India Ecosystem"). District list drills down.
+        }
+
+        document.getElementById('yearSelect').addEventListener('change', (e) => {
+            STATE.year = e.target.value;
+            fetchAllData();
+        });
+
+        document.getElementById('stateSelect').addEventListener('change', (e) => {
+            filterByState(e.target.value);
+        });
+
+        // Init
+        fetchAllData();
 
     </script>
 </body>
