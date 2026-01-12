@@ -42,6 +42,11 @@ app.get('/docs', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/docs.html'));
 });
 
+// Dashboard Route (Clean URL)
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+});
+
 // Root Landing Page - Simplest JSON
 app.get('/', (req, res) => {
   res.json({
