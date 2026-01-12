@@ -260,6 +260,22 @@
         .bg-purple-light { background: #f5f3ff; color: var(--primary); }
         .bg-green-light { background: #ecfdf5; color: var(--secondary); }
 
+        /* Skeleton Loading */
+        .skeleton {
+            background: #e5e7eb;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .skeleton-text { height: 1.5rem; width: 60%; margin-bottom: 0.5rem; }
+        .skeleton-rect { height: 100%; width: 100%; }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body>
@@ -371,11 +387,10 @@
 
         // --- Fetch & Update ---
         async function fetchData() {
+            setLoadingState();
+            
             const dataset = datasetSelect.value;
             const year = yearSelect.value;
-            
-            // UI Loading State
-            document.getElementById('totalCount').innerText = '...';
             
             try {
                 const res = await fetch(`/api/analytics/${dataset}?year=${year}`);
@@ -388,6 +403,32 @@
                 console.error(e);
                 document.getElementById('totalCount').innerText = 'ERR';
             }
+        }
+
+        function setLoadingState() {
+            // Metrics Skeletons
+            document.getElementById('totalCount').innerHTML = '<div class="skeleton skeleton-text" style="width: 120px; height: 2.5rem;"></div>';
+            document.getElementById('topState').innerHTML = '<div class="skeleton skeleton-text" style="width: 150px; height: 2rem;"></div>';
+            document.getElementById('topStateVal').innerHTML = '<div class="skeleton skeleton-text" style="width: 80px; height: 1rem;"></div>';
+            document.getElementById('topAgeGroup').innerHTML = '<div class="skeleton skeleton-text" style="width: 100px; height: 2rem;"></div>';
+
+            // Charts Skeletons
+            // destroy existing charts if any to clear canvas
+            if (mainChart) mainChart.destroy();
+            if (ageChart) ageChart.destroy();
+            
+            // Note: We can't easily put HTML inside canvas, so we might overlay or just accept canvas clear.
+            // Better: clear canvas container or check if we want to overlay a div.
+            // For simplicity, we'll leave charts blank (cleared) during load or show a small loader if strictly needed.
+            // But user asked for skeletons. Let's do district list skeleton.
+            
+            const districtContainer = document.getElementById('districtList');
+            districtContainer.innerHTML = Array(5).fill(0).map(() => `
+                <div class="district-item">
+                    <div class="skeleton skeleton-text" style="width: 40%; height: 1rem; margin:0;"></div>
+                    <div class="skeleton skeleton-text" style="width: 20%; height: 1rem; margin:0;"></div>
+                </div>
+            `).join('');
         }
 
         function updateDashboard(data) {
