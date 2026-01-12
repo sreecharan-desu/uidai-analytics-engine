@@ -1,11 +1,14 @@
 
 # Pre-computed map for O(1) case-insensitive lookup
+
+# Pre-computed map for O(1) case-insensitive lookup
 STATE_STANDARD_MAP = {
   'andhra pradesh': 'Andhra Pradesh',
   'arunachal pradesh': 'Arunachal Pradesh',
   'assam': 'Assam',
   'bihar': 'Bihar',
   'chhattisgarh': 'Chhattisgarh',
+  'chhatisgarh': 'Chhattisgarh',
   'goa': 'Goa',
   'gujarat': 'Gujarat',
   'haryana': 'Haryana',
@@ -34,13 +37,17 @@ STATE_STANDARD_MAP = {
   'west bengal': 'West Bengal',
   'westbengal': 'West Bengal',
   'west bangal': 'West Bengal',
+  'west bengli': 'West Bengal',
+  'west bengal.': 'West Bengal',
   # UTs
   'andaman and nicobar islands': 'Andaman and Nicobar Islands',
   'andaman nicobar islands': 'Andaman and Nicobar Islands',
   'chandigarh': 'Chandigarh',
   'dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+  'the dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
   'dadra nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
   'daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+  'daman & diu': 'Dadra and Nagar Haveli and Daman and Diu',
   'daman diu': 'Dadra and Nagar Haveli and Daman and Diu',
   'dadra and nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
   'dadra & nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
@@ -68,3 +75,63 @@ VALID_STATES = {
 }
 
 LOWER_CASE_VALID_STATES = {s.lower(): s for s in VALID_STATES}
+
+DISTRICT_ALIAS_MAP = {
+    # Tamil Nadu
+    'tuticorin': 'Thoothukkudi',
+
+    # Karnataka
+    'bangalore': 'Bengaluru',
+    'belgaum': 'Belagavi',
+    'shimoga': 'Shivamogga',
+    'mysore': 'Mysuru',
+    'tumkur': 'Tumakuru',
+    'bellary': 'Ballari',
+
+    # Maharashtra / MP
+    'gondia': 'Gondiya',
+    'ahmadabad': 'Ahmedabad',
+    'ahmadnagar': 'Ahilyanagar',
+    'ahmed nagar': 'Ahilyanagar',
+    'hoshangabad': 'Narmadapuram',
+    'mumbai( sub urban )': 'Mumbai Suburban',
+
+    # West Bengal
+    'burdwan': 'Bardhaman',
+    'barddhaman': 'Bardhaman',
+    'hugli': 'Hooghly',
+    'hooghiy': 'Hooghly',
+    'hawrah': 'Howrah',
+    'haora': 'Howrah',
+    
+    # Uttarakhand
+    'hardwar': 'Haridwar',
+
+    # Uttar Pradesh
+    'allahabad': 'Prayagraj',
+
+    # Andhra Pradesh
+    'ysr': 'Y.S.R. Kadapa',
+    'y s r': 'Y.S.R. Kadapa',
+    'y.s.r.': 'Y.S.R. Kadapa',
+    'y. s. r': 'Y.S.R. Kadapa',
+    'cuddapah': 'Y.S.R. Kadapa',
+    'anantapur': 'Ananthapuramu',
+    'ananthapur': 'Ananthapuramu',
+
+    # Telangana / AP Split fallout
+    'k v rangareddy': 'Rangareddy',
+    'k v rangareddi': 'Rangareddy',
+    'k.v.rangareddy': 'Rangareddy',
+    'k.v. rangareddy': 'Rangareddy',
+    'rangareddi': 'Rangareddy',
+    'warangal (urban)': 'Warangal Urban',
+    'karim nagar': 'Karimnagar',
+    'medchal malkajgiri': 'Medchal-Malkajgiri',
+
+    # Gujarat
+    'banas kantha': 'Banaskantha',
+
+    # HP
+    'lahul spiti': 'Lahaul And Spiti',
+}
