@@ -168,8 +168,8 @@ def process_and_merge(dataset_name, local_base_path, new_records):
             
             df_new['norm_state'] = df_new.apply(clean_state, axis=1)
             
-            # Strict Filter: Keep only Valid States (ONLY for Enrolment as per User request)
-            if dataset_name == 'enrolment':
+            # Strict Filter: Keep only Valid States (for Enrolment and Biometric as per User request)
+            if dataset_name in ['enrolment', 'biometric']:
                 df_new = df_new[df_new['norm_state'].isin(VALID_STATES)]
             else:
                  # For others, just use the normalized value if available, else keep original (or partial map)
@@ -184,7 +184,7 @@ def process_and_merge(dataset_name, local_base_path, new_records):
                 # If we are not filtering, we still want to apply the standard map where it matched
                 # If it didn't match (NaN), current logic leaves it as NaN if we assign it.
                 # Let's fillna with original if strict mode is off.
-                if dataset_name != 'enrolment':
+                if dataset_name not in ['enrolment', 'biometric']:
                      # If norm_state is null, keep original but maybe basic clean it?
                      # clean_state function creates a normalized version or None.
                      # Let's use the 'norm_state' where present.
