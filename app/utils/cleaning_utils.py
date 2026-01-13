@@ -86,16 +86,12 @@ def clean_dataframe(df, dataset_name):
             df.loc[mask, 'norm_state'] = df.loc[mask, pin_col].astype(str).str.split('.').str[0].map(PINCODE_MAP)
             
     # 3. Strict Filtering
-    # STRICT_DATASETS = ['enrolment', 'biometric'] 
-    # Demographic is explicitly NOT ensuring strictest filtering yet, pending its own notebook analysis.
-    if dataset_name in ['enrolment', 'biometric']:
+    # STRICT_DATASETS = ['enrolment', 'biometric', 'demographic']
+    # We now enforce strict filtering for demographic as well, as we have improved the state map.
+    if dataset_name in ['enrolment', 'biometric', 'demographic']:
         df = df[df['norm_state'].isin(VALID_STATES)].copy()
     else:
-        # For demographic, we currently keep rows even if state is not mapped, 
-        # OR we map them if possible and keep original if not?
-        # Current sync_data logic: if not enrolment, strict filter OFF.
-        # But we should still fill 'state' with 'norm_state' if available.
-        # If norm_state is NaN, keep original.
+        # Fallback for unknown datasets
         df['norm_state'] = df['norm_state'].fillna(df[state_col])
     
     df[state_col] = df['norm_state']

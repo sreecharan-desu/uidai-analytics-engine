@@ -60,6 +60,21 @@ STATE_STANDARD_MAP = {
   'lakshadweep': 'Lakshadweep',
   'puducherry': 'Puducherry',
   'pondicherry': 'Puducherry',
+  
+  # Cities/Districts appearing as States
+  'nagpur': 'Maharashtra',
+  'jaipur': 'Rajasthan',
+  'gurgaon': 'Haryana',
+  'pune city': 'Maharashtra',
+  'darbhanga': 'Bihar',
+  'madanapalle': 'Andhra Pradesh',
+  'balanagar': 'Telangana',
+  'puttenahalli': 'Karnataka',
+  'raja annamalai puram': 'Tamil Nadu',
+  'greater kailash 2': 'Delhi',
+  'puthur': 'Andhra Pradesh',
+  '100000': 'Unknown', # Explicitly mark garbage
+  '561203': 'Karnataka', # Pincode for Bangalore rural/urban
 }
 
 VALID_STATES = {
