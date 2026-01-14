@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,6 +7,7 @@ import os
 from app.utils.logger import get_logger
 from app.services.aggregation_service import prewarm_cache
 from app.api.v1.api import api_router
+from app.dependencies import validate_api_key
 
 logger = get_logger()
 
@@ -97,7 +98,7 @@ def custom_docs():
 #     import asyncio
 #     asyncio.create_task(prewarm_cache())
 
-@app.get("/api/cron/prewarm")
+@app.get("/api/cron/prewarm", dependencies=[Depends(validate_api_key)])
 async def cron_prewarm():
     import asyncio
     # Run in background to avoid timeout of the cron request itself? 
