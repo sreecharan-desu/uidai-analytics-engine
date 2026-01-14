@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 import re
+from app.dependencies import validate_api_key
 
 router = APIRouter()
 
@@ -8,7 +9,7 @@ GITHUB_REPO = 'sreecharan-desu/uidai-analytics-engine'
 RELEASE_TAG = 'dataset-latest'
 
 @router.get("/{dataset}")
-async def get_dataset_redirect(dataset: str, year: str = None):
+async def get_dataset_redirect(dataset: str, year: str = None, api_key: str = Depends(validate_api_key)):
     valid_datasets = ['biometric', 'enrolment', 'demographic']
     
     if dataset not in valid_datasets:

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter, Response, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from app.services.aggregation_service import get_aggregate_insights
 from app.utils.logger import get_logger
+from app.dependencies import validate_api_key
 from datetime import datetime
 import csv
 import io
@@ -10,7 +11,7 @@ logger = get_logger()
 router = APIRouter()
 
 @router.get("/{dataset}")
-async def get_analytics(dataset: str, year: str = None, format: str = None, view: str = 'state'):
+async def get_analytics(dataset: str, year: str = None, format: str = None, view: str = 'state', api_key: str = Depends(validate_api_key)):
     try:
         valid_datasets = ['biometric', 'enrolment', 'demographic']
         if dataset not in valid_datasets:

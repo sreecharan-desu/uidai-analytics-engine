@@ -1,5 +1,5 @@
 #!/bin/bash
-BASE_URL="http://127.0.0.1:8000"
+BASE_URL="https://uidai.sreecharandesu.in"
 API_KEY="61c1713c4960ac786a29873e689c9407f49a45b0e6bceba893df2f7e8285230e"
 SLEEP_DURATION=1
 
