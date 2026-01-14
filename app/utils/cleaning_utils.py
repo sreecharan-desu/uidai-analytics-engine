@@ -2,14 +2,13 @@
 import re
 import pandas as pd
 from app.utils.state_data import STATE_STANDARD_MAP, VALID_STATES, DISTRICT_ALIAS_MAP
-from app.config import config
 import json
 import os
 
 # Load PINCODE_MAP
 PINCODE_MAP = {}
 try:
-    path = os.path.join(os.getcwd(), 'app', 'config', 'pincodeMap.json')
+    path = os.path.join(os.getcwd(), 'app', 'core', 'pincodeMap.json')
     if os.path.exists(path):
         with open(path, 'r') as f:
             PINCODE_MAP = json.load(f)

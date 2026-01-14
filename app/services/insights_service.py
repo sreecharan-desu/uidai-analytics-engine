@@ -1,6 +1,6 @@
 import httpx
 import json
-from app.config import config
+from app.core.config import settings
 from app.utils.logger import get_logger
 from app.utils.redis_client import redis_client
 
@@ -40,7 +40,7 @@ async def fetch_insights(dataset: str, filters: dict, limit: int, page: int):
         logger.warning(f"Redis Cache Error: {str(e)}")
         
     # Map Resource ID
-    resource_id = config.RESOURCES.get(ds_lower)
+    resource_id = settings.RESOURCES.get(ds_lower)
     if not resource_id:
         raise ValueError("Invalid dataset type.")
         
@@ -49,7 +49,7 @@ async def fetch_insights(dataset: str, filters: dict, limit: int, page: int):
     # 2. External API
     api_url = f"https://api.data.gov.in/resource/{resource_id}"
     params = {
-        "api-key": config.DATA_GOV_API_KEY,
+        "api-key": settings.DATA_GOV_API_KEY,
         "format": "json",
         "limit": limit,
         "offset": offset

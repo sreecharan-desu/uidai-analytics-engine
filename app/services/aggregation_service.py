@@ -15,7 +15,7 @@ logger = get_logger()
 PINCODE_MAP = {}
 possible_paths = [
     os.path.join(os.getcwd(), 'src', 'config', 'pincodeMap.json'),
-    os.path.join(os.getcwd(), 'app', 'config', 'pincodeMap.json')
+    os.path.join(os.getcwd(), 'app', 'core', 'pincodeMap.json')
 ]
 
 for p in possible_paths:

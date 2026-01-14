@@ -24,5 +24,5 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
         run: |
-          pip install upstash-redis
+          pip install -r requirements.txt
           python scripts/flush_redis.py

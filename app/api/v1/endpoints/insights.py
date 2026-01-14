@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
+from app.schemas.analytics import InsightQuery
 from app.dependencies import validate_api_key
 from app.services.insights_service import fetch_insights
 from app.utils.logger import get_logger
@@ -8,14 +9,10 @@ from app.utils.logger import get_logger
 logger = get_logger()
 router = APIRouter()
 
-class InsightsQuery(BaseModel):
-    dataset: str
-    filters: Optional[Dict[str, Any]] = {}
-    limit: Optional[int] = 100
-    page: Optional[int] = 1
+
 
 @router.post("/query", dependencies=[Depends(validate_api_key)])
-async def query_insights(body: InsightsQuery):
+async def query_insights(body: InsightQuery):
     try:
         # Sanitize inputs
         limit_num = max(1, min(body.limit or 100, 1000))

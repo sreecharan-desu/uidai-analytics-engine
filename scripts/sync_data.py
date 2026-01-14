@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.state_data import STATE_STANDARD_MAP, VALID_STATES
-from app.config import config
+from app.core.config import settings
 # Import centralized cleaning
 from app.utils.cleaning_utils import clean_dataframe
 
@@ -27,14 +27,17 @@ if not DATA_GOV_API_KEY:
 
 # Load Pincode Map
 PINCODE_MAP = {}
-pincode_path = os.path.join(os.getcwd(), 'app', 'config', 'pincodeMap.json')
+pincode_path = os.path.join(os.getcwd(), 'app', 'core', 'pincodeMap.json')
 if os.path.exists(pincode_path):
     with open(pincode_path, 'r') as f:
         PINCODE_MAP = json.load(f)
 
 def download_existing_from_github(dataset_name):
     """Download existing full CSV from GitHub to find the starting point."""
-    url = f"https://github.com/{config.github_repo if hasattr(config, 'github_repo') else 'sreecharan-desu/uidai-data-sync'}/releases/download/dataset-latest/{dataset_name}_full.csv"
+    # Assuming standard repo if not in settings, or add to settings. 
+    # Current code uses hardcoded fallback if config attribute missing.
+    repo = 'sreecharan-desu/uidai-data-sync'
+    url = f"https://github.com/{repo}/releases/download/dataset-latest/{dataset_name}_full.csv"
     local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
     
@@ -195,7 +198,7 @@ def process_and_merge(dataset_name, local_base_path, new_records):
     print(f"Update complete for {dataset_name}. Total records: {len(df_final)}")
 
 def main():
-    datasets = config.RESOURCES
+    datasets = settings.RESOURCES
     
     for name, rid in datasets.items():
         local_file = download_existing_from_github(name)
