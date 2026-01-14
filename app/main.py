@@ -89,7 +89,7 @@ def custom_docs():
          path = os.path.join("public", "docs.html")
     if os.path.exists(path):
         return FileResponse(path)
-    return JSONResponse(status_code=404, content={"error": "Docs Not Found"})
+    return RedirectResponse(url="/docs.html")
 
 # Startup event removed to prevent cold start timeouts on serverless
 # @app.on_event("startup")
