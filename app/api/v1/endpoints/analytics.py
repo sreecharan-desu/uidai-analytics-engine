@@ -11,7 +11,7 @@ logger = get_logger()
 router = APIRouter()
 
 @router.get("/{dataset}")
-async def get_analytics(dataset: str, year: str = None, format: str = None, view: str = 'state', api_key: str = Depends(validate_api_key)):
+async def get_analytics(dataset: str, year: str = None, format: str = None, view: str = 'state'):
     try:
         valid_datasets = ['biometric', 'enrolment', 'demographic']
         if dataset not in valid_datasets:
