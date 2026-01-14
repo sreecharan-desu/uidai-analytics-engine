@@ -5,7 +5,7 @@ from app.utils.logger import get_logger
 logger = get_logger()
 
 async def validate_api_key(request: Request):
-    api_key = request.headers.get("x-api-key")
+    api_key = request.headers.get("x-api-key") or request.query_params.get("api_key")
     
     if not api_key or api_key != settings.CLIENT_API_KEY:
         received = api_key if api_key else ""
