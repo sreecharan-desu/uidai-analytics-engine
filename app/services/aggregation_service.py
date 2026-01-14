@@ -30,7 +30,7 @@ for p in possible_paths:
 
 memory_cache = {}
 
-GITHUB_REPO = 'sreecharan-desu/uidai-data-sync'
+GITHUB_REPO = 'sreecharan-desu/uidai-analytics-engine'
 RELEASE_TAG = 'dataset-latest'
 
 def normalize_state_text(x):

@@ -4,7 +4,7 @@ import re
 
 router = APIRouter()
 
-GITHUB_REPO = 'sreecharan-desu/uidai-data-sync'
+GITHUB_REPO = 'sreecharan-desu/uidai-analytics-engine'
 RELEASE_TAG = 'dataset-latest'
 
 @router.get("/{dataset}")

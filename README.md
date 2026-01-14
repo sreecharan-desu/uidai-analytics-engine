@@ -1,6 +1,6 @@
 # UIDAI Ecosystem Analytics API
 
-![GitHub Release](https://img.shields.io/github/v/release/sreecharan-desu/uidai-data-sync?style=for-the-badge&color=orange)
+![GitHub Release](https://img.shields.io/github/v/release/sreecharan-desu/uidai-analytics-engine?style=for-the-badge&color=orange)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)
 ![Vercel](https://img.shields.io/badge/Vercel-Serverless-black?style=for-the-badge&logo=vercel)
@@ -90,8 +90,8 @@ x-api-key: YOUR_SECURE_KEY
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/sreecharan-desu/uidai-data-sync.git
-   cd uidai-data-sync
+   git clone https://github.com/sreecharan-desu/uidai-analytics-engine.git
+   cd uidai-analytics-engine
    ```
 
 2. **Setup Environment**

@@ -36,7 +36,7 @@ def download_existing_from_github(dataset_name):
     """Download existing full CSV from GitHub to find the starting point."""
     # Assuming standard repo if not in settings, or add to settings. 
     # Current code uses hardcoded fallback if config attribute missing.
-    repo = 'sreecharan-desu/uidai-data-sync'
+    repo = 'sreecharan-desu/uidai-analytics-engine'
     url = f"https://github.com/{repo}/releases/download/dataset-latest/{dataset_name}_full.csv"
     local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
