@@ -18,8 +18,7 @@ async def get_dataset_redirect(dataset: str, year: str = None, api_key: str = De
             status_code=404, 
             media_type="application/json"
         )
-        # Node used res.status(404).json(...)
-        
+    
     file_name = ''
     if year:
         if not re.match(r'^\d{4}$', str(year)):
