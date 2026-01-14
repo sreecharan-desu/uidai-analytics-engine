@@ -1,9 +1,9 @@
 
-name: Hourly Redis Flush
+name: 6-Hourly Redis Flush
 
 on:
   schedule:
-    - cron: '0 * * * *' # Run at minute 0 past every hour
+    - cron: '0 */6 * * *' # Run at minute 0 past every 6th hour
   workflow_dispatch:
 
 jobs:

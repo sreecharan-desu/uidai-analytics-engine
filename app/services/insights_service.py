@@ -28,7 +28,7 @@ async def fetch_insights(dataset: str, filters: dict, limit: int, page: int):
     
     # 1. Check Redis (L2)
     try:
-        cached = redis_client.get(cache_key)
+        cached = await redis_client.get(cache_key)
         if cached:
             if isinstance(cached, str):
                 cached = json.loads(cached)
@@ -103,7 +103,7 @@ async def fetch_insights(dataset: str, filters: dict, limit: int, page: int):
         # Upstash-redis-py: set(name, value, ex)
         # It handles dict serialization? Usually better to serialize.
         # But let's see library docs. It usually accepts string.
-        redis_client.set(cache_key, json.dumps(response_payload), ex=86400)
+        await redis_client.set(cache_key, json.dumps(response_payload), ex=86400)
     except Exception as e:
         logger.warning(f"Failed to set Redis cache: {str(e)}")
         
