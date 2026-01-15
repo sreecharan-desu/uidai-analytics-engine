@@ -1,5 +1,10 @@
 # UIDAI Ecosystem Analytics API
 
+
+[![6-Hourly Redis Flush](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-6h.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-6h.yml)
+
+
+
 ![GitHub Release](https://img.shields.io/github/v/release/sreecharan-desu/uidai-analytics-engine?style=for-the-badge&color=orange)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)
