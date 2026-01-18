@@ -149,7 +149,7 @@ def _generate_fallback_data() -> pd.DataFrame:
         # Normalize
         master_df['state_norm'] = master_df['state'].apply(normalize_text)
         master_df['state_clean'] = master_df['state_norm'].map(STATE_STANDARD_MAP)
-        master_df['state_clean'].fillna(master_df['state'].str.title(), inplace=True)
+        master_df['state_clean'] = master_df['state_clean'].fillna(master_df['state'].str.title())
         
         master_df['district_norm'] = master_df['district'].astype(str).str.lower().str.strip().str.replace(r'\s+', ' ', regex=True)
         normalized_alias_map = {k.lower(): v for k, v in DISTRICT_ALIAS_MAP.items()}

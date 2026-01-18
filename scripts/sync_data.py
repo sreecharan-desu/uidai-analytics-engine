@@ -161,9 +161,30 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
         "api-key": DATA_GOV_API_KEY,
         "format": "json",
         "limit": 10000,
-        "offset": start_offset
+        "offset": start_offset if start_offset < 4800000 else 0
     }
     
+    # Implementing "Search After" logic for large datasets like biometric
+    # If offset exceeds 4.8M, we switch to date-filtering to bypass max_result_window
+    is_deep_paging = (dataset_name == "biometric" and start_offset >= 4800000)
+    
+    if is_deep_paging:
+        # Cursor lookup: Find the latest date in our local dataset.
+        local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
+        if os.path.exists(local_path):
+            try:
+                # Optimized tail lookup for large files
+                df_last = pd.read_csv(local_path).tail(2000)
+                if not df_last.empty and 'date' in df_last.columns:
+                    latest_date = df_last['date'].max()
+                    # Query for records from the latest date onwards (Lucene Range Query)
+                    params["query"] = f'date:["{latest_date}" TO *]'
+                    params["sort"] = "date asc"
+                    params["offset"] = 0 
+                    print(f"Applying search_after strategy for {dataset_name} (Cursor: {latest_date})")
+            except Exception as e:
+                print(f"Warning: search_after cursor lookup failed: {e}")
+
     all_new_records = []
     
     try:
@@ -174,27 +195,35 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
         
         data = resp.json()
         if data.get("status") != "ok":
-            print(f"API returned error for {dataset_name}: {data.get('message')}")
+            error_msg = str(data.get('message'))
+            print(f"API returned error for {dataset_name}: {error_msg}")
+            
+            # Auto-recovery if offset error happens unexpectedly
+            if "Result window is too large" in error_msg and not is_deep_paging:
+                 print("Attempting automatic deep-paging recovery...")
+                 return fetch_incremental_records(resource_id, dataset_name, 5000000)
             return []
 
-        current_total = data.get("total")
-        if current_total is None:
-            return []
-            
-        current_total = int(current_total)
+        current_total = int(data.get("total", 0))
         
-        if start_offset >= current_total:
+        if not is_deep_paging and start_offset >= current_total:
             print(f"Dataset {dataset_name} is already up to date ({start_offset}/{current_total}).")
             return []
             
         print(f"Syncing {dataset_name} ({resource_id})...")
-        print(f"Found {current_total - start_offset} new records (Total: {current_total}).")
+        if is_deep_paging:
+            print(f"Deep-paging mode: Cursor '{params.get('query')}' (Results in window: {current_total})")
+        else:
+            print(f"Found {current_total - start_offset} new records (Total: {current_total}).")
         
         records = data.get("records", [])
         all_new_records.extend(records)
-        offset = start_offset + len(records)
         
-        while offset < current_total:
+        # Determine how many records we've actually fetched vs how many match the current query
+        offset = params["offset"] + len(records)
+        total_matching = int(data.get("total", 0))
+        
+        while len(all_new_records) < total_matching:
             params["offset"] = offset
             resp = requests.get(base_url, params=params, timeout=30)
             if resp.status_code != 200:
@@ -207,12 +236,17 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
             
             all_new_records.extend(records)
             offset += len(records)
-            print(f"Progress: {offset}/{current_total} fetched...", end="\r")
+            print(f"Progress: {len(all_new_records)}/{total_matching} fetched...", end="\r")
+            
+            # Safe boundary for max_result_window
+            if offset >= 5000000 and not is_deep_paging:
+                 print("\nWarning: Safety window limit reached. Stopping batch to prevent 500 error.")
+                 break
 
     except Exception as e:
         print(f"Incremental fetch failed: {e}")
         
-    print(f"\nFetched {len(all_new_records)} new records.")
+    print(f"\nFetched {len(all_new_records)} records.")
     return all_new_records
 
 def process_and_merge(dataset_name, local_base_path, new_records):
@@ -233,7 +267,16 @@ def process_and_merge(dataset_name, local_base_path, new_records):
             return
         df_final = df_base
     else:
-        df_final = pd.concat([df_base, df_new], ignore_index=True)
+        # Safe merge: de-duplicate against base if we fetched using date overlapping
+        if not df_base.empty and not df_new.empty:
+            df_combined = pd.concat([df_base, df_new], ignore_index=True)
+            # Use all identifying columns for de-duplication
+            # Exclude derived columns if any
+            subset_cols = [c for c in df_combined.columns if c not in ['source_dataset', 'year']]
+            df_final = df_combined.drop_duplicates(subset=subset_cols, keep='last')
+        else:
+            df_final = pd.concat([df_base, df_new], ignore_index=True)
+
     
     if df_final.empty:
         return
@@ -318,7 +361,7 @@ def generate_powerbi_master():
         # Normalization
         master_df['state_norm'] = master_df['state'].apply(normalize_text)
         master_df['state_clean'] = master_df['state_norm'].map(NB_STATE_STANDARD_MAP)
-        master_df['state_clean'].fillna(master_df['state'].str.title(), inplace=True)
+        master_df['state_clean'] = master_df['state_clean'].fillna(master_df['state'].str.title())
         
         master_df['district_norm'] = master_df['district'].astype(str).str.lower().str.strip().str.replace(r'\s+', ' ', regex=True)
         normalized_alias_map = {k.lower(): v for k, v in NB_DISTRICT_ALIAS_MAP.items()}
