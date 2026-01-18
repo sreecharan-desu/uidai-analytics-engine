@@ -396,66 +396,87 @@ def generate_powerbi_master():
         master_df['biometric_update_ratio'] = (master_df['total_biometric_updates'] / master_df['total_activity']).fillna(0)
         master_df['demographic_update_ratio'] = (master_df['total_demographic_updates'] / master_df['total_activity']).fillna(0)
         
-        # Save Master CSV
+        # Save Partitioned Master (Yearly)
+        master_parts_dir = os.path.join(dataset_dir, 'master_parts')
+        os.makedirs(master_parts_dir, exist_ok=True)
+        
+        # Ensure year for partitioning
+        if 'year' not in master_df.columns:
+            master_df['year'] = master_df['date'].dt.year
+
+        print(f"Saving Master partitions to {master_parts_dir}...")
+        for year, group in master_df.groupby('year'):
+            if pd.isna(year): continue
+            part_path = os.path.join(master_parts_dir, f"master_{int(year)}.csv")
+            group.to_csv(part_path, index=False)
+        
+        # We still save the full one locally just in case, but we won't push it
         out_path_csv = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
         master_df.to_csv(out_path_csv, index=False)
-        print(f"Generated Aadhaar PowerBI Master CSV: {out_path_csv}")
         
-        print(f"Master Dataset Generation Complete. Rows: {len(master_df)}")
+        print(f"Master Partitioning Complete. Total rows: {len(master_df)}")
 
     except Exception as e:
         print(f"Error generating PowerBI Master: {e}")
 
-def push_to_github():
+def push_to_github(updated_datasets=None):
     """
-    Pushes the generated CSV/GA files to GitHub Releases and commits metadata.
+    Selectively pushes updated files to GitHub Releases.
+    updated_datasets: List of dataset names that were actually changed.
     """
-    print("\n=== Pushing Data to GitHub ===")
+    print("\n=== Selective Push to GitHub ===")
     dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
-    
-    # 2. Upload to GitHub Release via 'gh' CLI
-    # Files to upload: biometric_full.csv, demographic_full.csv, enrolment_full.csv, 
-    # aadhaar_powerbi_master.csv
-    files_to_upload = [
-        os.path.join(dataset_dir, 'biometric_full.csv'),
-        os.path.join(dataset_dir, 'demographic_full.csv'),
-        os.path.join(dataset_dir, 'enrolment_full.csv'),
-        os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
-    ]
-    
     tag = "dataset-latest"
-    print(f"Uploading assets to release {tag}...")
-    for fpath in files_to_upload:
-        if os.path.exists(fpath):
-            # clobber to overwrite
-            os.system(f"gh release upload {tag} {fpath} --clobber")
-            print(f"Uploaded {os.path.basename(fpath)}")
+    
+    # 1. Upload the 'full' bases only if they were updated
+    if updated_datasets:
+        for ds in updated_datasets:
+            fpath = os.path.join(dataset_dir, f"{ds}_full.csv")
+            if os.path.exists(fpath):
+                print(f"Uploading updated base: {ds}_full.csv")
+                os.system(f"gh release upload {tag} {fpath} --clobber")
 
-    # 3. Git Commit (Metadata & Code)
+    # 2. Upload only 'recent' Master Partitions (Year 2025 onwards)
+    # This prevents re-uploading historical data (2010-2024) which doesn't change
+    master_parts_dir = os.path.join(dataset_dir, 'master_parts')
+    if os.path.exists(master_parts_dir):
+        # We upload the current year and the previous one for safety (overlap)
+        current_year = datetime.now().year
+        years_to_push = [current_year - 1, current_year]
+        
+        for yr in years_to_push:
+            fpath = os.path.join(master_parts_dir, f"master_{yr}.csv")
+            if os.path.exists(fpath):
+                print(f"Uploading Master Partition: master_{yr}.csv")
+                os.system(f"gh release upload {tag} {fpath} --clobber")
+
+    # 3. Git metadata push
     print("Committing metadata...")
     os.system("git add .")
-    # We use --allow-empty in case no code changed
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    os.system(f'git commit -m "Auto-sync: {timestamp}" --allow-empty')
+    os.system(f'git commit -m "Auto-sync (Partitioned): {timestamp}" --allow-empty')
     os.system("git push origin main")
-    print("Git push complete.")
+    print("Push complete.")
 
 def main():
     datasets = settings.RESOURCES
+    updated_datasets = []
     
     for name, rid in datasets.items():
         local_file = download_existing_from_github(name)
         count = get_local_record_count(local_file)
         new_records = fetch_incremental_records(rid, name, start_offset=count)
-        process_and_merge(name, local_file, new_records)
+        if new_records:
+            process_and_merge(name, local_file, new_records)
+            updated_datasets.append(name)
     
     # Generate Integration Master after all are synced
     generate_powerbi_master()
     
-    # Push to GitHub
-    push_to_github()
+    # Push only modified parts
+    push_to_github(updated_datasets)
         
-    print("\nIncremental Sync & Push Complete!")
+    print("\nIncremental Sync & Selective Push Complete!")
 
 if __name__ == "__main__":
     main()
