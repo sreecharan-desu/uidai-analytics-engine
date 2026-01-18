@@ -56,28 +56,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Gzip the massive JSON master file before upload
-          gzip -k public/datasets/aadhaar_powerbi_master.json || true
-          
           # Create release if it doesn't exist, or update existing 'dataset-latest'
-          # Includes: Raw CSVs, Split CSVs, Master CSV, Master JSON.gz
+          # Includes: Raw CSVs, Split CSVs, Master CSV
           gh release upload dataset-latest \
             public/datasets/*.csv \
             public/datasets/split_data/*.csv \
-            public/datasets/aadhaar_powerbi_master.json.gz \
             --clobber || \
           (gh release create dataset-latest \
             public/datasets/*.csv \
             public/datasets/split_data/*.csv \
-            public/datasets/aadhaar_powerbi_master.json.gz \
             --title "Dataset Latest" \
             --notes "Automated monthly update from Data.gov.in")
 
-      - name: Flush Redis Cache
-        if: steps.check_schedule.outputs.should_run == 'true'
-        env:
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
-        run: |
-          pip install upstash-redis
-          python scripts/flush_redis.py

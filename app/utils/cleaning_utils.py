@@ -84,14 +84,9 @@ def clean_dataframe(df, dataset_name):
         if mask.any():
             df.loc[mask, 'norm_state'] = df.loc[mask, pin_col].astype(str).str.split('.').str[0].map(PINCODE_MAP)
             
-    # 3. Strict Filtering
-    # STRICT_DATASETS = ['enrolment', 'biometric', 'demographic']
-    # We now enforce strict filtering for demographic as well, as we have improved the state map.
-    if dataset_name in ['enrolment', 'biometric', 'demographic']:
-        df = df[df['norm_state'].isin(VALID_STATES)].copy()
-    else:
-        # Fallback for unknown datasets
-        df['norm_state'] = df['norm_state'].fillna(df[state_col])
+    # 3. No Silent Failures (Notebook Standard)
+    # We map and preserve the original if mapping fails, instead of dropping rows.
+    df['norm_state'] = df['norm_state'].fillna(df[state_col].astype(str).str.title())
     
     df[state_col] = df['norm_state']
     df.drop(columns=['__state_norm_raw', 'norm_state'], inplace=True, errors='ignore')
@@ -110,6 +105,5 @@ def clean_dataframe(df, dataset_name):
                 if len(parts[2]) == 4: return parts[2]
             return None
         df['year'] = df[date_col].apply(get_year)
-        df = df[df['year'].notna()] # Drop rows where year parsing failed
     
     return df

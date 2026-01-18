@@ -35,70 +35,74 @@ if os.path.exists(pincode_path):
 
 # === POWERBI INTEGRATION MAPS (Notebook Compliance) ===
 NB_STATE_STANDARD_MAP = {
-    'andhra pradesh': 'Andhra Pradesh', 'telangana': 'Telangana', 'hyd': 'Telangana', 'hyderabad': 'Telangana',
-    'jammu and kashmir': 'Jammu and Kashmir', 'j & k': 'Jammu and Kashmir', 'ladakh': 'Ladakh',
-    'arunachal pradesh': 'Arunachal Pradesh', 'assam': 'Assam', 'manipur': 'Manipur', 'meghalaya': 'Meghalaya',
-    'mizoram': 'Mizoram', 'nagaland': 'Nagaland', 'tripura': 'Tripura', 'sikkim': 'Sikkim',
-    'delhi': 'Delhi', 'new delhi': 'Delhi', 'nct of delhi': 'Delhi', 'chandigarh': 'Chandigarh',
-    'puducherry': 'Puducherry', 'pondicherry': 'Puducherry', 'lakshadweep': 'Lakshadweep',
-    'andaman and nicobar islands': 'Andaman and Nicobar Islands', 'a & n islands': 'Andaman and Nicobar Islands',
-    'dadra and nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
-    'daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+    'andhra pradesh': 'Andhra Pradesh', 'arunachal pradesh': 'Arunachal Pradesh', 'assam': 'Assam',
+    'bihar': 'Bihar', 'chhattisgarh': 'Chhattisgarh', 'goa': 'Goa', 'gujarat': 'Gujarat',
+    'haryana': 'Haryana', 'himachal pradesh': 'Himachal Pradesh', 'jharkhand': 'Jharkhand',
+    'karnataka': 'Karnataka', 'kerala': 'Kerala', 'madhya pradesh': 'Madhya Pradesh',
+    'maharashtra': 'Maharashtra', 'manipur': 'Manipur', 'meghalaya': 'Meghalaya',
+    'mizoram': 'Mizoram', 'nagaland': 'Nagaland', 'odisha': 'Odisha', 'orissa': 'Odisha',
+    'punjab': 'Punjab', 'rajasthan': 'Rajasthan', 'sikkim': 'Sikkim', 'tamil nadu': 'Tamil Nadu',
+    'tamilnadu': 'Tamil Nadu', 'telangana': 'Telangana', 'tripura': 'Tripura',
+    'uttar pradesh': 'Uttar Pradesh', 'uttarakhand': 'Uttarakhand', 'uttaranchal': 'Uttarakhand',
+    'west bengal': 'West Bengal', 'westbengal': 'West Bengal', 'west bangal': 'West Bengal',
+    # UTs
+    'andaman and nicobar islands': 'Andaman and Nicobar Islands', 'andaman nicobar islands': 'Andaman and Nicobar Islands',
+    'chandigarh': 'Chandigarh',
     'dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
-    'dnh & dd': 'Dadra and Nagar Haveli and Daman and Diu',
-    'odisha': 'Odisha', 'orissa': 'Odisha', 'west bengal': 'West Bengal', 'wb': 'West Bengal',
-    'uttarakhand': 'Uttarakhand', 'uttaranchal': 'Uttarakhand', 'chhattisgarh': 'Chhattisgarh',
-    'chattisgarh': 'Chhattisgarh', 'punjab': 'Punjab', 'haryana': 'Haryana', 'himachal pradesh': 'Himachal Pradesh',
-    'uttar pradesh': 'Uttar Pradesh', 'up': 'Uttar Pradesh', 'bihar': 'Bihar', 'jharkhand': 'Jharkhand',
-    'rajasthan': 'Rajasthan', 'gujarat': 'Gujarat', 'maharashtra': 'Maharashtra', 'goa': 'Goa',
-    'karnataka': 'Karnataka', 'kerala': 'Kerala', 'tamil nadu': 'Tamil Nadu', 'tn': 'Tamil Nadu',
-    'madhya pradesh': 'Madhya Pradesh', 'mp': 'Madhya Pradesh'
+    'dadra nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
+    'daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+    'daman diu': 'Dadra and Nagar Haveli and Daman and Diu',
+    'delhi': 'Delhi', 'new delhi': 'Delhi',
+    'jammu and kashmir': 'Jammu and Kashmir', 'jammu kashmir': 'Jammu and Kashmir',
+    'ladakh': 'Ladakh',
+    'lakshadweep': 'Lakshadweep',
+    'puducherry': 'Puducherry', 'pondicherry': 'Puducherry',
+    'chhatisgarh': 'Chhattisgarh',
+    # Additional common aliases from app
+    'hyd': 'Telangana', 'hyderabad': 'Telangana', 'wb': 'West Bengal', 'up': 'Uttar Pradesh', 'mp': 'Madhya Pradesh'
 }
 
 NB_DISTRICT_ALIAS_MAP = {
-    "belagavi": "Belagavi", "belgaum": "Belagavi", "bengaluru": "Bengaluru", "bangalore": "Bengaluru",
-    "bengaluru urban": "Bengaluru Urban", "bangalore urban": "Bengaluru Urban",
-    "bengaluru rural": "Bengaluru Rural", "bangalore rural": "Bengaluru Rural",
-    "kalaburagi": "Kalaburagi", "gulbarga": "Kalaburagi", "mysuru": "Mysuru", "mysore": "Mysuru",
-    "shivamogga": "Shivamogga", "shimoga": "Shivamogga", "vijayapura": "Vijayapura", "bijapur": "Vijayapura",
-    "ballari": "Ballari", "bellary": "Ballari", "chikkamagaluru": "Chikkamagaluru",
-    "chikmagalur": "Chikkamagaluru", "chamarajanagara": "Chamarajanagara", "chamrajanagar": "Chamarajanagara",
-    "mangalore": "Dakshina Kannada", "dakshina kannada": "Dakshina Kannada", "davanagere": "Davangere",
-    "davangere": "Davangere", "hubli": "Dharwad", "hubballi": "Dharwad", "hasan": "Hassan",
-    "ramanagar": "Ramanagara", "ahmednagar": "Ahilyanagar", "ahmed nagar": "Ahilyanagar",
-    "aurangabad": "Chhatrapati Sambhajinagar", "osmanabad": "Dharashiv", "beed": "Bid", "buldhana": "Buldana",
-    "gondia": "Gondiya", "raigarh(mh)": "Raigad", "raigarh": "Raigad", "bombay": "Mumbai",
-    "mumbai suburban": "Mumbai Suburban", "mumbai": "Mumbai", "jalgaon": "Jalgaon",
-    "ferozepur": "Firozpur", "s.a.s nagar": "S.A.S. Nagar", "mohali": "S.A.S. Nagar",
-    "sas nagar mohali": "S.A.S. Nagar", "s.a.s nagar (mohali)": "S.A.S. Nagar",
-    "s.a.s. nagar": "S.A.S. Nagar", "muktsar": "Sri Muktsar Sahib",
-    "burdwan": "Purba Bardhaman", "bardhaman": "Purba Bardhaman", "coochbehar": "Cooch Behar",
-    "darjiling": "Darjeeling", "hooghly": "Hooghly", "howrah": "Howrah",
-    "north 24 parganas": "North 24 Parganas", "north twenty four parganas": "North 24 Parganas",
-    "south 24 parganas": "South 24 Parganas", "south twenty four parganas": "South 24 Parganas",
-    "24 paraganas south": "South 24 Parganas", "puruliya": "Purulia", "malda": "Maldah",
-    "baramulla": "Baramula", "bandipora": "Bandipore", "budgam": "Badgam", "shupiyan": "Shopian",
-    "punch": "Poonch", "leh": "Leh", "ladakh": "Leh", "rajauri": "Rajouri",
-    "janjgir-champa": "Janjgir-Champa", "janjgir champa": "Janjgir-Champa", "kabeerdham": "Kabirdham",
-    "koriya": "Korea", "mohla-manpur-ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki",
-    "mohla manpur ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki",
-    "mohalla-manpur-ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki",
+    "baleshwar": "Balasore", "dang": "The Dangs", "tamulpur district": "Tamulpur",
+    "yadadri.": "Yadadri", "yadadri": "Yadadri", "medchal malkajgiri": "Medchal-Malkajgiri",
+    "mahrajganj": "Maharajganj", "maharajganj": "Maharajganj",
+    "bangalore": "Bengaluru", "bangalore rural": "Bengaluru Rural", "bangalore urban": "Bengaluru Urban",
+    "bengaluru south": "Bengaluru", "bengaluru urban": "Bengaluru", "bengaluru rural": "Bengaluru Rural",
+    "gulbarga": "Kalaburagi", "belgaum": "Belagavi", "bellary": "Ballari", "bijapur": "Vijayapura",
+    "chikmagalur": "Chikkamagaluru", "chikkamagaluru": "Chikkamagaluru", "chickmagalur": "Chikkamagaluru",
+    "shimoga": "Shivamogga", "mysore": "Mysuru", "chamarajanagar": "Chamarajanagara",
+    "chamrajnagar": "Chamarajanagara", "chamrajanagar": "Chamarajanagara", "mangalore": "Dakshina Kannada",
+    "dakshina kannada": "Dakshina Kannada", "davanagere": "Davangere", "davangere": "Davangere",
+    "hubli": "Dharwad", "hubballi": "Dharwad", "hasan": "Hassan", "ramanagar": "Ramanagara",
+    "ahmednagar": "Ahilyanagar", "ahmed nagar": "Ahilyanagar", "aurangabad": "Chhatrapati Sambhajinagar",
+    "osmanabad": "Dharashiv", "beed": "Bid", "buldhana": "Buldana", "gondia": "Gondiya",
+    "raigarh(mh)": "Raigad", "raigarh": "Raigad", "bombay": "Mumbai", "mumbai suburban": "Mumbai Suburban",
+    "mumbai": "Mumbai", "jalgaon": "Jalgaon", "ferozepur": "Firozpur", "s.a.s nagar": "S.A.S. Nagar",
+    "mohali": "S.A.S. Nagar", "sas nagar mohali": "S.A.S. Nagar", "s.a.s nagar (mohali)": "S.A.S. Nagar",
+    "s.a.s. nagar": "S.A.S. Nagar", "muktsar": "Sri Muktsar Sahib", "burdwan": "Purba Bardhaman",
+    "bardhaman": "Purba Bardhaman", "coochbehar": "Cooch Behar", "darjiling": "Darjeeling",
+    "hooghly": "Hooghly", "howrah": "Howrah", "north 24 parganas": "North 24 Parganas",
+    "north twenty four parganas": "North 24 Parganas", "south 24 parganas": "South 24 Parganas",
+    "south twenty four parganas": "South 24 Parganas", "24 paraganas south": "South 24 Parganas",
+    "puruliya": "Purulia", "malda": "Maldah", "baramulla": "Baramula", "bandipora": "Bandipore",
+    "budgam": "Badgam", "shupiyan": "Shopian", "punch": "Poonch", "leh": "Leh", "ladakh": "Leh",
+    "rajauri": "Rajouri", "janjgir-champa": "Janjgir-Champa", "janjgir champa": "Janjgir-Champa",
+    "kabeerdham": "Kabirdham", "koriya": "Korea", "mohla-manpur-ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki",
+    "mohla manpur ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki", "mohalla-manpur-ambagarh chouki": "Mohla-Manpur-Ambagarh Chowki",
     "gaurela-pendra-marwahi": "Gaurella Pendra Marwahi", "gaurela pendra marwahi": "Gaurella Pendra Marwahi",
-    "sarangarh-bilaigarh": "Sarangarh Bilaigarh", "kadapa": "Y.S.R. Kadapa",
-    "y.s.r. kadapa": "Y.S.R. Kadapa", "y s r kadapa": "Y.S.R. Kadapa", "ysr district": "Y.S.R. Kadapa",
-    "mahbubnagar": "Mahabubnagar", "warangal urban": "Hanumakonda",
-    "dr. b. r. ambedkar konaseema": "Dr. B.R. Ambedkar Konaseema",
+    "sarangarh-bilaigarh": "Sarangarh Bilaigarh", "kadapa": "Y.S.R. Kadapa", "y.s.r. kadapa": "Y.S.R. Kadapa",
+    "y s r kadapa": "Y.S.R. Kadapa", "ysr district": "Y.S.R. Kadapa", "mahbubnagar": "Mahabubnagar",
+    "warangal urban": "Hanumakonda", "dr. b. r. ambedkar konaseema": "Dr. B.R. Ambedkar Konaseema",
     "dr b r ambedkar konaseema": "Dr. B.R. Ambedkar Konaseema", "n. t. r": "NTR", "n.t.r": "NTR",
     "sri potti sriramulu nellore": "Nellore", "yadadri": "Yadadri", "yadadri.": "Yadadri",
     "medchal malkajgiri": "Medchal-Malkajgiri", "kancheepuram": "Kanchipuram", "thiruvallur": "Tiruvallur",
     "thoothukudi": "Thoothukkudi", "tuticorin": "Thoothukkudi", "kanyakumari": "Kanniyakumari",
-    "villupuram": "Viluppuram", "thiruvarur": "Tiruvarur", "tirupathur": "Tirupattur",
-    "allahabad": "Prayagraj", "faizabad": "Ayodhya", "lakhimpur kheri": "Kheri",
-    "sant ravidas nagar": "Bhadohi", "sant ravidas nagar bhadohi": "Bhadohi", "bara banki": "Barabanki",
-    "bulandshahar": "Bulandshahr", "baghpat": "Bagpat", "shravasti": "Shrawasti",
-    "maharajganj": "Mahrajganj", "baleswar": "Balasore", "keonjhar": "Kendujhar",
-    "nabarangapur": "Nabarangpur", "jagatsinghapur": "Jagatsinghpur", "anugul": "Angul", "baudh": "Boudh",
-    "subarnapur": "Sonepur", "sonapur": "Sonepur", "jajapur": "Jajpur", "khorda": "Khordha",
+    "villupuram": "Viluppuram", "thiruvarur": "Tiruvarur", "tirupathur": "Tirupattur", "allahabad": "Prayagraj",
+    "faizabad": "Ayodhya", "lakhimpur kheri": "Kheri", "sant ravidas nagar": "Bhadohi",
+    "sant ravidas nagar bhadohi": "Bhadohi", "bara banki": "Barabanki", "bulandshahar": "Bulandshahr",
+    "baghpat": "Bagpat", "shravasti": "Shrawasti", "maharajganj": "Mahrajganj", "baleswar": "Balasore",
+    "keonjhar": "Kendujhar", "nabarangapur": "Nabarangpur", "jagatsinghapur": "Jagatsinghpur", "anugul": "Angul",
+    "baudh": "Boudh", "subarnapur": "Sonepur", "sonapur": "Sonepur", "jajapur": "Jajpur", "khorda": "Khordha",
     "sundargarh": "Sundergarh", "kaimur (bhabua)": "Kaimur", "kaimur bhabua": "Kaimur", "bhabua": "Kaimur",
     "purbi champaran": "East Champaran", "paschim champaran": "West Champaran", "jehanabad": "Jehanabad",
     "monghyr": "Munger", "sheikhpura": "Sheikpura", "samstipur": "Samastipur", "samastipur": "Samastipur",
@@ -108,11 +112,10 @@ NB_DISTRICT_ALIAS_MAP = {
     "pashchimi singhbhum": "West Singhbhum", "purbi singhbhum": "East Singhbhum",
     "saraikela-kharsawan": "Seraikela Kharsawan", "seraikela-kharsawan": "Seraikela Kharsawan",
     "hazaribag": "Hazaribagh", "kodarma": "Koderma", "pakaur": "Pakur", "sahebganj": "Sahibganj",
-    "simdega": "Simdega", "lohardaga": "Lohardaga", "narsimhapur": "Narsinghpur",
-    "hoshangabad": "Narmadapuram", "ashok nagar": "Ashoknagar", "kamrup metro": "Kamrup Metropolitan",
-    "south salmara mankachar": "South Salmara-Mankachar", "ri-bhoi": "Ri Bhoi", "mamit": "Mammit",
-    "chittaurgarh": "Chittorgarh", "jalor": "Jalore", "jhunjhunu": "Jhunjhunun",
-    "didwana-kuchaman": "Didwana Kuchaman", "khairthal-tijara": "Khairthal Tijara",
+    "simdega": "Simdega", "lohardaga": "Lohardaga", "narsimhapur": "Narsinghpur", "hoshangabad": "Narmadapuram",
+    "ashok nagar": "Ashoknagar", "kamrup metro": "Kamrup Metropolitan", "south salmara mankachar": "South Salmara-Mankachar",
+    "ri-bhoi": "Ri Bhoi", "mamit": "Mammit", "chittaurgarh": "Chittorgarh", "jalor": "Jalore",
+    "jhunjhunu": "Jhunjhunun", "didwana-kuchaman": "Didwana Kuchaman", "khairthal-tijara": "Khairthal Tijara",
     "kotputli-behror": "Kotputli Behror", "lahaul and spiti": "Lahul and Spiti", "shi yomi": "Shi Yomi",
     "shi-yomi": "Shi Yomi", "nicobar": "Nicobars", "kasaragod": "Kasargod"
 }
@@ -169,21 +172,14 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
     is_deep_paging = (dataset_name == "biometric" and start_offset >= 4800000)
     
     if is_deep_paging:
-        # Cursor lookup: Find the latest date in our local dataset.
-        local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
-        if os.path.exists(local_path):
-            try:
-                # Optimized tail lookup for large files
-                df_last = pd.read_csv(local_path).tail(2000)
-                if not df_last.empty and 'date' in df_last.columns:
-                    latest_date = df_last['date'].max()
-                    # Query for records from the latest date onwards (Lucene Range Query)
-                    params["query"] = f'date:["{latest_date}" TO *]'
-                    params["sort"] = "date asc"
-                    params["offset"] = 0 
-                    print(f"Applying search_after strategy for {dataset_name} (Cursor: {latest_date})")
-            except Exception as e:
-                print(f"Warning: search_after cursor lookup failed: {e}")
+        # Strategy: Fetch latest records from the top using reverse sort
+        # This avoids the 5M offset limit entirely.
+        params["sort[date]"] = "desc"
+        params["offset"] = 0
+        # We fetch enough to cover expected new records + some overlap for safety
+        limit_to_fetch = 20000 
+        params["limit"] = 10000 # Max batch size
+        print(f"Applying reverse-sort strategy for {dataset_name} (Safety Window: {limit_to_fetch})")
 
     all_new_records = []
     
@@ -205,23 +201,13 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
             return []
 
         current_total = int(data.get("total", 0))
-        
-        if not is_deep_paging and start_offset >= current_total:
-            print(f"Dataset {dataset_name} is already up to date ({start_offset}/{current_total}).")
-            return []
-            
-        print(f"Syncing {dataset_name} ({resource_id})...")
-        if is_deep_paging:
-            print(f"Deep-paging mode: Cursor '{params.get('query')}' (Results in window: {current_total})")
-        else:
-            print(f"Found {current_total - start_offset} new records (Total: {current_total}).")
+        total_matching = 20000 if is_deep_paging else (current_total - start_offset)
         
         records = data.get("records", [])
         all_new_records.extend(records)
         
         # Determine how many records we've actually fetched vs how many match the current query
         offset = params["offset"] + len(records)
-        total_matching = int(data.get("total", 0))
         
         while len(all_new_records) < total_matching:
             params["offset"] = offset
@@ -358,6 +344,17 @@ def generate_powerbi_master():
         # Merge
         master_df = pd.concat([df_bio_clean, df_demo_clean, df_enroll_clean], ignore_index=True)
         
+        # Exact Metric Columns from Notebook
+        metric_cols = [
+            'bio_age_5_17', 'bio_age_17_', 
+            'demo_age_5_17', 'demo_age_17_', 
+            'age_0_5', 'age_5_17', 'age_18_greater', 
+            'total_biometric_updates', 'total_enrolment'
+        ]
+        for col in metric_cols:
+            if col in master_df.columns:
+                master_df[col] = master_df[col].fillna(0)
+
         # Normalization
         master_df['state_norm'] = master_df['state'].apply(normalize_text)
         master_df['state_clean'] = master_df['state_norm'].map(NB_STATE_STANDARD_MAP)
@@ -371,7 +368,7 @@ def generate_powerbi_master():
         master_df['district'] = master_df['district_clean']
         master_df.drop(columns=['state_norm', 'state_clean', 'district_norm', 'district_clean'], inplace=True, errors='ignore')
 
-        # Structural Audit
+        # Structural Audit (Majority Vote)
         district_state_counts = master_df.groupby(['district', 'state']).size().reset_index(name='count')
         authoritative_map = district_state_counts.sort_values('count', ascending=False).drop_duplicates('district')[['district', 'state']]
         authoritative_dict = dict(zip(authoritative_map['district'], authoritative_map['state']))
@@ -383,40 +380,65 @@ def generate_powerbi_master():
         authoritative_dict.update(manual_overrides)
         master_df['state'] = master_df['district'].map(authoritative_dict).fillna(master_df['state'])
         
-        # Date Handling
-        master_df['date'] = pd.to_datetime(master_df['date'], errors='coerce')
+        # Date Handling - Enforce dayfirst=True for DD-MM-YYYY source format
+        master_df['date'] = pd.to_datetime(master_df['date'], dayfirst=True, errors='coerce')
         master_df['month_year'] = master_df['date'].dt.to_period('M').astype(str)
         
-        # Fill NaNs
-        master_df['total_enrolment'] = master_df['total_enrolment'].fillna(0)
-        master_df['total_biometric_updates'] = master_df['total_biometric_updates'].fillna(0)
-        master_df['total_demographic_updates'] = master_df['total_demographic_updates'].fillna(0)
-        
-        master_df['total_activity'] = (master_df['total_enrolment'] + 
-                                       master_df['total_biometric_updates'] + 
-                                       master_df['total_demographic_updates'])
+        # Calculated Columns - Exact Notebook logic
+        master_df['total_demographic_updates'] = master_df['demo_age_5_17'] + master_df['demo_age_17_']
+        master_df['total_activity'] = (
+            master_df.get('total_biometric_updates', 0) + 
+            master_df.get('total_enrolment', 0) + 
+            master_df.get('total_demographic_updates', 0)
+        )
         
         # Ratios
-        master_df['biometric_update_ratio'] = master_df['total_biometric_updates'] / master_df['total_activity']
-        master_df['biometric_update_ratio'] = master_df['biometric_update_ratio'].fillna(0)
-        
-        master_df['demographic_update_ratio'] = master_df['total_demographic_updates'] / master_df['total_activity']
-        master_df['demographic_update_ratio'] = master_df['demographic_update_ratio'].fillna(0)
+        master_df['biometric_update_ratio'] = (master_df['total_biometric_updates'] / master_df['total_activity']).fillna(0)
+        master_df['demographic_update_ratio'] = (master_df['total_demographic_updates'] / master_df['total_activity']).fillna(0)
         
         # Save Master CSV
         out_path_csv = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
         master_df.to_csv(out_path_csv, index=False)
         print(f"Generated Aadhaar PowerBI Master CSV: {out_path_csv}")
-
-        # Save Master JSON (for API optimization)
-        out_path_json = os.path.join(dataset_dir, 'aadhaar_powerbi_master.json')
-        master_df.to_json(out_path_json, orient='records', date_format='iso')
-        print(f"Generated Aadhaar PowerBI Master JSON: {out_path_json}")
         
         print(f"Master Dataset Generation Complete. Rows: {len(master_df)}")
 
     except Exception as e:
         print(f"Error generating PowerBI Master: {e}")
+
+def push_to_github():
+    """
+    Pushes the generated CSV/GA files to GitHub Releases and commits metadata.
+    """
+    print("\n=== Pushing Data to GitHub ===")
+    dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
+    
+    # 2. Upload to GitHub Release via 'gh' CLI
+    # Files to upload: biometric_full.csv, demographic_full.csv, enrolment_full.csv, 
+    # aadhaar_powerbi_master.csv
+    files_to_upload = [
+        os.path.join(dataset_dir, 'biometric_full.csv'),
+        os.path.join(dataset_dir, 'demographic_full.csv'),
+        os.path.join(dataset_dir, 'enrolment_full.csv'),
+        os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
+    ]
+    
+    tag = "dataset-latest"
+    print(f"Uploading assets to release {tag}...")
+    for fpath in files_to_upload:
+        if os.path.exists(fpath):
+            # clobber to overwrite
+            os.system(f"gh release upload {tag} {fpath} --clobber")
+            print(f"Uploaded {os.path.basename(fpath)}")
+
+    # 3. Git Commit (Metadata & Code)
+    print("Committing metadata...")
+    os.system("git add .")
+    # We use --allow-empty in case no code changed
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    os.system(f'git commit -m "Auto-sync: {timestamp}" --allow-empty')
+    os.system("git push origin main")
+    print("Git push complete.")
 
 def main():
     datasets = settings.RESOURCES
@@ -429,8 +451,11 @@ def main():
     
     # Generate Integration Master after all are synced
     generate_powerbi_master()
+    
+    # Push to GitHub
+    push_to_github()
         
-    print("\nIncremental Sync Complete!")
+    print("\nIncremental Sync & Push Complete!")
 
 if __name__ == "__main__":
     main()
