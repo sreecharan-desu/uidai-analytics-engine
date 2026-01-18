@@ -233,6 +233,141 @@ def process_and_merge(dataset_name, local_base_path, new_records):
     
     print(f"Update complete for {dataset_name}. Total records: {len(df_final)}")
 
+def generate_powerbi_master():
+    """
+    Generates the master integrated CSV specific for PowerBI by reading the local files
+    that were just synced/updated.
+    """
+    print("\n=== Generating PowerBI Master Dataset ===")
+    
+    dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
+    bio_path = os.path.join(dataset_dir, 'biometric_full.csv')
+    demo_path = os.path.join(dataset_dir, 'demographic_full.csv')
+    enroll_path = os.path.join(dataset_dir, 'enrolment_full.csv')
+    
+    if not (os.path.exists(bio_path) and os.path.exists(demo_path) and os.path.exists(enroll_path)):
+        print("Required full datasets are missing in public/datasets. Skipping Master Generation.")
+        return
+
+    try:
+        # Load columns strictly needed
+        bio_cols = ['state', 'district', 'date', 'pincode', 'bio_age_5_17', 'bio_age_17_']
+        demo_cols = ['state', 'district', 'date', 'pincode', 'demo_age_5_17', 'demo_age_17_']
+        enroll_cols = ['state', 'district', 'date', 'pincode', 'age_0_5', 'age_5_17', 'age_18_greater']
+
+        print("Reading datasets...")
+        df_bio = pd.read_csv(bio_path, usecols=lambda c: c in bio_cols)
+        df_demo = pd.read_csv(demo_path, usecols=lambda c: c in demo_cols)
+        df_enroll = pd.read_csv(enroll_path, usecols=lambda c: c in enroll_cols)
+
+        # Pre-calc totals
+        df_bio['total_biometric_updates'] = df_bio.get('bio_age_5_17', 0).fillna(0) + df_bio.get('bio_age_17_', 0).fillna(0)
+        df_demo['total_demographic_updates'] = df_demo.get('demo_age_5_17', 0).fillna(0) + df_demo.get('demo_age_17_', 0).fillna(0)
+        df_enroll['total_enrolment'] = (df_enroll.get('age_0_5', 0).fillna(0) + 
+                                        df_enroll.get('age_5_17', 0).fillna(0) + 
+                                        df_enroll.get('age_18_greater', 0).fillna(0))
+
+        # Cleanup & Tag
+        df_bio_clean = df_bio.copy()
+        df_bio_clean['source_dataset'] = 'Biometric Updates'
+        
+        df_demo_clean = df_demo.copy()
+        df_demo_clean['source_dataset'] = 'Demographic Updates'
+        
+        df_enroll_clean = df_enroll.copy()
+        df_enroll_clean['source_dataset'] = 'New Enrolment'
+        
+        # Merge
+        master_df = pd.concat([df_bio_clean, df_demo_clean, df_enroll_clean], ignore_index=True)
+        
+        # Exact Metric Columns from Notebook
+        metric_cols = [
+            'bio_age_5_17', 'bio_age_17_', 
+            'demo_age_5_17', 'demo_age_17_', 
+            'age_0_5', 'age_5_17', 'age_18_greater', 
+            'total_biometric_updates', 'total_enrolment'
+        ]
+        for col in metric_cols:
+            if col in master_df.columns:
+                master_df[col] = master_df[col].fillna(0)
+
+        # Normalization
+        master_df['state_norm'] = master_df['state'].apply(normalize_text)
+        master_df['state_clean'] = master_df['state_norm'].map(NB_STATE_STANDARD_MAP)
+        master_df['state_clean'] = master_df['state_clean'].fillna(master_df['state'].str.title())
+        
+        master_df['district_norm'] = master_df['district'].astype(str).str.lower().str.strip().str.replace(r'\s+', ' ', regex=True)
+        normalized_alias_map = {k.lower(): v for k, v in NB_DISTRICT_ALIAS_MAP.items()}
+        master_df['district_clean'] = master_df['district_norm'].replace(normalized_alias_map).str.title()
+        
+        master_df['state'] = master_df['state_clean']
+        master_df['district'] = master_df['district_clean']
+        master_df.drop(columns=['state_norm', 'state_clean', 'district_norm', 'district_clean'], inplace=True, errors='ignore')
+
+        # Structural Audit (Majority Vote)
+        district_state_counts = master_df.groupby(['district', 'state']).size().reset_index(name='count')
+        authoritative_map = district_state_counts.sort_values('count', ascending=False).drop_duplicates('district')[['district', 'state']]
+        authoritative_dict = dict(zip(authoritative_map['district'], authoritative_map['state']))
+        
+        manual_overrides = {
+            'Leh': 'Ladakh', 'Kargil': 'Ladakh',
+            'Mahabubnagar': 'Telangana', 'Rangareddy': 'Telangana', 'Khammam': 'Telangana'
+        }
+        authoritative_dict.update(manual_overrides)
+        master_df['state'] = master_df['district'].map(authoritative_dict).fillna(master_df['state'])
+        
+        # Date Handling - Enforce dayfirst=True for DD-MM-YYYY source format
+        master_df['date'] = pd.to_datetime(master_df['date'], dayfirst=True, errors='coerce')
+        master_df.dropna(subset=['date'], inplace=True) 
+        
+        master_df['month_year'] = master_df['date'].dt.to_period('M').astype(str)
+        
+        # Ensure year for partitioning if needed
+        if 'year' not in master_df.columns:
+            master_df['year'] = master_df['date'].dt.year
+
+        # --- AGGREGATION for Power BI ---
+        # Group by Key Dimensions to squash them into single rows per Location-Date.
+        agg_key = ['state', 'district', 'date', 'pincode', 'month_year', 'year']
+        
+        agg_map = {col: 'sum' for col in metric_cols if col in master_df.columns}
+        
+        print("Aggregating Master Dataset for PowerBI...")
+        aggregated_df = master_df.groupby(agg_key, as_index=False).agg(agg_map)
+        
+        # Recalculate Ratios on Aggregated Data
+        aggregated_df['total_demographic_updates'] = aggregated_df.get('demo_age_5_17', 0) + aggregated_df.get('demo_age_17_', 0)
+        
+        aggregated_df.fillna(0, inplace=True)
+        
+        aggregated_df['total_activity'] = (
+            aggregated_df['total_biometric_updates'] + 
+            aggregated_df['total_enrolment'] + 
+            aggregated_df['total_demographic_updates']
+        )
+        
+        aggregated_df['biometric_update_ratio'] = np.where(
+            aggregated_df['total_activity'] > 0,
+            aggregated_df['total_biometric_updates'] / aggregated_df['total_activity'],
+            0
+        )
+        
+        aggregated_df['demographic_update_ratio'] = np.where(
+            aggregated_df['total_activity'] > 0,
+            aggregated_df['total_demographic_updates'] / aggregated_df['total_activity'],
+            0
+        )
+
+        # Save local full backup (Aggregated version)
+        # This is what gets uploaded to GitHub as 'aadhaar_powerbi_master.csv' (or master_dataset_final)
+        out_path_csv = os.path.join(dataset_dir, 'master_dataset_final.csv')
+        aggregated_df.to_csv(out_path_csv, index=False)
+        
+        print(f"Master Dataset Generated. Total rows (Aggregated): {len(aggregated_df)}")
+
+    except Exception as e:
+        print(f"Error generating PowerBI Master: {e}")
+
 def push_to_github(updated_datasets=None):
     """
     Selectively pushes updated files to GitHub Releases.
@@ -286,6 +421,9 @@ def main():
         if new_records:
             process_and_merge(name, local_file, new_records)
             updated_datasets.append(name) 
+    
+    # Always generate/refresh the master dataset logic (it reads from the updated CSVs)
+    generate_powerbi_master()
     
     # Push only modified parts + Master
     push_to_github(updated_datasets)
