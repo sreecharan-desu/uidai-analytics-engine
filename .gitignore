@@ -15,3 +15,4 @@ split_data/
 public/datasets/master_parts/*.csv
 
 # Allow keeping the empty structure or small configs if needed, but blocking data
+__pycache__/
