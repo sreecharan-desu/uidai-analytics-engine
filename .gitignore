@@ -13,11 +13,7 @@ public/datasets/*.csv
 public/datasets/split_data/*.csv
 split_data/
 
-# Allow Enrolment Data (Small enough)
-public/datasets/enrolment_full.csv
-public/datasets/split_data/enrolment_*.csv
+# Large Dataset files are ignored by general *.csv rule above
 
-# Allow 2026 Data (Small enough)
-public/datasets/split_data/*_2026.csv
 public/datasets/aadhaar_powerbi_master.json
 public/datasets/aadhaar_powerbi_master.json.gz
