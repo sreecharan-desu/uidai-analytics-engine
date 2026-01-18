@@ -2,69 +2,39 @@ name: Monthly UIDAI Data Sync
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Run daily to check the date
-  workflow_dispatch: # Allow manual trigger
+    - cron: '0 0 1 * *' # Run on 1st of every month
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required for pushing to repo and releases
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Check Schedule
-        id: check_schedule
-        run: |
-          # Default to 1st of month if SYNC_DAY secret is missing
-          TARGET_DAY="${{ secrets.SYNC_DAY || '1' }}"
-          CURRENT_DAY=$(date +%d | sed 's/^0//') # Get day and remove leading zero
-          
-          echo "Target sync day: $TARGET_DAY"
-          echo "Current day: $CURRENT_DAY"
-          
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual trigger detected. Running sync."
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          elif [[ "$CURRENT_DAY" == "$TARGET_DAY" ]]; then
-            echo "Today is the scheduled sync day. Running sync."
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          else
-            echo "Not the scheduled sync day. Skipping."
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          fi
+        with:
+          fetch-depth: 0 # Full history for git operations if needed
 
       - name: Set up Python
-        if: steps.check_schedule.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install Dependencies
-        if: steps.check_schedule.outputs.should_run == 'true'
         run: |
-          pip install pandas requests python-dotenv
+          pip install pandas requests python-dotenv numpy
 
-      - name: Run Sync Script
-        if: steps.check_schedule.outputs.should_run == 'true'
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run Sync Script & Push
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/sync_data.py
 
-      - name: Upload to GitHub Release
-        if: steps.check_schedule.outputs.should_run == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Create release if it doesn't exist, or update existing 'dataset-latest'
-          # Includes: Raw CSVs, Split CSVs, Master CSV
-          gh release upload dataset-latest \
-            public/datasets/*.csv \
-            public/datasets/split_data/*.csv \
-            --clobber || \
-          (gh release create dataset-latest \
-            public/datasets/*.csv \
-            public/datasets/split_data/*.csv \
-            --title "Dataset Latest" \
-            --notes "Automated monthly update from Data.gov.in")
 
