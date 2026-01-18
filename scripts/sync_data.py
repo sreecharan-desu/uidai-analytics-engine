@@ -5,7 +5,6 @@ import pandas as pd
 import json
 import re
 import sys
-import time
 import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv
@@ -13,9 +12,7 @@ from dotenv import load_dotenv
 # Add project root to path to import app modules if needed
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.utils.state_data import STATE_STANDARD_MAP, VALID_STATES
 from app.core.config import settings
-# Import centralized cleaning
 from app.utils.cleaning_utils import clean_dataframe
 
 load_dotenv()
@@ -26,13 +23,6 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not DATA_GOV_API_KEY:
     print("Error: DATA_GOV_API_KEY not found in environment.")
     sys.exit(1)
-
-# Load Pincode Map
-PINCODE_MAP = {}
-pincode_path = os.path.join(os.getcwd(), 'app', 'core', 'pincodeMap.json')
-if os.path.exists(pincode_path):
-    with open(pincode_path, 'r') as f:
-        PINCODE_MAP = json.load(f)
 
 # === POWERBI INTEGRATION MAPS (Notebook Compliance) ===
 NB_STATE_STANDARD_MAP = {
@@ -46,21 +36,12 @@ NB_STATE_STANDARD_MAP = {
     'tamilnadu': 'Tamil Nadu', 'telangana': 'Telangana', 'tripura': 'Tripura',
     'uttar pradesh': 'Uttar Pradesh', 'uttarakhand': 'Uttarakhand', 'uttaranchal': 'Uttarakhand',
     'west bengal': 'West Bengal', 'westbengal': 'West Bengal', 'west bangal': 'West Bengal',
-    # UTs
-    'andaman and nicobar islands': 'Andaman and Nicobar Islands', 'andaman nicobar islands': 'Andaman and Nicobar Islands',
-    'chandigarh': 'Chandigarh',
+    'andaman and nicobar islands': 'Andaman and Nicobar Islands', 'chandigarh': 'Chandigarh',
     'dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
     'dadra nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
     'daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
-    'daman diu': 'Dadra and Nagar Haveli and Daman and Diu',
-    'delhi': 'Delhi', 'new delhi': 'Delhi',
-    'jammu and kashmir': 'Jammu and Kashmir', 'jammu kashmir': 'Jammu and Kashmir',
-    'ladakh': 'Ladakh',
-    'lakshadweep': 'Lakshadweep',
-    'puducherry': 'Puducherry', 'pondicherry': 'Puducherry',
-    'chhatisgarh': 'Chhattisgarh',
-    # Additional common aliases from app
-    'hyd': 'Telangana', 'hyderabad': 'Telangana', 'wb': 'West Bengal', 'up': 'Uttar Pradesh', 'mp': 'Madhya Pradesh'
+    'delhi': 'Delhi', 'new delhi': 'Delhi', 'jammu and kashmir': 'Jammu and Kashmir',
+    'ladakh': 'Ladakh', 'lakshadweep': 'Lakshadweep', 'puducherry': 'Puducherry'
 }
 
 NB_DISTRICT_ALIAS_MAP = {
@@ -133,7 +114,7 @@ def download_existing_from_github(dataset_name):
     """Download existing full CSV from GitHub only if not present locally."""
     local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
     
-    # 🚨 SKIP DOWNLOAD IF EXISTS (for fast re-aggregation)
+    # Check if exists
     if os.path.exists(local_path):
         print(f"✅ Local {dataset_name} found. Skipping download.")
         return local_path
@@ -156,14 +137,12 @@ def download_existing_from_github(dataset_name):
     return None
 
 def get_local_record_count(file_path):
-    if not file_path or not os.path.exists(file_path):
-        return 0
+    if not file_path or not os.path.exists(file_path): return 0
     try:
         with open(file_path, 'rb') as f:
             lines = sum(1 for _ in f)
         return max(0, lines - 1)
-    except:
-        return 0
+    except: return 0
 
 def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
     base_url = f"https://api.data.gov.in/resource/{resource_id}"
@@ -174,54 +153,33 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
         "offset": start_offset if start_offset < 4800000 else 0
     }
     
-    # Implementing "Search After" logic for large datasets like biometric
-    # If offset exceeds 4.8M, we switch to date-filtering to bypass max_result_window
+    # Deep paging logic
     is_deep_paging = (dataset_name == "biometric" and start_offset >= 4800000)
-    
     if is_deep_paging:
-        # Strategy: Fetch latest records from the top using reverse sort
-        # This avoids the 5M offset limit entirely.
         params["sort[date]"] = "desc"
-        params["offset"] = 0
-        # We fetch enough to cover expected new records + some overlap for safety
-        limit_to_fetch = 20000 
-        params["limit"] = 10000 # Max batch size
-        print(f"Applying reverse-sort strategy for {dataset_name} (Safety Window: {limit_to_fetch})")
+        params["offset"] = 0 
+        params["limit"] = 10000
 
     all_new_records = []
     
     try:
         resp = requests.get(base_url, params=params, timeout=30)
-        if resp.status_code != 200:
-            print(f"Error checking status for {dataset_name}: {resp.status_code}")
-            return []
+        if resp.status_code != 200: return []
         
         data = resp.json()
-        if data.get("status") != "ok":
-            error_msg = str(data.get('message'))
-            print(f"API returned error for {dataset_name}: {error_msg}")
-            
-            # Auto-recovery if offset error happens unexpectedly
-            if "Result window is too large" in error_msg and not is_deep_paging:
-                 print("Attempting automatic deep-paging recovery...")
-                 return fetch_incremental_records(resource_id, dataset_name, 5000000)
-            return []
+        if data.get("status") != "ok": return []
 
         current_total = int(data.get("total", 0))
         total_matching = 20000 if is_deep_paging else (current_total - start_offset)
         
         records = data.get("records", [])
         all_new_records.extend(records)
-        
-        # Determine how many records we've actually fetched vs how many match the current query
         offset = params["offset"] + len(records)
         
         while len(all_new_records) < total_matching:
             params["offset"] = offset
             resp = requests.get(base_url, params=params, timeout=30)
-            if resp.status_code != 200:
-                print(f"\nBatch fetch failed at offset {offset}")
-                break
+            if resp.status_code != 200: break
             
             data = resp.json()
             records = data.get("records", [])
@@ -229,12 +187,8 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
             
             all_new_records.extend(records)
             offset += len(records)
-            print(f"Progress: {len(all_new_records)}/{total_matching} fetched...", end="\r")
             
-            # Safe boundary for max_result_window
-            if offset >= 5000000 and not is_deep_paging:
-                 print("\nWarning: Safety window limit reached. Stopping batch to prevent 500 error.")
-                 break
+            if offset >= 5000000 and not is_deep_paging: break
 
     except Exception as e:
         print(f"Incremental fetch failed: {e}")
@@ -243,7 +197,7 @@ def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
     return all_new_records
 
 def process_and_merge(dataset_name, local_base_path, new_records):
-    # Load Existing (Base)
+    # Load
     if local_base_path and os.path.exists(local_base_path):
         df_base = pd.read_csv(local_base_path)
     else:
@@ -255,37 +209,19 @@ def process_and_merge(dataset_name, local_base_path, new_records):
         df_new = clean_dataframe(df_new, dataset_name)
     
     if df_new.empty and not new_records:
-        if df_base.empty:
-            print(f"No data to process for {dataset_name}.")
-            return
+        if df_base.empty: return
         df_final = df_base
     else:
-        # Safe merge: de-duplicate against base if we fetched using date overlapping
         if not df_base.empty and not df_new.empty:
             df_combined = pd.concat([df_base, df_new], ignore_index=True)
-            # Use all identifying columns for de-duplication
-            # Exclude derived columns if any
             subset_cols = [c for c in df_combined.columns if c not in ['source_dataset', 'year']]
             df_final = df_combined.drop_duplicates(subset=subset_cols, keep='last')
         else:
             df_final = pd.concat([df_base, df_new], ignore_index=True)
 
-    
-    if df_final.empty:
-        return
+    if df_final.empty: return
 
-    # Helper to check for year column
-    if 'year' not in df_final.columns and 'date' in df_final.columns:
-         def get_year(d):
-            if pd.isna(d): return None
-            parts = re.split(r'[-/]', str(d))
-            if len(parts) == 3:
-                if len(parts[0]) == 4: return parts[0]
-                if len(parts[2]) == 4: return parts[2]
-            return None
-         df_final['year'] = df_final['date'].apply(get_year)
-
-    # Save
+    # Save ONLY full CSV
     output_dir = os.path.join(os.getcwd(), 'public', 'datasets')
     os.makedirs(output_dir, exist_ok=True)
     full_path = os.path.join(output_dir, f"{dataset_name}_full.csv")
@@ -295,167 +231,7 @@ def process_and_merge(dataset_name, local_base_path, new_records):
     else:
         df_final.to_csv(full_path, index=False)
     
-    split_dir = os.path.join(output_dir, 'split_data')
-    os.makedirs(split_dir, exist_ok=True)
-    
-    if 'year' in df_final.columns:
-        for year, group in df_final.groupby('year'):
-            group.drop(columns=['year']).to_csv(os.path.join(split_dir, f"{dataset_name}_{year}.csv"), index=False)
-    
     print(f"Update complete for {dataset_name}. Total records: {len(df_final)}")
-
-def generate_powerbi_master():
-    """
-    Generates the master integrated CSV specific for PowerBI by reading the local files
-    that were just synced/updated.
-    """
-    print("\n=== Generating PowerBI Master Dataset ===")
-    
-    dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
-    bio_path = os.path.join(dataset_dir, 'biometric_full.csv')
-    demo_path = os.path.join(dataset_dir, 'demographic_full.csv')
-    enroll_path = os.path.join(dataset_dir, 'enrolment_full.csv')
-    
-    if not (os.path.exists(bio_path) and os.path.exists(demo_path) and os.path.exists(enroll_path)):
-        print("Required full datasets are missing in public/datasets. Skipping Master Generation.")
-        return
-
-    try:
-        # Load columns strictly needed
-        bio_cols = ['state', 'district', 'date', 'pincode', 'bio_age_5_17', 'bio_age_17_']
-        demo_cols = ['state', 'district', 'date', 'pincode', 'demo_age_5_17', 'demo_age_17_']
-        enroll_cols = ['state', 'district', 'date', 'pincode', 'age_0_5', 'age_5_17', 'age_18_greater']
-
-        print("Reading datasets...")
-        df_bio = pd.read_csv(bio_path, usecols=lambda c: c in bio_cols)
-        df_demo = pd.read_csv(demo_path, usecols=lambda c: c in demo_cols)
-        df_enroll = pd.read_csv(enroll_path, usecols=lambda c: c in enroll_cols)
-
-        # Pre-calc totals
-        df_bio['total_biometric_updates'] = df_bio.get('bio_age_5_17', 0).fillna(0) + df_bio.get('bio_age_17_', 0).fillna(0)
-        df_demo['total_demographic_updates'] = df_demo.get('demo_age_5_17', 0).fillna(0) + df_demo.get('demo_age_17_', 0).fillna(0)
-        df_enroll['total_enrolment'] = (df_enroll.get('age_0_5', 0).fillna(0) + 
-                                        df_enroll.get('age_5_17', 0).fillna(0) + 
-                                        df_enroll.get('age_18_greater', 0).fillna(0))
-
-        # Cleanup & Tag
-        df_bio_clean = df_bio.copy()
-        df_bio_clean['source_dataset'] = 'Biometric Updates'
-        
-        df_demo_clean = df_demo.copy()
-        df_demo_clean['source_dataset'] = 'Demographic Updates'
-        
-        df_enroll_clean = df_enroll.copy()
-        df_enroll_clean['source_dataset'] = 'New Enrolment'
-        
-        # Merge
-        master_df = pd.concat([df_bio_clean, df_demo_clean, df_enroll_clean], ignore_index=True)
-        
-        # Exact Metric Columns from Notebook
-        metric_cols = [
-            'bio_age_5_17', 'bio_age_17_', 
-            'demo_age_5_17', 'demo_age_17_', 
-            'age_0_5', 'age_5_17', 'age_18_greater', 
-            'total_biometric_updates', 'total_enrolment'
-        ]
-        for col in metric_cols:
-            if col in master_df.columns:
-                master_df[col] = master_df[col].fillna(0)
-
-        # Normalization
-        master_df['state_norm'] = master_df['state'].apply(normalize_text)
-        master_df['state_clean'] = master_df['state_norm'].map(NB_STATE_STANDARD_MAP)
-        master_df['state_clean'] = master_df['state_clean'].fillna(master_df['state'].str.title())
-        
-        master_df['district_norm'] = master_df['district'].astype(str).str.lower().str.strip().str.replace(r'\s+', ' ', regex=True)
-        normalized_alias_map = {k.lower(): v for k, v in NB_DISTRICT_ALIAS_MAP.items()}
-        master_df['district_clean'] = master_df['district_norm'].replace(normalized_alias_map).str.title()
-        
-        master_df['state'] = master_df['state_clean']
-        master_df['district'] = master_df['district_clean']
-        master_df.drop(columns=['state_norm', 'state_clean', 'district_norm', 'district_clean'], inplace=True, errors='ignore')
-
-        # Structural Audit (Majority Vote)
-        district_state_counts = master_df.groupby(['district', 'state']).size().reset_index(name='count')
-        authoritative_map = district_state_counts.sort_values('count', ascending=False).drop_duplicates('district')[['district', 'state']]
-        authoritative_dict = dict(zip(authoritative_map['district'], authoritative_map['state']))
-        
-        manual_overrides = {
-            'Leh': 'Ladakh', 'Kargil': 'Ladakh',
-            'Mahabubnagar': 'Telangana', 'Rangareddy': 'Telangana', 'Khammam': 'Telangana'
-        }
-        authoritative_dict.update(manual_overrides)
-        master_df['state'] = master_df['district'].map(authoritative_dict).fillna(master_df['state'])
-        
-        # Date Handling - Enforce dayfirst=True for DD-MM-YYYY source format
-        # IMPORTANT: Explicitly handle mixed formats if any, but standard is DD-MM-YYYY
-        master_df['date'] = pd.to_datetime(master_df['date'], dayfirst=True, errors='coerce')
-        master_df.dropna(subset=['date'], inplace=True) # Drop rows where date failed
-        
-        master_df['month_year'] = master_df['date'].dt.to_period('M').astype(str)
-        
-        # Calculated Columns - Exact Notebook logic
-        # Save Partitioned Master (Yearly)
-        master_parts_dir = os.path.join(dataset_dir, 'master_parts')
-        os.makedirs(master_parts_dir, exist_ok=True)
-        
-        # Ensure year for partitioning
-        if 'year' not in master_df.columns:
-            master_df['year'] = master_df['date'].dt.year
-
-        # --- AGGREGATION FIX for Power BI ---
-        # Instead of saving raw stacked rows (where bio is 0 in demo rows etc),
-        # we group by Key Dimensions to squash them into single rows per Location-Date.
-        
-        agg_key = ['state', 'district', 'date', 'pincode', 'month_year', 'year']
-        
-        # Define aggregation dictionary: Sum for metrics, First for others if needed
-        agg_map = {col: 'sum' for col in metric_cols if col in master_df.columns}
-        
-        # Perform GroupBy + Sum
-        print("Aggregating Master Dataset by Location & Date for PowerBI...")
-        aggregated_df = master_df.groupby(agg_key, as_index=False).agg(agg_map)
-        
-        # Recalculate Ratios on Aggregated Data (Now denominators will be valid!)
-        aggregated_df['total_demographic_updates'] = aggregated_df.get('demo_age_5_17', 0) + aggregated_df.get('demo_age_17_', 0)
-        
-        # IMPORTANT: Fill NA before ratio calc
-        aggregated_df.fillna(0, inplace=True)
-        
-        aggregated_df['total_activity'] = (
-            aggregated_df['total_biometric_updates'] + 
-            aggregated_df['total_enrolment'] + 
-            aggregated_df['total_demographic_updates']
-        )
-        
-        # Avoid division by zero
-        aggregated_df['biometric_update_ratio'] = np.where(
-            aggregated_df['total_activity'] > 0,
-            aggregated_df['total_biometric_updates'] / aggregated_df['total_activity'],
-            0
-        )
-        
-        aggregated_df['demographic_update_ratio'] = np.where(
-            aggregated_df['total_activity'] > 0,
-            aggregated_df['total_demographic_updates'] / aggregated_df['total_activity'],
-            0
-        )
-        # ------------------------------------
-
-        print(f"Saving Master partitions to {master_parts_dir}...")
-        for year, group in aggregated_df.groupby('year'):
-            if pd.isna(year): continue
-            part_path = os.path.join(master_parts_dir, f"master_{int(year)}.csv")
-            group.to_csv(part_path, index=False)
-        
-        # Save local full backup (Aggregated version)
-        out_path_csv = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
-        aggregated_df.to_csv(out_path_csv, index=False)
-        
-        print(f"Master Partitioning Complete. Total rows (Aggregated): {len(aggregated_df)}")
-
-    except Exception as e:
-        print(f"Error generating PowerBI Master: {e}")
 
 def push_to_github(updated_datasets=None):
     """
@@ -466,7 +242,7 @@ def push_to_github(updated_datasets=None):
     dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
     tag = "dataset-latest"
     
-    # 1. Upload the 'full' bases only if they were updated
+    # 1. Upload the 'full' bases only (Biometric, Demographic, Enrolment)
     if updated_datasets:
         for ds in updated_datasets:
             fpath = os.path.join(dataset_dir, f"{ds}_full.csv")
@@ -474,25 +250,28 @@ def push_to_github(updated_datasets=None):
                 print(f"Uploading updated base: {ds}_full.csv")
                 os.system(f"gh release upload {tag} {fpath} --clobber")
 
-    # 2. Upload only 'recent' Master Partitions (Year 2025 onwards)
-    # This prevents re-uploading historical data (2010-2024) which doesn't change
-    master_parts_dir = os.path.join(dataset_dir, 'master_parts')
-    if os.path.exists(master_parts_dir):
-        # We upload the current year and the previous one for safety (overlap)
-        current_year = datetime.now().year
-        years_to_push = [current_year - 1, current_year]
+    # 2. Upload Master Dataset (master_dataset_final.csv) if it was just generated
+    # (Assuming generate_powerbi_master is run and creates this)
+    # The generated file name from notebook is 'master_dataset_final.csv' usually.
+    # In earlier scripts, it might be 'aadhaar_powerbi_master.csv'.
+    # We will upload whatever we have.
+    
+    master_v1 = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv') # from internal logic
+    master_v2 = os.path.join(os.getcwd(), 'public', 'notebooks', 'master_dataset_final.csv') # from notebook
+    
+    if os.path.exists(master_v1):
+        print(f"Uploading Master: {master_v1}")
+        os.system(f"gh release upload {tag} {master_v1} --clobber")
         
-        for yr in years_to_push:
-            fpath = os.path.join(master_parts_dir, f"master_{yr}.csv")
-            if os.path.exists(fpath):
-                print(f"Uploading Master Partition: master_{yr}.csv")
-                os.system(f"gh release upload {tag} {fpath} --clobber")
+    if os.path.exists(master_v2):
+         print(f"Uploading Master (Notebook Artifact): {master_v2}")
+         os.system(f"gh release upload {tag} {master_v2} --clobber")
 
     # 3. Git metadata push
     print("Committing metadata...")
     os.system("git add .")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    os.system(f'git commit -m "Auto-sync (Partitioned): {timestamp}" --allow-empty')
+    os.system(f'git commit -m "Auto-sync (Datasets): {timestamp}" --allow-empty')
     os.system("git push origin main")
     print("Push complete.")
 
@@ -500,9 +279,6 @@ def main():
     datasets = settings.RESOURCES
     updated_datasets = []
     
-    # Force Aggregation Flag (since we know the last run didn't finish)
-    force_rebuild = True
-
     for name, rid in datasets.items():
         local_file = download_existing_from_github(name)
         count = get_local_record_count(local_file)
@@ -511,10 +287,7 @@ def main():
             process_and_merge(name, local_file, new_records)
             updated_datasets.append(name) 
     
-    # Generate Integration Master after all are synced
-    generate_powerbi_master()
-    
-    # Push only modified parts
+    # Push only modified parts + Master
     push_to_github(updated_datasets)
         
     print("\nIncremental Sync & Selective Push Complete!")
