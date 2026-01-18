@@ -1,7 +1,7 @@
 # UIDAI Ecosystem Analytics API
 
 
-[![6-Hourly Redis Flush](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-6h.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-6h.yml)
+[![12-Hourly Redis Flush](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-12h.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-12h.yml)
 
 
 
