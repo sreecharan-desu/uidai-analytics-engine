@@ -385,22 +385,20 @@ def push_to_github(updated_datasets=None):
                 print(f"Uploading updated base: {ds}_full.csv")
                 os.system(f"gh release upload {tag} {fpath} --clobber")
 
-    # 2. Upload Master Dataset (master_dataset_final.csv) if it was just generated
-    # (Assuming generate_powerbi_master is run and creates this)
-    # The generated file name from notebook is 'master_dataset_final.csv' usually.
-    # In earlier scripts, it might be 'aadhaar_powerbi_master.csv'.
-    # We will upload whatever we have.
+    # 2. Upload Master Dataset (master_dataset_final.csv)
+    # The generated file is in public/datasets/master_dataset_final.csv
     
-    master_v1 = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv') # from internal logic
-    master_v2 = os.path.join(os.getcwd(), 'public', 'notebooks', 'master_dataset_final.csv') # from notebook
+    master_generated = os.path.join(dataset_dir, 'master_dataset_final.csv')
     
-    if os.path.exists(master_v1):
-        print(f"Uploading Master: {master_v1}")
-        os.system(f"gh release upload {tag} {master_v1} --clobber")
-        
-    if os.path.exists(master_v2):
-         print(f"Uploading Master (Notebook Artifact): {master_v2}")
-         os.system(f"gh release upload {tag} {master_v2} --clobber")
+    if os.path.exists(master_generated):
+        print(f"Uploading Generated Master: {master_generated}")
+        os.system(f"gh release upload {tag} {master_generated} --clobber")
+    else:
+        # Fallback to notebook artifact if generated one is missing (unlikely)
+        master_notebook = os.path.join(os.getcwd(), 'public', 'notebooks', 'master_dataset_final.csv')
+        if os.path.exists(master_notebook):
+             print(f"Uploading Master (Notebook Artifact): {master_notebook}")
+             os.system(f"gh release upload {tag} {master_notebook} --clobber")
 
     # 3. Git metadata push
     print("Committing metadata...")
