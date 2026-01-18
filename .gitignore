@@ -7,13 +7,11 @@ coverage
 .env*.local
 venv
 
-# Ignore all CSVs by default to avoid large file errors
+# Ignore all large CSVs to prevent GitHub rejection (using Releases instead)
 *.csv
 public/datasets/*.csv
 public/datasets/split_data/*.csv
 split_data/
+public/datasets/master_parts/*.csv
 
-# Large Dataset files are ignored by general *.csv rule above
-
-public/datasets/aadhaar_powerbi_master.json
-public/datasets/aadhaar_powerbi_master.json.gz
+# Allow keeping the empty structure or small configs if needed, but blocking data

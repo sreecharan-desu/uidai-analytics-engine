@@ -8,3 +8,6 @@ aiofiles>=23.2.1
 pandas>=2.2.0
 numpy>=1.26.0
 requests>=2.31.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+ipykernel>=6.29.0

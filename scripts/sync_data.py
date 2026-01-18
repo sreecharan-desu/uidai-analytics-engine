@@ -6,6 +6,7 @@ import json
 import re
 import sys
 import time
+import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -129,11 +130,17 @@ def normalize_text(x):
     return x
 
 def download_existing_from_github(dataset_name):
-    """Download existing full CSV from GitHub to find the starting point."""
+    """Download existing full CSV from GitHub only if not present locally."""
+    local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
+    
+    # 🚨 SKIP DOWNLOAD IF EXISTS (for fast re-aggregation)
+    if os.path.exists(local_path):
+        print(f"✅ Local {dataset_name} found. Skipping download.")
+        return local_path
+        
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
     repo = 'sreecharan-desu/uidai-analytics-engine'
     url = f"https://github.com/{repo}/releases/download/dataset-latest/{dataset_name}_full.csv"
-    local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
     
     print(f"Checking for existing {dataset_name} on GitHub...")
     try:
@@ -381,21 +388,13 @@ def generate_powerbi_master():
         master_df['state'] = master_df['district'].map(authoritative_dict).fillna(master_df['state'])
         
         # Date Handling - Enforce dayfirst=True for DD-MM-YYYY source format
+        # IMPORTANT: Explicitly handle mixed formats if any, but standard is DD-MM-YYYY
         master_df['date'] = pd.to_datetime(master_df['date'], dayfirst=True, errors='coerce')
+        master_df.dropna(subset=['date'], inplace=True) # Drop rows where date failed
+        
         master_df['month_year'] = master_df['date'].dt.to_period('M').astype(str)
         
         # Calculated Columns - Exact Notebook logic
-        master_df['total_demographic_updates'] = master_df['demo_age_5_17'] + master_df['demo_age_17_']
-        master_df['total_activity'] = (
-            master_df.get('total_biometric_updates', 0) + 
-            master_df.get('total_enrolment', 0) + 
-            master_df.get('total_demographic_updates', 0)
-        )
-        
-        # Ratios
-        master_df['biometric_update_ratio'] = (master_df['total_biometric_updates'] / master_df['total_activity']).fillna(0)
-        master_df['demographic_update_ratio'] = (master_df['total_demographic_updates'] / master_df['total_activity']).fillna(0)
-        
         # Save Partitioned Master (Yearly)
         master_parts_dir = os.path.join(dataset_dir, 'master_parts')
         os.makedirs(master_parts_dir, exist_ok=True)
@@ -404,17 +403,56 @@ def generate_powerbi_master():
         if 'year' not in master_df.columns:
             master_df['year'] = master_df['date'].dt.year
 
+        # --- AGGREGATION FIX for Power BI ---
+        # Instead of saving raw stacked rows (where bio is 0 in demo rows etc),
+        # we group by Key Dimensions to squash them into single rows per Location-Date.
+        
+        agg_key = ['state', 'district', 'date', 'pincode', 'month_year', 'year']
+        
+        # Define aggregation dictionary: Sum for metrics, First for others if needed
+        agg_map = {col: 'sum' for col in metric_cols if col in master_df.columns}
+        
+        # Perform GroupBy + Sum
+        print("Aggregating Master Dataset by Location & Date for PowerBI...")
+        aggregated_df = master_df.groupby(agg_key, as_index=False).agg(agg_map)
+        
+        # Recalculate Ratios on Aggregated Data (Now denominators will be valid!)
+        aggregated_df['total_demographic_updates'] = aggregated_df.get('demo_age_5_17', 0) + aggregated_df.get('demo_age_17_', 0)
+        
+        # IMPORTANT: Fill NA before ratio calc
+        aggregated_df.fillna(0, inplace=True)
+        
+        aggregated_df['total_activity'] = (
+            aggregated_df['total_biometric_updates'] + 
+            aggregated_df['total_enrolment'] + 
+            aggregated_df['total_demographic_updates']
+        )
+        
+        # Avoid division by zero
+        aggregated_df['biometric_update_ratio'] = np.where(
+            aggregated_df['total_activity'] > 0,
+            aggregated_df['total_biometric_updates'] / aggregated_df['total_activity'],
+            0
+        )
+        
+        aggregated_df['demographic_update_ratio'] = np.where(
+            aggregated_df['total_activity'] > 0,
+            aggregated_df['total_demographic_updates'] / aggregated_df['total_activity'],
+            0
+        )
+        # ------------------------------------
+
         print(f"Saving Master partitions to {master_parts_dir}...")
-        for year, group in master_df.groupby('year'):
+        for year, group in aggregated_df.groupby('year'):
             if pd.isna(year): continue
             part_path = os.path.join(master_parts_dir, f"master_{int(year)}.csv")
             group.to_csv(part_path, index=False)
         
-        # We still save the full one locally just in case, but we won't push it
+        # Save local full backup (Aggregated version)
         out_path_csv = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
-        master_df.to_csv(out_path_csv, index=False)
+        aggregated_df.to_csv(out_path_csv, index=False)
         
-        print(f"Master Partitioning Complete. Total rows: {len(master_df)}")
+        print(f"Master Partitioning Complete. Total rows (Aggregated): {len(aggregated_df)}")
 
     except Exception as e:
         print(f"Error generating PowerBI Master: {e}")
@@ -462,13 +500,16 @@ def main():
     datasets = settings.RESOURCES
     updated_datasets = []
     
+    # Force Aggregation Flag (since we know the last run didn't finish)
+    force_rebuild = True
+
     for name, rid in datasets.items():
         local_file = download_existing_from_github(name)
         count = get_local_record_count(local_file)
         new_records = fetch_incremental_records(rid, name, start_offset=count)
         if new_records:
             process_and_merge(name, local_file, new_records)
-            updated_datasets.append(name)
+            updated_datasets.append(name) 
     
     # Generate Integration Master after all are synced
     generate_powerbi_master()
