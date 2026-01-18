@@ -1,40 +1,33 @@
 
-import os
-import requests
 import pandas as pd
+import io
 import json
 import re
-import sys
 import time
-from datetime import datetime
-from dotenv import load_dotenv
-
-# Add project root to path to import app modules if needed
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from app.utils.state_data import STATE_STANDARD_MAP, VALID_STATES
+import os
+from fastapi import HTTPException
 from app.core.config import settings
-# Import centralized cleaning
-from app.utils.cleaning_utils import clean_dataframe
+from upstash_redis import Redis
 
-load_dotenv()
+# Setup Redis
+redis_client = None
+if settings.UPSTASH_REDIS_REST_URL and settings.UPSTASH_REDIS_REST_TOKEN:
+    try:
+        redis_client = Redis(url=settings.UPSTASH_REDIS_REST_URL, token=settings.UPSTASH_REDIS_REST_TOKEN)
+    except Exception as e:
+        print(f"Failed to initialize Redis: {e}")
 
-DATA_GOV_API_KEY = os.getenv("DATA_GOV_API_KEY")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+# Constants
+MASTER_CSV_URL = "https://github.com/sreecharan-desu/uidai-analytics-engine/releases/download/dataset-latest/aadhaar_powerbi_master.csv"
+BIO_URL = 'https://github.com/sreecharan-desu/uidai-analytics-engine/releases/download/dataset-latest/biometric_full.csv'
+DEMO_URL = 'https://github.com/sreecharan-desu/uidai-analytics-engine/releases/download/dataset-latest/demographic_full.csv'
+ENROLL_URL = 'https://github.com/sreecharan-desu/uidai-analytics-engine/releases/download/dataset-latest/enrolment_full.csv'
 
-if not DATA_GOV_API_KEY:
-    print("Error: DATA_GOV_API_KEY not found in environment.")
-    sys.exit(1)
+REDIS_KEY = "integrated:master_json"
+CACHE_TTL = 86400  # 24 hours
 
-# Load Pincode Map
-PINCODE_MAP = {}
-pincode_path = os.path.join(os.getcwd(), 'app', 'core', 'pincodeMap.json')
-if os.path.exists(pincode_path):
-    with open(pincode_path, 'r') as f:
-        PINCODE_MAP = json.load(f)
-
-# === POWERBI INTEGRATION MAPS (Notebook Compliance) ===
-NB_STATE_STANDARD_MAP = {
+# Maps (kept for fallback generation)
+STATE_STANDARD_MAP = {
     'andhra pradesh': 'Andhra Pradesh', 'telangana': 'Telangana', 'hyd': 'Telangana', 'hyderabad': 'Telangana',
     'jammu and kashmir': 'Jammu and Kashmir', 'j & k': 'Jammu and Kashmir', 'ladakh': 'Ladakh',
     'arunachal pradesh': 'Arunachal Pradesh', 'assam': 'Assam', 'manipur': 'Manipur', 'meghalaya': 'Meghalaya',
@@ -55,7 +48,7 @@ NB_STATE_STANDARD_MAP = {
     'madhya pradesh': 'Madhya Pradesh', 'mp': 'Madhya Pradesh'
 }
 
-NB_DISTRICT_ALIAS_MAP = {
+DISTRICT_ALIAS_MAP = {
     "belagavi": "Belagavi", "belgaum": "Belagavi", "bengaluru": "Bengaluru", "bangalore": "Bengaluru",
     "bengaluru urban": "Bengaluru Urban", "bangalore urban": "Bengaluru Urban",
     "bengaluru rural": "Bengaluru Rural", "bangalore rural": "Bengaluru Rural",
@@ -125,203 +118,41 @@ def normalize_text(x):
     x = re.sub(r'\s+', ' ', x)
     return x
 
-def download_existing_from_github(dataset_name):
-    """Download existing full CSV from GitHub to find the starting point."""
-    repo = 'sreecharan-desu/uidai-analytics-engine'
-    url = f"https://github.com/{repo}/releases/download/dataset-latest/{dataset_name}_full.csv"
-    local_path = os.path.join(os.getcwd(), 'public', 'datasets', f"{dataset_name}_full.csv")
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-    
-    print(f"Checking for existing {dataset_name} on GitHub...")
+def _generate_fallback_data() -> pd.DataFrame:
+    """Fallback: downloads 3 parts and merges them (Heavy)."""
     try:
-        resp = requests.get(url, stream=True, timeout=10)
-        if resp.status_code == 200:
-            with open(local_path, 'wb') as f:
-                for chunk in resp.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            print(f"Downloaded existing base for {dataset_name}")
-            return local_path
-    except Exception as e:
-        print(f"No existing dataset found or download failed: {e}")
-    return None
-
-def get_local_record_count(file_path):
-    if not file_path or not os.path.exists(file_path):
-        return 0
-    try:
-        with open(file_path, 'rb') as f:
-            lines = sum(1 for _ in f)
-        return max(0, lines - 1)
-    except:
-        return 0
-
-def fetch_incremental_records(resource_id, dataset_name, start_offset=0):
-    base_url = f"https://api.data.gov.in/resource/{resource_id}"
-    params = {
-        "api-key": DATA_GOV_API_KEY,
-        "format": "json",
-        "limit": 10000,
-        "offset": start_offset
-    }
-    
-    all_new_records = []
-    
-    try:
-        resp = requests.get(base_url, params=params, timeout=30)
-        if resp.status_code != 200:
-            print(f"Error checking status for {dataset_name}: {resp.status_code}")
-            return []
-        
-        data = resp.json()
-        if data.get("status") != "ok":
-            print(f"API returned error for {dataset_name}: {data.get('message')}")
-            return []
-
-        current_total = data.get("total")
-        if current_total is None:
-            return []
-            
-        current_total = int(current_total)
-        
-        if start_offset >= current_total:
-            print(f"Dataset {dataset_name} is already up to date ({start_offset}/{current_total}).")
-            return []
-            
-        print(f"Syncing {dataset_name} ({resource_id})...")
-        print(f"Found {current_total - start_offset} new records (Total: {current_total}).")
-        
-        records = data.get("records", [])
-        all_new_records.extend(records)
-        offset = start_offset + len(records)
-        
-        while offset < current_total:
-            params["offset"] = offset
-            resp = requests.get(base_url, params=params, timeout=30)
-            if resp.status_code != 200:
-                print(f"\nBatch fetch failed at offset {offset}")
-                break
-            
-            data = resp.json()
-            records = data.get("records", [])
-            if not records: break
-            
-            all_new_records.extend(records)
-            offset += len(records)
-            print(f"Progress: {offset}/{current_total} fetched...", end="\r")
-
-    except Exception as e:
-        print(f"Incremental fetch failed: {e}")
-        
-    print(f"\nFetched {len(all_new_records)} new records.")
-    return all_new_records
-
-def process_and_merge(dataset_name, local_base_path, new_records):
-    # Load Existing (Base)
-    if local_base_path and os.path.exists(local_base_path):
-        df_base = pd.read_csv(local_base_path)
-    else:
-        df_base = pd.DataFrame()
-
-    df_new = pd.DataFrame()
-    if new_records:
-        df_new = pd.DataFrame(new_records)
-        df_new = clean_dataframe(df_new, dataset_name)
-    
-    if df_new.empty and not new_records:
-        if df_base.empty:
-            print(f"No data to process for {dataset_name}.")
-            return
-        df_final = df_base
-    else:
-        df_final = pd.concat([df_base, df_new], ignore_index=True)
-    
-    if df_final.empty:
-        return
-
-    # Helper to check for year column
-    if 'year' not in df_final.columns and 'date' in df_final.columns:
-         def get_year(d):
-            if pd.isna(d): return None
-            parts = re.split(r'[-/]', str(d))
-            if len(parts) == 3:
-                if len(parts[0]) == 4: return parts[0]
-                if len(parts[2]) == 4: return parts[2]
-            return None
-         df_final['year'] = df_final['date'].apply(get_year)
-
-    # Save
-    output_dir = os.path.join(os.getcwd(), 'public', 'datasets')
-    os.makedirs(output_dir, exist_ok=True)
-    full_path = os.path.join(output_dir, f"{dataset_name}_full.csv")
-    
-    if 'year' in df_final.columns:
-        df_final.drop(columns=['year']).to_csv(full_path, index=False)
-    else:
-        df_final.to_csv(full_path, index=False)
-    
-    split_dir = os.path.join(output_dir, 'split_data')
-    os.makedirs(split_dir, exist_ok=True)
-    
-    if 'year' in df_final.columns:
-        for year, group in df_final.groupby('year'):
-            group.drop(columns=['year']).to_csv(os.path.join(split_dir, f"{dataset_name}_{year}.csv"), index=False)
-    
-    print(f"Update complete for {dataset_name}. Total records: {len(df_final)}")
-
-def generate_powerbi_master():
-    """
-    Generates the master integrated CSV specific for PowerBI by reading the local files
-    that were just synced/updated.
-    """
-    print("\n=== Generating PowerBI Master Dataset ===")
-    
-    dataset_dir = os.path.join(os.getcwd(), 'public', 'datasets')
-    bio_path = os.path.join(dataset_dir, 'biometric_full.csv')
-    demo_path = os.path.join(dataset_dir, 'demographic_full.csv')
-    enroll_path = os.path.join(dataset_dir, 'enrolment_full.csv')
-    
-    if not (os.path.exists(bio_path) and os.path.exists(demo_path) and os.path.exists(enroll_path)):
-        print("Required full datasets are missing in public/datasets. Skipping Master Generation.")
-        return
-
-    try:
-        # Load columns strictly needed
         bio_cols = ['state', 'district', 'date', 'pincode', 'bio_age_5_17', 'bio_age_17_']
         demo_cols = ['state', 'district', 'date', 'pincode', 'demo_age_5_17', 'demo_age_17_']
         enroll_cols = ['state', 'district', 'date', 'pincode', 'age_0_5', 'age_5_17', 'age_18_greater']
 
-        print("Reading datasets...")
-        df_bio = pd.read_csv(bio_path, usecols=lambda c: c in bio_cols)
-        df_demo = pd.read_csv(demo_path, usecols=lambda c: c in demo_cols)
-        df_enroll = pd.read_csv(enroll_path, usecols=lambda c: c in enroll_cols)
-
-        # Pre-calc totals
+        print("Fetching Biometric Data (Fallback)...")
+        df_bio = pd.read_csv(BIO_URL, usecols=lambda c: c in bio_cols)
         df_bio['total_biometric_updates'] = df_bio.get('bio_age_5_17', 0).fillna(0) + df_bio.get('bio_age_17_', 0).fillna(0)
+        
+        print("Fetching Demographic Data (Fallback)...")
+        df_demo = pd.read_csv(DEMO_URL, usecols=lambda c: c in demo_cols)
         df_demo['total_demographic_updates'] = df_demo.get('demo_age_5_17', 0).fillna(0) + df_demo.get('demo_age_17_', 0).fillna(0)
+        
+        print("Fetching Enrolment Data (Fallback)...")
+        df_enroll = pd.read_csv(ENROLL_URL, usecols=lambda c: c in enroll_cols)
         df_enroll['total_enrolment'] = (df_enroll.get('age_0_5', 0).fillna(0) + 
                                         df_enroll.get('age_5_17', 0).fillna(0) + 
                                         df_enroll.get('age_18_greater', 0).fillna(0))
-
-        # Cleanup & Tag
-        df_bio_clean = df_bio.copy()
-        df_bio_clean['source_dataset'] = 'Biometric Updates'
         
-        df_demo_clean = df_demo.copy()
-        df_demo_clean['source_dataset'] = 'Demographic Updates'
+        # Cleanup & Merge
+        df_bio['source_dataset'] = 'Biometric Updates'
+        df_demo['source_dataset'] = 'Demographic Updates'
+        df_enroll['source_dataset'] = 'New Enrolment'
         
-        df_enroll_clean = df_enroll.copy()
-        df_enroll_clean['source_dataset'] = 'New Enrolment'
+        master_df = pd.concat([df_bio, df_demo, df_enroll], ignore_index=True)
         
-        # Merge
-        master_df = pd.concat([df_bio_clean, df_demo_clean, df_enroll_clean], ignore_index=True)
-        
-        # Normalization
+        # Normalize
         master_df['state_norm'] = master_df['state'].apply(normalize_text)
-        master_df['state_clean'] = master_df['state_norm'].map(NB_STATE_STANDARD_MAP)
+        master_df['state_clean'] = master_df['state_norm'].map(STATE_STANDARD_MAP)
         master_df['state_clean'].fillna(master_df['state'].str.title(), inplace=True)
         
         master_df['district_norm'] = master_df['district'].astype(str).str.lower().str.strip().str.replace(r'\s+', ' ', regex=True)
-        normalized_alias_map = {k.lower(): v for k, v in NB_DISTRICT_ALIAS_MAP.items()}
+        normalized_alias_map = {k.lower(): v for k, v in DISTRICT_ALIAS_MAP.items()}
         master_df['district_clean'] = master_df['district_norm'].replace(normalized_alias_map).str.title()
         
         master_df['state'] = master_df['state_clean']
@@ -340,11 +171,9 @@ def generate_powerbi_master():
         authoritative_dict.update(manual_overrides)
         master_df['state'] = master_df['district'].map(authoritative_dict).fillna(master_df['state'])
         
-        # Date Handling
         master_df['date'] = pd.to_datetime(master_df['date'], errors='coerce')
         master_df['month_year'] = master_df['date'].dt.to_period('M').astype(str)
         
-        # Fill NaNs
         master_df['total_enrolment'] = master_df['total_enrolment'].fillna(0)
         master_df['total_biometric_updates'] = master_df['total_biometric_updates'].fillna(0)
         master_df['total_demographic_updates'] = master_df['total_demographic_updates'].fillna(0)
@@ -353,41 +182,82 @@ def generate_powerbi_master():
                                        master_df['total_biometric_updates'] + 
                                        master_df['total_demographic_updates'])
         
-        # Ratios
-        master_df['biometric_update_ratio'] = master_df['total_biometric_updates'] / master_df['total_activity']
-        master_df['biometric_update_ratio'] = master_df['biometric_update_ratio'].fillna(0)
-        
-        master_df['demographic_update_ratio'] = master_df['total_demographic_updates'] / master_df['total_activity']
-        master_df['demographic_update_ratio'] = master_df['demographic_update_ratio'].fillna(0)
-        
-        # Save Master CSV
-        out_path_csv = os.path.join(dataset_dir, 'aadhaar_powerbi_master.csv')
-        master_df.to_csv(out_path_csv, index=False)
-        print(f"Generated Aadhaar PowerBI Master CSV: {out_path_csv}")
+        master_df['biometric_update_ratio'] = (master_df['total_biometric_updates'] / master_df['total_activity']).fillna(0)
+        master_df['demographic_update_ratio'] = (master_df['total_demographic_updates'] / master_df['total_activity']).fillna(0)
 
-        # Save Master JSON (for API optimization)
-        out_path_json = os.path.join(dataset_dir, 'aadhaar_powerbi_master.json')
-        master_df.to_json(out_path_json, orient='records', date_format='iso')
-        print(f"Generated Aadhaar PowerBI Master JSON: {out_path_json}")
-        
-        print(f"Master Dataset Generation Complete. Rows: {len(master_df)}")
-
+        return master_df
     except Exception as e:
-        print(f"Error generating PowerBI Master: {e}")
+        print(f"Fallback generation error: {e}")
+        raise e
 
-def main():
-    datasets = settings.RESOURCES
-    
-    for name, rid in datasets.items():
-        local_file = download_existing_from_github(name)
-        count = get_local_record_count(local_file)
-        new_records = fetch_incremental_records(rid, name, start_offset=count)
-        process_and_merge(name, local_file, new_records)
-    
-    # Generate Integration Master after all are synced
-    generate_powerbi_master()
+def get_integrated_data() -> pd.DataFrame:
+    # 1. Try Cache
+    if redis_client:
+        try:
+            print("Checking Redis for Master Dataset...")
+            cached = redis_client.get(REDIS_KEY)
+            if cached:
+                print("Cache Hit: Returning data from Redis")
+                if isinstance(cached, str):
+                    return pd.read_json(io.StringIO(cached), orient='records')
+                else:
+                    # Upstash python client might return dict/list directly if it parsed JSON
+                    return pd.DataFrame(cached)
+        except Exception as e:
+            print(f"Redis get failed: {e}")
+
+    # 2. Try Local File (Fastest for local dev)
+    local_path = os.path.join(os.getcwd(), 'public', 'datasets', 'aadhaar_powerbi_master.csv')
+    if os.path.exists(local_path):
+        try:
+            print(f"Found local Master CSV at {local_path}. Loading...")
+            df = pd.read_csv(local_path)
+            
+            # Cache it asynchronously (or synchronously for now to ensure consistency)
+            if redis_client:
+                 try:
+                     print("Caching JSON to Redis...")
+                     json_str = df.to_json(orient='records', date_format='iso')
+                     redis_client.set(REDIS_KEY, json_str, ex=CACHE_TTL)
+                 except Exception as e:
+                     print(f"Redis set failed: {e}")
+            return df
+        except Exception as e:
+            print(f"Error reading local master file: {e}")
+
+    # 3. Try Fetch Master CSV from Release
+    try:
+        print(f"Fetching Master CSV from {MASTER_CSV_URL}...")
+        df = pd.read_csv(MASTER_CSV_URL)
+        print("Successfully loaded Master CSV.")
         
-    print("\nIncremental Sync Complete!")
-
-if __name__ == "__main__":
-    main()
+        # Cache it
+        if redis_client:
+             try:
+                 print(" caching JSON to Redis...")
+                 # Serialize
+                 json_str = df.to_json(orient='records', date_format='iso')
+                 redis_client.set(REDIS_KEY, json_str, ex=CACHE_TTL)
+                 print("Cached successfully.")
+             except Exception as e:
+                 print(f"Redis set failed (likely size limit): {e}")
+        
+        return df
+        
+    except Exception as master_err:
+        print(f"Failed to fetch Master CSV ({master_err}) or cache outdated. Falling back to aggregation...")
+        
+        # 3. Fallback: Aggregate locally
+        try:
+            df = _generate_fallback_data()
+            # Try caching fallback result too
+            if redis_client:
+                 try:
+                     print("Caching Fallback JSON to Redis...")
+                     json_str = df.to_json(orient='records', date_format='iso')
+                     redis_client.set(REDIS_KEY, json_str, ex=CACHE_TTL)
+                 except Exception as e:
+                     print(f"Redis set failed: {e}")
+            return df
+        except Exception as fallback_err:
+            raise HTTPException(status_code=500, detail=f"Error generating master data: {fallback_err}")
