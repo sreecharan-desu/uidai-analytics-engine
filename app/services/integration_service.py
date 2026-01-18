@@ -191,7 +191,7 @@ def get_master_partitions():
     import requests
     try:
         url = "https://api.github.com/repos/sreecharan-desu/uidai-analytics-engine/releases/tags/dataset-latest"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers={'User-Agent': 'PowerBI'}, timeout=10)
         if resp.status_code != 200: return []
         
         assets = resp.json().get('assets', [])

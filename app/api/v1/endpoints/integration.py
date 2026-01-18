@@ -1,7 +1,6 @@
 
 from fastapi import APIRouter, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse, FileResponse
-from app.services.integration_service import get_integrated_data
 import pandas as pd
 import io
 import os
