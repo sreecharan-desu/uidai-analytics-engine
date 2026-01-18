@@ -1,7 +1,6 @@
 import requests
 import os
 import re
-import pandas as pd
 
 # --- Notebook-Grade Cleaning Logic Sources ---
 
@@ -239,7 +238,7 @@ DISTRICT_ALIAS_MAP = {
 }
 
 def normalize_text(x):
-    if pd.isna(x):
+    if x is None:
         return x
     x = str(x).lower().strip()
     x = re.sub(r'[^a-z0-9 ]', ' ', x)
