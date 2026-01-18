@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 import requests
 import io
-import pandas as pd
 from app.dependencies import validate_api_key
 
 router = APIRouter()
