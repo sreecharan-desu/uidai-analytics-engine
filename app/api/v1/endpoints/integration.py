@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import JSONResponse, StreamingResponse
-import requests
-import io
+from fastapi.responses import JSONResponse, RedirectResponse
+
+
 from app.dependencies import validate_api_key
 
 router = APIRouter()
@@ -23,17 +23,11 @@ async def get_powerbi_master_data():
         # We assume the file exists because we just uploaded it.
         # We proxy the download to let PowerBI see it as a stream from our API.
         
-        # Using requests to get the stream
-        r = requests.get(url, stream=True)
-        r.raise_for_status()
-            
-        return StreamingResponse(
-            io.BytesIO(r.content), 
-            media_type="text/csv", 
-            headers={"Content-Disposition": "attachment; filename=aadhaar_powerbi_master.csv"}
-        )
+        # Redirect to the GitHub Release URL directly
+        # PowerBI can handle HTTP redirects (307 Temporary Redirect by default)
+        return RedirectResponse(url=url)
 
-    except Exception as e:
+    except Exception as e:  
         print(f"Error serving Master CSV: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
