@@ -186,28 +186,21 @@ def _generate_fallback_data() -> pd.DataFrame:
         print(f"Fallback generation error: {e}")
         raise e
 
-def get_integrated_data() -> pd.DataFrame:
-    # 1. Try Local File (Fastest for local dev)
-    local_path = os.path.join(os.getcwd(), 'public', 'datasets', 'aadhaar_powerbi_master.csv')
-    if os.path.exists(local_path):
-        try:
-            print(f"Found local Master CSV at {local_path}. Loading...")
-            return pd.read_csv(local_path)
-        except Exception as e:
-            print(f"Error reading local master file: {e}")
-
-    # 2. Try Fetch Master CSV from Release
+def get_master_partitions():
+    """Returns a list of URLs for the yearly master partitions from GitHub."""
+    import requests
     try:
-        print(f"Fetching Master CSV from {MASTER_CSV_URL}...")
-        df = pd.read_csv(MASTER_CSV_URL)
-        print("Successfully loaded Master CSV.")
-        return df
+        url = "https://api.github.com/repos/sreecharan-desu/uidai-analytics-engine/releases/tags/dataset-latest"
+        resp = requests.get(url, timeout=10)
+        if resp.status_code != 200: return []
         
-    except Exception as master_err:
-        print(f"Failed to fetch Master CSV ({master_err}). Falling back to aggregation...")
-        
-        # 3. Fallback: Aggregate locally
-        try:
-            return _generate_fallback_data()
-        except Exception as fallback_err:
-            raise HTTPException(status_code=500, detail=f"Error generating master data: {fallback_err}")
+        assets = resp.json().get('assets', [])
+        partition_urls = [
+            asset['browser_download_url'] 
+            for asset in assets 
+            if asset['name'].startswith('master_') and asset['name'].endswith('.csv')
+        ]
+        return sorted(partition_urls)
+    except Exception as e:
+        print(f"Error fetching partitions: {e}")
+        return []
