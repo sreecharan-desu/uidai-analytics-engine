@@ -12,7 +12,7 @@
 > **UIDAI DATA HACKATHON 2026**
 > *Transforming raw Aadhaar enrolment and update data into a clean, consistent, and policy-ready dataset.*
 
-## 🏛️ Stateless Architecture Overview
+## Stateless Architecture Overview
 
 Sanchara Intelligence uses a **Release-as-Database** (RaD) architecture. Instead of maintaining a persistent database server, the system leverages GitHub Releases as a highly available, versioned, and globally distributed storage layer.
 
@@ -48,13 +48,13 @@ graph TD
     Analytics -->|Monitor| Vercel
 ```
 
-## 🚀 Key Innovation: Release-as-Database
+## Key Innovation: Release-as-Database
 Traditional analytics engines rely on expensive RDS or NoSQL instances. This project eliminates that overhead by treating **GitHub Release Assets** as read-only DB tables:
 1. **Parallel Ingestion**: Multi-threaded Python workers fetch chunked data (1M+ rows) with exponential backoff.
 2. **Schema-on-Write**: Cleaning logic resolves district-state conflicts and administrative boundary changes *before* publishing.
 3. **CDN Redirection**: FastAPI acts as a lightweight proxy, performing logic-check redirections (307) so that visualization engines pull data directly from GitHub's infrastructure.
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ├── app/
@@ -74,7 +74,7 @@ Traditional analytics engines rely on expensive RDS or NoSQL instances. This pro
 └── vercel.json         # Serverless deployment configuration
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
@@ -85,7 +85,7 @@ Traditional analytics engines rely on expensive RDS or NoSQL instances. This pro
 | **Frontend** | `PowerBI` | Advanced demographic visualizations & trend prediction. |
 | **Analytics** | `Vercel Analytics` | Performance and engagement monitoring. |
 
-## 🧪 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Python 3.11+
@@ -106,5 +106,5 @@ Traditional analytics engines rely on expensive RDS or NoSQL instances. This pro
 ---
 
 <p align="center">
-  Built with ❤️ for India's Digital Infrastructure
+  Built with dedication for India's Digital Infrastructure
 </p>
