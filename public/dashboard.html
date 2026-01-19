@@ -10,55 +10,39 @@
     <meta name="theme-color" content="#ffffff">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Sanchara-inspired Palette */
-            --bg-top-bar: #080808;
-            --text-nav: #e5e5e5;
-            
-            --hero-bg-1: #d4c5b5; /* Pale Earth/Saffronish */
-            --hero-bg-2: #ffffff;
-            --hero-bg-3: #b8c9bd; /* Pale Green */
-            
-            --text-hero-title: #1a1a2e; /* Deep Navy */
-            --text-body: #404040;
-            
-            --pill-bg: #ffeedd;
-            --pill-text: #d97706;
-            --pill-dot: #10b981;
-
-            --section-dark: #0a0a0a;
-            --text-dark-section: #f5f5f5;
+            /* Policy / Research Lab Palette */
+            --bg-body: #f8fafc;        /* Neutral off-white */
+            --bg-card: #ffffff;        /* Pure white */
+            --border-subtle: #e2e8f0;  /* Slate 200 */
+            --text-primary: #0f172a;   /* Slate 900 */
+            --text-secondary: #64748b; /* Slate 500 */
+            --accent: #2563eb;         /* Academic Blue */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
         body {
-            background-color: var(--hero-bg-2);
-            /* Soft mesh gradient background */
-            background: linear-gradient(120deg, 
-                var(--hero-bg-1) 0%, 
-                #ffffff 40%, 
-                #ffffff 60%, 
-                var(--hero-bg-3) 100%);
-            color: var(--text-hero-title);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
-        /* Top Navigation Bar (Black) */
+        /* Top Navigation - Minimal */
         .top-bar {
-            height: 50px;
-            background: var(--bg-top-bar);
+            height: 48px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 1.5rem;
             font-size: 0.85rem;
             z-index: 20;
         }
@@ -66,180 +50,113 @@
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--text-nav);
-            font-weight: 600;
+            gap: 12px;
             text-decoration: none;
-            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            font-weight: 600;
         }
-        .nav-brand img { height: 20px; filter: grayscale(1) brightness(2); } /* Make logo white/mono */
+        .nav-brand img { height: 20px; filter: grayscale(100%); opacity: 0.8; } 
         
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
         }
         .nav-links a {
-            color: #a3a3a3;
+            color: var(--text-secondary);
             text-decoration: none;
             transition: color 0.2s;
             font-weight: 500;
+            font-size: 0.8rem;
         }
-        .nav-links a:hover { color: #fff; }
+        .nav-links a:hover { color: var(--accent); }
 
-        /* Hero / Header Section */
-        .hero-section {
-            padding: 1.5rem 1rem 1rem 1rem;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }
-
-        /* The 'Made in India' pill */
-        .status-pill {
-            background: var(--pill-bg);
-            padding: 6px 16px;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #92400e; /* Darker orange */
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .status-dot { height: 8px; width: 8px; background: var(--pill-dot); border-radius: 50%; }
-
-        .hero-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 2.5rem;
-            color: var(--text-hero-title);
-            margin-bottom: 0.25rem;
-            line-height: 1.1;
-        }
-        
-        .hero-subtitle-hindi {
-            font-family: 'Tiro Devanagari Hindi', serif;
-            color: #3b82f6; /* Distinct Blue/Indigo */
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero-desc {
-            font-size: 0.95rem;
-            color: var(--text-body);
-            max-width: 600px;
-            margin: 0 auto;
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-
-        /* Dashboard Container - Transitions into Dark Mode feel or Glass */
-        .dashboard-wrapper {
-            flex: 1;
-            padding: 1rem 2rem 2rem 2rem;
+        /* Minimal Header - Just Context */
+        .context-header {
+            padding: 1rem 1.5rem 0.5rem 1.5rem;
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
+        }
+        .context-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dot-indicator {
+            width: 6px; height: 6px;
+            background-color: #10b981; /* Green active dot */
+            border-radius: 50%;
+        }
+
+        /* Dashboard Container - The Focal Point */
+        .dashboard-wrapper {
+            flex: 1;
+            padding: 0.5rem 1.5rem 1.5rem 1.5rem; /* Tighter padding to maximize view */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Anchor top */
             position: relative;
         }
 
-        .glass-frame {
+        .chart-frame {
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 16px;
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px; /* Subtle radius */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Minimal lift */
             overflow: hidden;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Dark Section at bottom (Visual anchor) */
-        .bottom-anchor {
-            height: 10px;
-            background: var(--section-dark);
-            width: 100%;
         }
 
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            background: #fff; /* Ensure white backing while loading */
         }
-
-        /* Loader */
-        .loader {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex; flex-direction: column; align-items: center; gap: 1rem;
-            color: var(--text-hero-title);
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--pill-text);
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
-            .hero-title { font-size: 2rem; }
-            .dashboard-wrapper { padding: 1rem; }
+            .dashboard-wrapper { padding: 0.5rem; }
+            .top-bar { padding: 0 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation (Black Bar) -->
+    <!-- Top Navigation -->
     <nav class="top-bar">
         <a href="/" class="nav-brand">
             <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Logo">
             <span>UIDAI Data Bridge</span>
         </a>
         <div class="nav-links">
-            <a href="/dashboard" style="color: #fff;">Dashboard</a>
             <a href="/docs">Architecture</a>
-            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank">GitHub</a>
+            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank">Source</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="status-pill">
-            <span class="status-dot"></span>
-            <span>Made in India • स्वदेशी</span>
-            <span class="status-dot" style="background: #f97316;"></span>
+    <!-- Context Header -->
+    <div class="context-header">
+        <div class="context-title">
+            <span class="dot-indicator"></span>
+            Ecosystem Intelligence Report
         </div>
-        
-        <div class="hero-subtitle-hindi">आधार विश्लेषण</div>
-        <h1 class="hero-title">Ecosystem Intelligence</h1>
-        
-        <p class="hero-desc">
-            Capture lifecycle insights with origin, mode, and demographics — passively detected, verifiable, and synced for planners across भारत
-        </p>
     </div>
 
     <!-- Main Content -->
     <main class="dashboard-wrapper">
-        <div class="glass-frame">
-            <div class="loader">
-                <div class="spinner"></div>
-                <div style="font-size: 0.9rem; font-weight: 500;">Loading Insights Engine...</div>
-            </div>
-            
+        <div class="chart-frame">
             <iframe title="report_trail" width="1024" height="1060" src="https://app.powerbi.com/view?r=eyJrIjoiMmM3OGUyMDEtZDY1NC00ZTBlLWFkZTktMTQyNTY2NDIwZWJhIiwidCI6IjNmYTA1YWI1LWY1ODgtNGY2Yy05N2I5LTBmNmExZGZkNThmYyJ9&embedImagePlaceholder=true" frameborder="0" allowFullScreen="true"></iframe>
         </div>
     </main>
     
-    <div class="bottom-anchor"></div>
-
     <script>
         // URL Cleaning
         if (window.location.pathname.endsWith('/dashboard.html')) {
