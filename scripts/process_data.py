@@ -469,6 +469,9 @@ def integrate_datasets():
     base_dir = "public/datasets"
     bio_path = os.path.join(base_dir, "biometric.csv")
     enroll_path = os.path.join(base_dir, "enrollment.csv")
+    if not os.path.exists(enroll_path):
+        enroll_path = os.path.join(base_dir, "enrolment.csv")
+    
     demo_path = os.path.join(base_dir, "demographic.csv")
     
     # 1. Load and clean individual datasets
