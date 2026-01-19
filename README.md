@@ -1,6 +1,11 @@
 # UIDAI Ecosystem Analytics API
 
 
+
+[![Monthly Raw Data Download](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml)
+
+[![Monthly Clean Data Processing](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml)
+
 [![12-Hourly Redis Flush](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-12h.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/flush-redis-12h.yml)
 
 
