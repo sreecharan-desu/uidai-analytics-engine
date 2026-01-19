@@ -83,6 +83,7 @@ Traditional analytics engines rely on expensive RDS or NoSQL instances. This pro
 | **Data** | `Pandas` | Vectorized geographic conflict resolution. |
 | **Storage** | `GitHub Releases` | Globally distributed storage for 500MB+ CSVs. |
 | **Frontend** | `PowerBI` | Advanced demographic visualizations & trend prediction. |
+| **Container** | `Docker` | Ensuring consistent environments across development and production. |
 | **Analytics** | `Vercel Analytics` | Performance and engagement monitoring. |
 
 ## Getting Started
@@ -102,6 +103,17 @@ Traditional analytics engines rely on expensive RDS or NoSQL instances. This pro
    uvicorn app.main:app --reload
    ```
    Access the dashboard at `http://localhost:8000/dashboard`.
+
+### Docker Deployment
+1. **Build and Run**:
+   ```bash
+   docker-compose up --build
+   ```
+2. **Run in Background**:
+   ```bash
+   docker-compose up -d
+   ```
+   The API will be available at `http://localhost:8000`.
 
 ---
 
