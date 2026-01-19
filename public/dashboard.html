@@ -161,21 +161,44 @@
 </head>
 <body>
 
-                    }
-                });
-            });
-        }
-
-        // --- LISTENERS ---
-        document.getElementById('kpiEnrol').parentElement.onclick = () => filterByDataset('enrolment');
-        document.getElementById('kpiBio').parentElement.onclick = () => filterByDataset('biometric');
-        document.getElementById('kpiDemo').parentElement.onclick = () => filterByDataset('demographic');
+    <!-- Header -->
+    <header class="app-header">
+        <div class="brand">
+            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Aadhaar Logo">
+            <div class="brand-text">UIDAI Intelligence Hub</div>
+        </div>
         
-        // Init
-        initFullscreenHandlers();
-        fetchAllData();
+        <div class="header-actions">
+            <div class="status-badge" title="Data Synced from GitHub Release">
+                <span class="status-dot"></span>
+                <span>Live Feed</span>
+            </div>
+            <a href="/docs" title="API Documentation" class="btn-icon">
+                <i class="fa-solid fa-book"></i>
+            </a>
+            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank" title="GitHub Repo" class="btn-icon">
+                <i class="fa-brands fa-github"></i>
+            </a>
+        </div>
+    </header>
 
-    </script>
+    <!-- Main Content -->
+    <main class="dashboard-wrapper">
+        <div class="iframe-container">
+            <div class="loader">
+                <div class="spinner"></div>
+                <div style="font-size: 0.9rem;">Loading Visualization Engine...</div>
+            </div>
+            
+            <iframe 
+                title="UIDAI Analytics Report" 
+                src="https://app.powerbi.com/reportEmbed?reportId=28cbe8fc-02b8-483e-8885-cce4293c6601&autoAuth=true&ctid=3fa05ab5-f588-4f6c-97b9-0f6a1dfd58fc" 
+                frameborder="0" 
+                allowFullScreen="true">
+            </iframe>
+        </div>
+    </main>
+
     <script>
         // URL Cleaning: Ensure browser bar shows '/dashboard' instead of '/dashboard.html'
         if (window.location.pathname.endsWith('/dashboard.html')) {
