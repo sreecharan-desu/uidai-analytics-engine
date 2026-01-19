@@ -383,5 +383,13 @@
         import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics/+esm';
         inject();
     </script>
+    
+    <script>
+        // URL Cleaning
+        if (window.location.pathname.endsWith('/docs.html')) {
+            const newPath = window.location.pathname.replace('/docs.html', '/docs');
+            window.history.replaceState({}, document.title, newPath);
+        }
+    </script>
 </body>
 </html>
