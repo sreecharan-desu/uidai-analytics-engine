@@ -10,818 +10,157 @@
     <meta property="og:title" content="UIDAI Ecosystem - Intelligence Hub">
     <meta name="theme-color" content="#8b5cf6">
 
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
-
     <style>
         :root {
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            
-            --c-bio: #8b5cf6;   /* Violet */
-            --c-enrol: #10b981; /* Emerald */
-            --c-demo: #f59e0b;  /* Amber */
-            
-            --success: #10b981;
-            
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            /* Premium Palette */
+            --bg-body: #0f172a; /* Slate 900 */
+            --bg-glass: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #8b5cf6; /* Violet 500 */
+            --accent-glow: rgba(139, 92, 246, 0.3);
         }
 
-        /* Base */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
         body {
             background-color: var(--bg-body);
             background-image: 
-                radial-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 24px 24px;
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
             color: var(--text-main);
-            padding-bottom: 2rem;
-        }
-
-        /* Layout - PowerBI Style Grid */
-        .dashboard-container {
-            width: 100%;
-            max-width: 100%;
-            padding: 1rem;
-            display: grid;
-            gap: 1rem;
-            /* Desktop: Sidebar (260px) + 3 Columns */
-            grid-template-columns: 260px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-            grid-template-areas: 
-                "filter hero hero hero"
-                "filter kpi1 kpi2 kpi3"
-                "list main main main"
-                "list sec1 sec2 sec3";
-        }
-        
-        /* Fullscreen Helper */
-        :fullscreen, ::backdrop {
-            background-color: var(--bg-card);
-            padding: 2rem;
-            overflow: auto;
-        }
-
-        /* Responsive: Laptop/Tablet (Sidebar moves to top or side becomes narrower, but let's stack for simplicity on smaller screens) */
-        @media (max-width: 1024px) {
-            .dashboard-container {
-                grid-template-columns: 1fr 1fr;
-                grid-template-areas:
-                    "hero hero"
-                    "filter filter"
-                    "kpi1 kpi2"
-                    "kpi3 list"
-                    "main main"
-                    "sec1 sec2"
-                    "sec3 sec3";
-            }
-            .area-filter { flex-direction: row; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-            .filter-group { margin-bottom: 0; flex: 1; min-width: 200px; }
-            .area-list { max-height: 400px; }
-        }
-
-        /* Responsive: Mobile */
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 0.5rem;
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .hero-title h1 { font-size: 1.25rem; }
-            .hero-big-num { font-size: 1.75rem; }
-            .area-main { min-height: 300px; }
-            .area-sec1, .area-sec2, .area-sec3 { min-height: 300px; }
-        }
-
-        /* Components */
-        .panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px; /* Slightly sharper for BI feel */
-            padding: 1rem;
-            box-shadow: var(--shadow);
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* Prevent body scroll, let container scroll if needed */
         }
 
-        /* Filter Panel (Sidebar) */
-        .area-filter { grid-area: filter; height: fit-content; }
-        .filter-header { font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
-        .filter-group { margin-bottom: 1.5rem; }
-        .filter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
-        
-        .pbi-select {
-            width: 100%;
-            padding: 0.6rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            background: #f8fafc;
-            outline: none;
+        /* Header */
+        .app-header {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .brand img { height: 32px; width: auto; filter: drop-shadow(0 0 8px rgba(255,255,255,0.2)); }
+        .brand-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-icon {
+            color: var(--text-muted);
+            font-size: 1.1rem;
             cursor: pointer;
+            transition: color 0.2s;
+            padding: 0.5rem;
+            border-radius: 50%;
         }
-        .pbi-select:focus { border-color: var(--c-bio); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1); }
+        .btn-icon:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
 
-        .kpi-row { display: contents; }
-        
-        /* KPI Cards */
-        .kpi-card { position: relative; overflow: hidden; cursor: pointer; transition: opacity 0.2s ease; }
-        .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }
-        .kpi-sub { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem; }
-        .trend-up { color: var(--success); font-weight: 600; font-size: 0.75rem; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
-        
-        /* Specific Areas */
-        .area-hero { grid-area: hero; background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: white; display: flex; align-items: center; justify-content: space-between; padding: 2rem; }
-        .hero-title h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .hero-title p { opacity: 0.9; font-size: 0.95rem; }
-        .hero-stat { text-align: right; }
-        .hero-big-num { font-size: 2.5rem; font-weight: 800; line-height: 1; }
-        
-        .area-kpi1 { grid-area: kpi1; border-top: 4px solid var(--c-enrol); }
-        .area-kpi2 { grid-area: kpi2; border-top: 4px solid var(--c-bio); }
-        .area-kpi3 { grid-area: kpi3; border-top: 4px solid var(--c-demo); }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399; /* Emerald 400 */
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
 
-        /* Main Chart Area */
-        .area-main { grid-area: main; min-height: 400px; }
-        
-        /* List Area (PowerBI Matrix) */
-        .area-list { grid-area: list; max-height: 800px; overflow: hidden; display: flex; flex-direction: column; }
-        .matrix-table-container { flex: 1; overflow-y: auto; margin-top: 1rem; }
-        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .matrix-table th { text-align: left; padding: 0.75rem; background: #f8fafc; position: sticky; top: 0; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); }
-        .matrix-table td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
-        .matrix-table tr:hover { background: #f1f5f9; cursor: pointer; }
-        .matrix-val { font-family: 'Courier New', monospace; font-weight: 600; text-align: right; }
-        .matrix-bar-cell { width: 60px; }
-        
-        /* Secondary Charts */
-        .area-sec1 { grid-area: sec1; min-height: 250px; } /* Donut */
-        .area-sec2 { grid-area: sec2; min-height: 250px; } /* Age */
-        .area-sec3 { grid-area: sec3; min-height: 250px; } /* District Top 5 */
+        /* Main Container */
+        .dashboard-wrapper {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
 
-        /* Chart Header */
-        .chart-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
-        .chart-title { font-weight: 600; font-size: 1rem; color: var(--text-main); }
-        .chart-action { color: var(--text-muted); cursor: pointer; font-size: 0.85rem; }
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(8px);
+        }
 
-        /* Skeleton */
-        .skeleton { background: #f1f5f9; animation: pulse 1.5s infinite; border-radius: 4px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Loading State */
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1; /* Behind iframe */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-muted);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Overlay for mobile warning if needed (PowerBI helps, but sometimes desktop view is better) */
+        @media (max-width: 768px) {
+            .app-header { padding: 0 1rem; }
+            .brand-text { font-size: 1rem; }
+            .dashboard-wrapper { padding: 0.5rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
-        
-        <!-- Filter Panel -->
-        <div class="panel area-filter">
-            <div class="filter-header">
-                <i class="fa-solid fa-filter"></i> Filters
-            </div>
-            
-            <div class="filter-group">
-                <div class="filter-label">Fiscal Year</div>
-                <select id="yearSelect" class="pbi-select">
-                    <option value="2025" selected>2025</option>
-                    <option value="all">All Available History</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <div class="filter-label">State / Region</div>
-                <select id="stateSelect" class="pbi-select">
-                    <option value="all">All India</option>
-                    <!-- Populated via JS -->
-                </select>
-            </div>
-
-            <div class="filter-group" style="margin-top:auto; padding-top: 2rem; border-top: 1px solid var(--border);">
-                <div class="filter-label">Data Sources</div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #ecfdf5; color: var(--c-enrol); border-radius: 4px; font-weight: 600;">Enrolment</span>
-                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #f5f3ff; color: var(--c-bio); border-radius: 4px; font-weight: 600;">Biometric</span>
-                    <span style="font-size: 0.75rem; padding: 4px 8px; background: #fffbeb; color: var(--c-demo); border-radius: 4px; font-weight: 600;">Demographic</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hero Header -->
-        <div class="panel area-hero">
-            <div class="hero-title">
-                <h1>UIDAI Ecosystem Intelligence</h1>
-                <p>Consolidated view of Aadhaar lifecycle events (Enrolment → Update → Biometric)</p>
-            </div>
-            <div class="hero-stat">
-                <div style="font-size: 0.85rem; opacity: 0.8;">TOTAL ECOSYSTEM TRANSACTIONS</div>
-                <div class="hero-big-num" id="grandTotal">-</div>
-            </div>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="panel kpi-card area-kpi1">
-            <div class="filter-label" style="color: var(--c-enrol);">New Enrolments</div>
-            <div class="kpi-value" id="kpiEnrol">-</div>
-            <div class="kpi-sub"><span class="trend-up">Fresh Intake</span></div>
-        </div>
-
-        <div class="panel kpi-card area-kpi2">
-            <div class="filter-label" style="color: var(--c-bio);">Biometric Updates</div>
-            <div class="kpi-value" id="kpiBio">-</div>
-            <div class="kpi-sub"><span class="trend-up">Security Updates</span></div>
-        </div>
-
-        <div class="panel kpi-card area-kpi3">
-            <div class="filter-label" style="color: var(--c-demo);">Demographic Updates</div>
-            <div class="kpi-value" id="kpiDemo">-</div>
-            <div class="kpi-sub"><span class="trend-up">Corrections</span></div>
-        </div>
-
-        <!-- State Matrix List -->
-        <div class="panel area-list">
-            <div class="chart-header">
-                <div class="chart-title">Geographic Breakdown</div>
-            </div>
-            <div class="matrix-table-container">
-                <table class="matrix-table" id="matrixTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 40%">State</th>
-                            <th style="text-align: right">Total</th>
-                            <th style="width: 60px"></th> <!-- Bar -->
-                        </tr>
-                    </thead>
-                    <tbody id="matrixBody">
-                        <!-- JS Populated -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Main Trend Chart -->
-        <div class="panel area-main">
-            <div class="chart-header">
-                <div class="chart-title">Ecosystem Trends (Monthly Volume)</div>
-                <div class="chart-action"><i class="fa-solid fa-expand"></i></div>
-            </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="trendChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Secondary Charts -->
-        <div class="panel area-sec1">
-            <div class="chart-header">
-                <div class="chart-title">Service Mix</div>
-            </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="mixChart"></canvas>
-            </div>
-        </div>
-
-        <div class="panel area-sec2">
-             <div class="chart-header">
-                <div class="chart-title">Age Demographics</div>
-            </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="ageChart"></canvas>
-            </div>
-        </div>
-
-        <div class="panel area-sec3">
-             <div class="chart-header">
-                <div class="chart-title">Top Districts</div>
-            </div>
-            <div id="districtList" style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                <!-- JS populated -->
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // --- GLOBAL STATE ---
-        const STATE = {
-            year: '2025',
-            filterState: 'all', // 'all' or specific state name
-            data: {
-                enrolment: null,
-                biometric: null,
-                demographic: null
-            },
-            filterDataset: 'combined', // 'combined', 'enrolment', 'biometric', 'demographic'
-            combined: null
-        };
-
-        // --- COLORS ---
-        const COLORS = {
-            enrol: '#10b981',
-            bio: '#8b5cf6',
-            demo: '#f59e0b',
-            grid: '#e2e8f0',
-            text: '#64748b'
-        };
-
-        // --- SKELETON LOADER ---
-        function setSkeletons() {
-            const els = ['grandTotal', 'kpiEnrol', 'kpiBio', 'kpiDemo'];
-            els.forEach(id => {
-                document.getElementById(id).innerHTML = `<div class="skeleton" style="height: 2rem; width: 60%;"></div>`;
-            });
-        }
-
-        // --- FETCH LOGIC ---
-        async function fetchAllData() {
-            setSkeletons();
-            
-            try {
-                // Parallel Fetch
-                const [enrolRes, bioRes, demoRes] = await Promise.all([
-                    fetch(`/api/analytics/enrolment?year=${STATE.year}`).then(r => r.json()),
-                    fetch(`/api/analytics/biometric?year=${STATE.year}`).then(r => r.json()),
-                    fetch(`/api/analytics/demographic?year=${STATE.year}`).then(r => r.json())
-                ]);
-
-                STATE.data.enrolment = enrolRes.data;
-                STATE.data.biometric = bioRes.data;
-                STATE.data.demographic = demoRes.data;
-
-                processCombinedData();
-                updateUI();
-                populateStateDropdown(); 
-
-            } catch (err) {
-                console.error("Fetch failed", err);
-                // Handle Error
-            }
-        }
-
-        // --- DATA PROCESSING ---
-        function processCombinedData() {
-            // Combine logic
-            const combined = {
-                total: 0,
-                by_state: {},
-                by_month: {},
-                by_age_group: {},
-                by_dataset: {
-                    enrolment: STATE.data.enrolment.total_updates,
-                    biometric: STATE.data.biometric.total_updates,
-                    demographic: STATE.data.demographic.total_updates
-                }
-            };
-            
-            combined.total = combined.by_dataset.enrolment + combined.by_dataset.biometric + combined.by_dataset.demographic;
-
-            // Merge States
-            const allStates = new Set([
-                ...Object.keys(STATE.data.enrolment.by_state),
-                ...Object.keys(STATE.data.biometric.by_state),
-                ...Object.keys(STATE.data.demographic.by_state)
-            ]);
-            
-            allStates.forEach(st => {
-                combined.by_state[st] = 
-                    (STATE.data.enrolment.by_state[st] || 0) + 
-                    (STATE.data.biometric.by_state[st] || 0) + 
-                    (STATE.data.demographic.by_state[st] || 0);
-            });
-
-            // Merge Months (Assuming keys are '01', '02' etc)
-            const allMonths = new Set([
-                ...Object.keys(STATE.data.enrolment.by_month || {}),
-                ...Object.keys(STATE.data.biometric.by_month || {}),
-                ...Object.keys(STATE.data.demographic.by_month || {})
-            ]);
-            
-            allMonths.forEach(m => {
-                combined.by_month[m] = {
-                    total: 0,
-                    enrolment: STATE.data.enrolment.by_month?.[m] || 0,
-                    biometric: STATE.data.biometric.by_month?.[m] || 0,
-                    demographic: STATE.data.demographic.by_month?.[m] || 0
-                };
-                combined.by_month[m].total = combined.by_month[m].enrolment + combined.by_month[m].biometric + combined.by_month[m].demographic;
-            });
-
-            STATE.combined = combined;
-        }
-
-        // --- DATA VIEW LOGIC ---
-        function getViewData(filterState) {
-            // Refactored: Always use dynamic aggregation to support Dataset Filtering
-            // (Even for 'all' India, we might need to filter by 'demographic' only)
-
-
-            // Case 2: Dynamic Aggregation (Handles State & Dataset Filter)
-            const view = {
-                total: 0,
-                by_state: {}, 
-                by_month: {},
-                by_age_group: {},
-                by_dataset: {
-                    enrolment: 0,
-                    biometric: 0,
-                    demographic: 0
-                }
-            };
-            
-            // Helper to merge state specific stats
-            const mergeStats = (datasetKey, sourceData) => {
-                // strict dataset filter
-                if (STATE.filterDataset !== 'combined' && STATE.filterDataset !== datasetKey) return;
-
-                let stData = null;
-                let dsTotal = 0;
-
-                if (filterState === 'all') {
-                     // Use global aggregates from sourceData
-                     stData = {
-                         by_month: sourceData.by_month,
-                         by_age_group: sourceData.by_age_group
-                     };
-                     dsTotal = sourceData.total_updates;
-
-                     // Merge State Breakdown for Matrix
-                     Object.entries(sourceData.by_state).forEach(([s, v]) => {
-                         view.by_state[s] = (view.by_state[s] || 0) + v;
-                     });
-                     
-                } else {
-                    // Specific State
-                    if (!sourceData || !sourceData.state_breakdown) return;
-                    stData = sourceData.state_breakdown[filterState];
-                    if (!stData) return; 
-
-                    dsTotal = sourceData.by_state[filterState] || 0;
-                    view.by_state[filterState] = (view.by_state[filterState] || 0) + dsTotal; // Single entry
-                }
-
-                // 1. Total for this dataset
-                view.by_dataset[datasetKey] = dsTotal;
-                view.total += dsTotal;
-
-                // 2. Month Merge
-                if(stData.by_month) {
-                    Object.entries(stData.by_month).forEach(([m, val]) => {
-                        if(!view.by_month[m]) {
-                             view.by_month[m] = { total: 0, enrolment: 0, biometric: 0, demographic: 0 };
-                        }
-                        view.by_month[m][datasetKey] = val;
-                        view.by_month[m].total += val;
-                    });
-                }
-
-                 // 3. Age Merge
-                if(stData.by_age_group) {
-                    Object.entries(stData.by_age_group).forEach(([age, val]) => {
-                        view.by_age_group[age] = (view.by_age_group[age] || 0) + val;
-                    });
-                }
-            };
-
-            mergeStats('enrolment', STATE.data.enrolment);
-            mergeStats('biometric', STATE.data.biometric);
-            mergeStats('demographic', STATE.data.demographic);
-
-            return view;
-        }
-
-        // --- UI UPDATES ---
-        function updateUI(data) {
-            if(!data) {
-                // Initial Load fallback
-                data = STATE.combined;
-            }
-            if(!data) return;
-
-            // 1. KPIs
-            animateValue('grandTotal', data.total);
-            animateValue('kpiEnrol', data.by_dataset.enrolment);
-            animateValue('kpiBio', data.by_dataset.biometric);
-            animateValue('kpiDemo', data.by_dataset.demographic);
-
-            // 2. Charts
-            renderTrendChart(data);
-            renderMixChart(data);
-            renderAgeChart(data);
-            
-            // 3. Matrix & District (Pass data to matrix!)
-            renderMatrix(data);
-            renderDistrictList();
-        }
-
-        function animateValue(id, end) {
-            const el = document.getElementById(id);
-            el.innerText = end.toLocaleString();
-            el.classList.remove('skeleton');
-        }
-
-        // --- CHARTS ---
-        let trendChart = null;
-        function renderTrendChart(data) {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            if (trendChart) trendChart.destroy();
-
-            const months = Object.keys(data.by_month).sort((a,b) => parseInt(a) - parseInt(b));
-            const monthNames = months.map(m => {
-                 const d = new Date(); d.setMonth(parseInt(m)-1);
-                 return d.toLocaleString('default', { month: 'short' });
-            });
-            
-            // Filters datasets based on global state
-            const datasets = [];
-            const showAll = STATE.filterDataset === 'combined';
-            
-            if (showAll || STATE.filterDataset === 'enrolment') {
-                datasets.push({ label: 'Enrolment', data: months.map(m => data.by_month[m].enrolment || 0), backgroundColor: COLORS.enrol, stack: 'Stack 0' });
-            }
-            if (showAll || STATE.filterDataset === 'biometric') {
-                datasets.push({ label: 'Biometric', data: months.map(m => data.by_month[m].biometric || 0), backgroundColor: COLORS.bio, stack: 'Stack 0' });
-            }
-            if (showAll || STATE.filterDataset === 'demographic') {
-                datasets.push({ label: 'Demographic', data: months.map(m => data.by_month[m].demographic || 0), backgroundColor: COLORS.demo, stack: 'Stack 0' });
-            }
-
-            trendChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: monthNames, datasets: datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { grid: { color: '#f1f5f9' }, stacked: true }
-                    },
-                    plugins: {
-                        legend: { position: 'top', align: 'end' }
-                    }
-                }
-            });
-        }
-
-        let mixChart = null;
-        function renderMixChart(data) {
-            const ctx = document.getElementById('mixChart').getContext('2d');
-            if (mixChart) mixChart.destroy();
-
-            const highlightColor = (type) => {
-                if (STATE.filterDataset === 'combined') return COLORS[type.substring(0, 3).toLowerCase()];
-                return STATE.filterDataset === type ? COLORS[type.substring(0, 3).toLowerCase()] : '#e2e8f0';
-            };
-
-            mixChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Enrolment', 'Biometric', 'Demographic'],
-                    datasets: [{
-                        data: [
-                            data.by_dataset.enrolment,
-                            data.by_dataset.biometric,
-                            data.by_dataset.demographic
-                        ],
-                        backgroundColor: [
-                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment' ? COLORS.enrol : '#f1f5f9',
-                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric' ? COLORS.bio : '#f1f5f9',
-                            STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic' ? COLORS.demo : '#f1f5f9'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: {
-                        legend: { position: 'right' }
-                    }
-                }
-            });
-        }
-        
-        let ageChart = null;
-        function renderAgeChart(data) {
-             const ctx = document.getElementById('ageChart').getContext('2d');
-            if (ageChart) ageChart.destroy();
-            
-            const ageKeys = ['0-5', '5-17', '18+'];
-            const totals = ageKeys.map(k => data.by_age_group[k] || 0);
-            
-            const getActiveColor = () => {
-                if (STATE.filterDataset === 'enrolment') return COLORS.enrol;
-                if (STATE.filterDataset === 'biometric') return COLORS.bio;
-                if (STATE.filterDataset === 'demographic') return COLORS.demo;
-                return '#64748b'; // default slate for combined
-            };
-
-            ageChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ageKeys,
-                    datasets: [{
-                        label: 'Total Residents',
-                        data: totals,
-                        backgroundColor: getActiveColor(),
-                        borderRadius: 4,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false }, y: { grid: { display:false } } }
-                }
-            });
-        }
-
-        // --- MATRIX & LIST UTILS ---
-        function renderMatrix(data) {
-            const tbody = document.getElementById('matrixBody');
-            tbody.innerHTML = '';
-            
-            const entries = Object.entries(data.by_state).sort((a,b) => b[1] - a[1]);
-            const maxVal = entries[0] ? entries[0][1] : 0;
-
-            const barColor = () => {
-                if (STATE.filterDataset === 'enrolment') return COLORS.enrol;
-                if (STATE.filterDataset === 'biometric') return COLORS.bio;
-                if (STATE.filterDataset === 'demographic') return COLORS.demo;
-                return '#8b5cf6'; // default bio violet for combined
-            };
-
-            entries.forEach(([st, val]) => {
-                const tr = document.createElement('tr');
-                tr.onclick = () => filterByState(st);
-                
-                const percent = maxVal ? (val / maxVal) * 100 : 0;
-                const color = barColor();
-                
-                tr.innerHTML = `
-                    <td>${st}</td>
-                    <td class="matrix-val">${val.toLocaleString()}</td>
-                    <td>
-                        <div style="height: 4px; background: #e2e8f0; border-radius: 2px; width: 100%;">
-                            <div style="height: 100%; width: ${percent}%; background: ${st === STATE.filterState ? '#000' : color}; border-radius: 2px;"></div>
-                        </div>
-                    </td>
-                `;
-                if(STATE.filterState === st) tr.style.background = '#f1f5f9';
-                tbody.appendChild(tr);
-            });
-        }
-
-        function populateStateDropdown() {
-             const sel = document.getElementById('stateSelect');
-             // Clear existing except first
-             sel.innerHTML = '<option value="all">All India</option>';
-             const states = Object.keys(STATE.combined.by_state).sort();
-             states.forEach(st => {
-                 const opt = document.createElement('option');
-                 opt.value = st;
-                 opt.innerText = st;
-                 sel.appendChild(opt);
-             });
-        }
-
-        // --- DISTRICT DEEP DIVE ---
-        function renderDistrictList() {
-            // Find top districts for Current Filter State (or top state if All)
-            let targetState = STATE.filterState;
-            if (targetState === 'all') {
-                // If All, use highest volume state
-                const entries = Object.entries(STATE.combined.by_state).sort((a,b) => b[1] - a[1]);
-                targetState = entries[0][0];
-            }
-            
-            const cont = document.getElementById('districtList');
-            cont.innerHTML = `<div style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; color:var(--text-muted); border-bottom:1px solid #eee;">Focus: ${targetState}</div>`;
-
-            // Merge Districts for this state from all 3 datasets
-            const dMap = {};
-            const addToMap = (datasetKey, dsData) => {
-                // Strict Dataset Filter
-                if (STATE.filterDataset !== 'combined' && STATE.filterDataset !== datasetKey) return;
-
-                if(dsData.by_district && dsData.by_district[targetState]) {
-                    Object.entries(dsData.by_district[targetState]).forEach(([dName, val]) => {
-                        dMap[dName] = (dMap[dName]||0) + val;
-                    });
-                }
-            };
-            
-            addToMap('enrolment', STATE.data.enrolment);
-            addToMap('biometric', STATE.data.biometric);
-            addToMap('demographic', STATE.data.demographic);
-            
-            const sorted = Object.entries(dMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
-            
-            sorted.forEach(([d, v]) => {
-                const el = document.createElement('div');
-                el.style.padding = '0.5rem';
-                el.style.borderBottom = '1px solid #f8fafc';
-                el.style.display = 'flex';
-                el.style.justifyContent = 'space-between';
-                el.style.fontSize = '0.85rem';
-                el.innerHTML = `
-                    <span>${d}</span>
-                    <span style="font-weight:600;">${v.toLocaleString()}</span>
-                `;
-                cont.appendChild(el);
-            });
-        }
-        
-        // --- INTERACTION ---
-        function filterByState(st) {
-            STATE.filterState = st;
-            document.getElementById('stateSelect').value = st;
-            
-            // 1. Get Context Data
-            const viewData = getViewData(st);
-            
-            // 2. Update Charts & KPIs
-            updateUI(viewData);
-        }
-
-        function filterByDataset(type) {
-            // Toggle off if same clicked
-            const prevFilter = STATE.filterDataset;
-            if (STATE.filterDataset === type) STATE.filterDataset = 'combined';
-            else STATE.filterDataset = type;
-
-            // Visual Update for KPIs
-            const hero = document.querySelector('.area-hero');
-            const heroTitle = hero.querySelector('h1');
-            const heroLabel = hero.querySelector('.hero-stat div');
-            
-            // Define Theme colors for Hero
-            const themes = {
-                combined: { bg: 'linear-gradient(135deg, #4f46e5, #8b5cf6)', title: 'UIDAI Ecosystem Intelligence', label: 'TOTAL ECOSYSTEM TRANSACTIONS' },
-                enrolment: { bg: 'var(--c-enrol)', title: 'New Enrolment Intelligence', label: 'TOTAL NEW ENROLMENTS' },
-                biometric: { bg: 'var(--c-bio)', title: 'Biometric Update Analytics', label: 'TOTAL BIOMETRIC UPDATES' },
-                demographic: { bg: 'var(--c-demo)', title: 'Demographic Correction Hub', label: 'TOTAL DEMOGRAPHIC UPDATES' }
-            };
-
-            const theme = themes[STATE.filterDataset];
-            hero.style.background = theme.bg;
-            heroTitle.innerText = theme.title;
-            heroLabel.innerText = theme.label;
-
-            // Opacity for cards
-            const cardEnrol = document.getElementById('kpiEnrol').parentElement;
-            const cardBio = document.getElementById('kpiBio').parentElement;
-            const cardDemo = document.getElementById('kpiDemo').parentElement;
-            
-            const activeOpacity = '1';
-            const inactiveOpacity = '0.4';
-
-            cardEnrol.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'enrolment') ? activeOpacity : inactiveOpacity;
-            cardBio.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'biometric') ? activeOpacity : inactiveOpacity;
-            cardDemo.style.opacity = (STATE.filterDataset === 'combined' || STATE.filterDataset === 'demographic') ? activeOpacity : inactiveOpacity;
-            
-            // Highlight active card border/shadow
-            [cardEnrol, cardBio, cardDemo].forEach(c => c.style.boxShadow = 'var(--shadow)');
-            if (STATE.filterDataset !== 'combined') {
-                const activeCard = document.getElementById(STATE.filterDataset === 'enrolment' ? 'kpiEnrol' : (STATE.filterDataset === 'biometric' ? 'kpiBio' : 'kpiDemo')).parentElement;
-                activeCard.style.boxShadow = `0 0 0 3px ${theme.bg === 'var(--c-enrol)' ? '#10b98144' : (theme.bg === 'var(--c-bio)' ? '#8b5cf644' : '#f59e0b44')}`;
-            }
-
-            // Refresh
-            const viewData = getViewData(STATE.filterState);
-            updateUI(viewData);
-        }
-
-        document.getElementById('yearSelect').addEventListener('change', (e) => {
-            STATE.year = e.target.value;
-            fetchAllData();
-        });
-
-        document.getElementById('stateSelect').addEventListener('change', (e) => {
-            filterByState(e.target.value);
-        });
-
-        // --- FULLSCREEN HANDLERS ---
-        function initFullscreenHandlers() {
-            document.querySelectorAll('.chart-action').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const panel = btn.closest('.panel');
-                    if (!document.fullscreenElement) {
-                         if(panel.requestFullscreen) panel.requestFullscreen();
-                         else if(panel.webkitRequestFullscreen) panel.webkitRequestFullscreen();
-                         else if(panel.msRequestFullscreen) panel.msRequestFullscreen();
-                    } else {
-                         if(document.exitFullscreen) document.exitFullscreen();
                     }
                 });
             });
