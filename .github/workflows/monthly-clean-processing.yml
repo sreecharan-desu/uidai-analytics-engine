@@ -1,0 +1,44 @@
+name: Monthly Clean Data Processing
+
+on:
+  workflow_run:
+    workflows: ["Monthly Raw Data Download"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  process-and-release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas numpy requests python-dotenv
+
+      - name: Download Raw Data from Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p public/datasets
+          gh release download dataset-raw --repo ${{ github.repository }} --pattern "*.csv" --dir public/datasets
+
+      - name: Run Processing Script
+        run: python scripts/process_data.py
+
+      - name: Upload to GitHub Release (dataset-latest)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload dataset-latest public/master_dataset_final.csv --clobber
