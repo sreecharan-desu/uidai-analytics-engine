@@ -5,139 +5,183 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIDAI Aadhaar Insights - Architecture Docs</title>
     <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
-    
-    <!-- Open Graph / Meta -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="UIDAI Analytics Architecture">
-    <meta property="og:description" content="Technical documentation for the High-Reliability Caching & Analytics Engine.">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#ffffff">
 
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=Tiro+Devanagari+Hindi&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <style>
         :root {
-            --bg-body: #020617; /* Slate 950 */
-            --bg-card: #0f172a; /* Slate 900 */
-            --bg-hover: #1e293b; /* Slate 800 */
-            --border: #1e293b;
+            /* Sanchara-inspired Palette */
+            --bg-top-bar: #080808;
+            --text-nav: #e5e5e5;
             
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6; /* Blue 500 */
-            --accent: #8b5cf6;  /* Violet 500 */
+            --hero-bg-1: #d4c5b5; /* Pale Earth/Saffronish */
+            --hero-bg-2: #ffffff;
+            --hero-bg-3: #b8c9bd; /* Pale Green */
             
-            --code-bg: #0f172a;
+            --text-hero-title: #1a1a2e; /* Deep Navy */
+            --text-body: #404040;
+            
+            --section-dark: #0a0a0a;
+            --text-dark-section: #f5f5f5;
+            --text-dark-muted: #a3a3a3;
+            
+            --accent-blue: #3b82f6;
+            --code-bg: #171717;
         }
 
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-body); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
         body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            background-color: var(--bg-body);
-            color: var(--text-main);
+            background-color: var(--hero-bg-2);
+            /* Soft mesh gradient background */
+            background: linear-gradient(120deg, 
+                var(--hero-bg-1) 0%, 
+                #ffffff 40%, 
+                #ffffff 60%, 
+                var(--hero-bg-3) 100%);
+            color: var(--text-hero-title);
+            min-height: 100vh;
+        }
+
+        /* Top Navigation (Black Bar) */
+        .top-bar {
+            height: 50px;
+            background: var(--bg-top-bar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            font-size: 0.85rem;
+            z-index: 20;
+            position: sticky; top: 0;
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-nav);
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .nav-brand img { height: 20px; filter: grayscale(1) brightness(2); } 
+        
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a {
+            color: #a3a3a3;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+        .nav-links a:hover { color: #fff; }
+
+        /* Hero / Header Section */
+        .hero-section {
+            padding: 4rem 1rem 3rem 1rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-subtitle-hindi {
+            font-family: 'Tiro Devanagari Hindi', serif;
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 3rem;
+            color: var(--text-hero-title);
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-body);
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
             line-height: 1.6;
+        }
+
+        /* Dark Content Section (The Problem style) */
+        .dark-section {
+            background-color: var(--section-dark);
+            color: var(--text-dark-section);
+            padding: 4rem 2rem;
+            min-height: 500px;
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 0 1.5rem;
         }
 
-        /* HEADER */
-        header {
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 0;
+        .section-header {
             margin-bottom: 3rem;
-            background: rgba(2, 6, 23, 0.8);
-            backdrop-filter: blur(8px);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .header-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #fff;
         }
-        .logo img { height: 28px; }
 
-        .nav-link {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s;
-            margin-left: 20px;
-        }
-        .nav-link:hover { color: var(--primary); }
-
-        /* CONTENT */
-        h1 { font-size: 2.5rem; font-weight: 700; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
-        h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-main); }
-        h3 { font-size: 1.1rem; color: var(--text-main); margin-top: 1.5rem; display: flex; align-items: center; gap: 8px; }
-        p, li { color: var(--text-muted); font-size: 1rem; }
-        code { font-family: 'Fira Code', monospace; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
-
-        /* DIAGRAMS / CARDS */
         .grid-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
+            gap: 2rem;
+            margin-bottom: 4rem;
         }
 
         .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 1.5rem;
-            transition: transform 0.2s, border-color 0.2s;
+            transition: transform 0.2s;
         }
-        .card:hover { transform: translateY(-2px); border-color: var(--primary); }
-        .card h4 { margin: 0 0 0.5rem 0; color: var(--text-main); font-size: 1.1rem; }
-        .card p { font-size: 0.9rem; margin: 0; }
+        .card:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.2); }
+        .card h4 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff; }
+        .card p { font-size: 0.9rem; color: var(--text-dark-muted); line-height: 1.5; }
 
-        /* ENDPOINT BLOCK */
+        /* API Endpoint Styles */
         .endpoint-block {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 1.5rem 0;
+            background: var(--code-bg);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
         }
-        .ep-header {
-            padding: 1rem;
-            background: var(--bg-hover);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+
+        .ep-method {
             font-family: 'Fira Code', monospace;
-        }
-        .method {
             font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            color: #34d399; /* Green */
+            margin-right: 1rem;
         }
-        .method.get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .ep-body { padding: 1.5rem; }
         
+        .ep-path {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .ep-desc {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-dark-muted);
+        }
+
         pre {
             background: #000;
             padding: 1rem;
@@ -146,113 +190,91 @@
             color: #d4d4d4;
             font-family: 'Fira Code', monospace;
             font-size: 0.85rem;
-            border: 1px solid var(--border);
+            margin-top: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        /* STATUS BADGE */
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
 
         .footer {
-            margin-top: 4rem;
-            padding: 2rem 0;
-            border-top: 1px solid var(--border);
             text-align: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            padding: 2rem;
+            color: var(--text-dark-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .dark-section { padding: 2rem 1rem; }
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="container header-inner">
-        <div class="logo">
-            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Aadhaar">
+    <!-- Top Navigation -->
+    <nav class="top-bar">
+        <a href="/" class="nav-brand">
+            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Logo">
             <span>Engineering Docs</span>
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/docs" style="color: #fff;">Architecture</a>
+            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank">GitHub</a>
         </div>
-        <nav>
-            <a href="/dashboard" class="nav-link"><i class="fa-solid fa-chart-line"></i> Live Dashboard</a>
-            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" class="nav-link"><i class="fa-brands fa-github"></i> Repository</a>
-        </nav>
-    </div>
-</header>
+    </nav>
 
-<div class="container">
-
-    <section>
-        <div class="status-pill" style="margin-bottom: 1rem;">
-            <span class="dot"></span>
-            <span>SYSTEM OPERATIONAL</span>
-        </div>
-        <h1>Architecture Overview</h1>
-        <p style="font-size: 1.2rem; max-width: 800px;">
-            A high-performance, serverless data pipeline designed to ingest, process, and serve massive scale Aadhaar ecosystem metrics without database overhead.
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-subtitle-hindi">सिस्टम संरचना</div>
+        <h1 class="hero-title">Technical Architecture</h1>
+        <p class="hero-desc">
+            A serverless, high-throughput pipeline engineered for massive scale. Leveraging GitHub Releases as a globally distributed CDN database.
         </p>
     </section>
 
-    <section>
-        <h2><i class="fa-solid fa-layer-group"></i> Core Components</h2>
-        <div class="grid-cards">
-            <div class="card">
-                <h4><i class="fa-solid fa-cloud-arrow-down" style="color: #3b82f6;"></i> Smart Ingestion</h4>
-                <p>Automated Python jobs running on GitHub Actions fetch partial updates from Data.gov.in using intelligent exponential backoff and parallel threading.</p>
-            </div>
-            <div class="card">
-                <h4><i class="fa-solid fa-box-open" style="color: #a855f7;"></i> Release-as-Database</h4>
-                <p>Instead of a traditional DB, processed CSV bundles (Raw & Master) are versioned and stored in <strong>GitHub Releases</strong>, acting as an immutable, high-bandwidth CDN.</p>
-            </div>
-            <div class="card">
-                <h4><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Zero-Latency API</h4>
-                <p>FastAPI acts as a lightweight proxy, redirecting PowerBI streams directly to the pre-compressed assets in GitHub, eliminating server timeouts.</p>
-            </div>
-        </div>
-    </section>
-
-    <section>
-        <h2><i class="fa-solid fa-terminal"></i> API Reference</h2>
-        
-        <div class="endpoint-block">
-            <div class="ep-header">
-                <span class="method get">GET</span>
-                <span style="color: #f8fafc;">/api/integration/powerbi</span>
-            </div>
-            <div class="ep-body">
-                <p><strong>Primary Integration Stream.</strong> Redirects to the latest `master_dataset_final.csv`. Used by the PowerBI Report to pull 500MB+ data in seconds.</p>
-                <div style="margin-top: 1rem;">
-                    <label style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Authentication</label>
-                    <pre>Header: x-api-key: YOUR_SECRET_KEY</pre>
+    <!-- Dark Technical Content -->
+    <section class="dark-section">
+        <div class="container">
+            
+            <div class="section-header">
+                <h2 class="section-title">Core Principles</h2>
+                <div class="grid-cards">
+                    <div class="card">
+                        <h4><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Stateless Ingestion</h4>
+                        <p>Python workers on GitHub Actions perform ETL operations, eliminating the need for persistent intermediate servers.</p>
+                    </div>
+                    <div class="card">
+                        <h4><i class="fa-solid fa-server" style="color: #a855f7;"></i> Release-as-Database</h4>
+                        <p>Processed datasets are versioned and stored as immutable artifacts, serving as a high-speed read layer.</p>
+                    </div>
+                    <div class="card">
+                        <h4><i class="fa-solid fa-network-wired" style="color: #3b82f6;"></i> Proxy Layer</h4>
+                        <p>FastAPI acts as a thin authentication and redirection layer, ensuring PowerBI consumes optimized data streams.</p>
+                    </div>
                 </div>
             </div>
+
+            <div class="section-header">
+                <h2 class="section-title">Integration Points</h2>
+                
+                <div class="endpoint-block">
+                    <div>
+                        <span class="ep-method">GET</span>
+                        <span class="ep-path">/api/integration/powerbi</span>
+                    </div>
+                    <div class="ep-desc">
+                        <p><strong>Primary Integration Stream.</strong> Redirects to the master dataset artifact. Optimized for PowerBI web ingestion.</p>
+                        <pre>Header: x-api-key: YOUR_SECRET_KEY</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Engineered by <a href="https://sreecharandesu.in" style="color: #fff; text-decoration: none;">SreeCharan</a> • v2.4.0
+            </div>
+
         </div>
-
-
     </section>
-
-
-
-    <div class="footer">
-        <p>
-            Engineered by <a href="https://sreecharandesu.in" style="color: var(--text-main); text-decoration: none; font-weight: 600;">SreeCharan</a>
-        </p>
-        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">
-            System Version: v2.4.0 (Stateless Architecture)
-        </p>
-    </div>
-
-</div>
 
 </body>
 </html>
