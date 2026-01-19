@@ -50,6 +50,7 @@ async def add_security_headers(request: Request, call_next):
          "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
          "img-src 'self' data: https:; "
          "connect-src 'self';"
+         "frame-src 'self' https://app.powerbi.com;"
     )
     return response
 
@@ -58,11 +59,7 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 def read_root():
-    return {
-        "status": "healthy",
-        "message": "UIDAI Insights API",
-        "docs": "https://uidai.sreecharandesu.in/docs"
-    }
+    return RedirectResponse(url="/dashboard")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
