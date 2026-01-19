@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -57,9 +57,26 @@ async def add_security_headers(request: Request, call_next):
 # Routes
 app.include_router(api_router, prefix="/api")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return RedirectResponse(url="/dashboard")
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>UIDAI Ecosystem - Intelligence Hub</title>
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="UIDAI Ecosystem - Intelligence Hub">
+        <meta property="og:description" content="Policy-ready analysis of Aadhaar enrolment and update trends across India.">
+        <meta property="og:image" content="https://uidai.sreecharandesu.in/og-image.png">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta http-equiv="refresh" content="0; url=/dashboard">
+        <script>window.location.href = "/dashboard";</script>
+    </head>
+    <body style="background: #000;">
+    </body>
+    </html>
+    """
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
