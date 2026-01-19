@@ -5,7 +5,6 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from app.utils.logger import get_logger
-from app.services.aggregation_service import prewarm_cache
 from app.api.v1.api import api_router
 from app.dependencies import validate_api_key
 
@@ -91,25 +90,6 @@ def custom_docs():
     if os.path.exists(path):
         return FileResponse(path)
     return RedirectResponse(url="/docs.html")
-
-# Startup event removed to prevent cold start timeouts on serverless
-# @app.on_event("startup")
-# async def startup_event():
-#     import asyncio
-#     asyncio.create_task(prewarm_cache())
-
-@app.get("/api/cron/prewarm", dependencies=[Depends(validate_api_key)])
-async def cron_prewarm():
-    import asyncio
-    # Run in background to avoid timeout of the cron request itself? 
-    # Vercel Crons have the same timeout as other requests. 
-    # Ideally we await it so we know if it succeeded, as long as it fits in 300s.
-    # The prewarm fetches 2025 data, usually fast enough if data is not massive.
-    # If massive, we might need to split it. 
-    
-    # We will await it to ensure it completes before the function freezes.
-    await prewarm_cache()
-    return {"status": "Cache pre-warming started"}
 
 # Mount Public folder for /datasets/ downloads or other assets
 if os.path.exists("public"):
