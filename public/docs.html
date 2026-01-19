@@ -3,278 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UIDAI Aadhaar Insights - Architecture Docs</title>
+    <title>UIDAI Ecosystem - Intelligence Hub</title>
+    
+    <!-- Meta -->
     <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#000000">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=Tiro+Devanagari+Hindi&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            /* Sanchara-inspired Palette */
-            --bg-top-bar: #080808;
-            --text-nav: #e5e5e5;
-            
-            --hero-bg-1: #d4c5b5; /* Pale Earth/Saffronish */
-            --hero-bg-2: #ffffff;
-            --hero-bg-3: #b8c9bd; /* Pale Green */
-            
-            --text-hero-title: #1a1a2e; /* Deep Navy */
-            --text-body: #404040;
-            
-            --section-dark: #0a0a0a;
-            --text-dark-section: #f5f5f5;
-            --text-dark-muted: #a3a3a3;
-            
-            --accent-blue: #3b82f6;
-            --code-bg: #171717;
+            /* Sanchara Dark Palette */
+            --bg-body: #050505;
+            --bg-card: #0f0f0f;
+            --bg-card-hover: #141414;
+            --border-subtle: #262626;
+            --text-primary: #ededed;
+            --text-secondary: #a1a1a1;
+            --accent: #ededed;
+            --brand-orange: #f97316;
+            --brand-green: #10b981;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
         body {
-            background-color: var(--hero-bg-2);
-            /* Soft mesh gradient background */
-            background: linear-gradient(120deg, 
-                var(--hero-bg-1) 0%, 
-                #ffffff 40%, 
-                #ffffff 60%, 
-                var(--hero-bg-3) 100%);
-            color: var(--text-hero-title);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
         }
 
-        /* Top Navigation (Black Bar) */
+        /* Top Bar */
         .top-bar {
-            height: 50px;
-            background: var(--bg-top-bar);
+            height: 60px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 2rem;
-            font-size: 0.85rem;
-            z-index: 20;
-            position: sticky; top: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--text-nav);
-            font-weight: 600;
+            gap: 12px;
             text-decoration: none;
-            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.95rem;
         }
-        .nav-brand img { height: 20px; filter: grayscale(1) brightness(2); } 
+        .nav-brand img { height: 24px; filter: grayscale(1) brightness(1.5); } 
         
-        .nav-links { display: flex; gap: 2rem; }
+        .nav-links { display: flex; gap: 2rem; margin-left: auto; }
         .nav-links a {
-            color: #a3a3a3;
+            color: var(--text-secondary);
             text-decoration: none;
             transition: color 0.2s;
+            font-size: 0.85rem;
             font-weight: 500;
         }
-        .nav-links a:hover { color: #fff; }
+        .nav-links a:hover { color: var(--text-primary); }
 
-        /* Hero / Header Section */
-        .hero-section {
-            padding: 4rem 1rem 3rem 1rem;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .hero-subtitle-hindi {
-            font-family: 'Tiro Devanagari Hindi', serif;
-            color: var(--accent-blue);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 3rem;
-            color: var(--text-hero-title);
-            margin-bottom: 1rem;
-            line-height: 1.1;
-        }
-
-        .hero-desc {
-            font-size: 1.1rem;
-            color: var(--text-body);
-            max-width: 700px;
-            margin: 0 auto;
-            opacity: 0.9;
-            line-height: 1.6;
-        }
-
-        /* Dark Content Section (The Problem style) */
-        .dark-section {
-            background-color: var(--section-dark);
-            color: var(--text-dark-section);
-            padding: 4rem 2rem;
-            min-height: 500px;
-        }
-
+        /* General Layout */
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
+            padding: 0 1.5rem;
         }
 
-        .section-header {
-            margin-bottom: 3rem;
+        section {
+            padding: 5rem 0;
+            border-bottom: 1px solid var(--border-subtle);
         }
+        section:last-child { border-bottom: none; }
 
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
             margin-bottom: 1rem;
-            color: #fff;
+            display: block;
         }
 
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: transform 0.2s;
-        }
-        .card:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.2); }
-        .card h4 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff; }
-        .card p { font-size: 0.9rem; color: var(--text-dark-muted); line-height: 1.5; }
-
-        /* API Endpoint Styles */
-        .endpoint-block {
-            background: var(--code-bg);
-            border-left: 4px solid var(--accent-blue);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .ep-method {
-            font-family: 'Fira Code', monospace;
-            font-weight: 700;
-            color: #34d399; /* Green */
-            margin-right: 1rem;
-        }
+        h1, h2, h3 { color: var(--text-primary); line-height: 1.2; }
+        h1 { font-size: 3rem; font-weight: 500; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        h2 { font-size: 2rem; font-weight: 500; margin-bottom: 2rem; }
+        h3 { font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem; margin-top: 2rem; }
         
-        .ep-path {
-            font-family: 'Fira Code', monospace;
-            font-size: 0.95rem;
-            color: #fff;
+        p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 1.05rem; max-width: 800px; }
+        ul { color: var(--text-secondary); margin-bottom: 1.5rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+
+        /* Hero */
+        .hero {
+            padding: 8rem 0 6rem 0;
+            background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, var(--bg-body) 60%);
+        }
+        .hero p.lead {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            max-width: 900px;
+            line-height: 1.5;
         }
 
-        .ep-desc {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: var(--text-dark-muted);
+        /* Check Cards (Objectives) */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+
+        .feature-list li {
+            list-style: none;
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--text-primary);
         }
 
-        pre {
-            background: #000;
+        /* Sanchara Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            padding: 2rem;
+            border-radius: 12px;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: #404040; }
+        .card-icon {
+            width: 40px; height: 40px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        .card h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); }
+        .card p { font-size: 0.95rem; margin-bottom: 0; color: var(--text-secondary); }
+
+        /* API Block */
+        .api-block {
+            background: #0a0a0a;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+        .api-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #101010;
+        }
+        .method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .endpoint { font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+        .api-body { padding: 1.5rem; }
+        .api-body code {
+            font-family: 'JetBrains Mono', monospace;
+            display: block;
+            background: #1a1a1a;
             padding: 1rem;
             border-radius: 6px;
-            overflow-x: auto;
+            font-size: 0.9rem;
             color: #d4d4d4;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
             margin-top: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-dark-muted);
-            font-size: 0.85rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .hero-title { font-size: 2.2rem; }
-            .dark-section { padding: 2rem 1rem; }
+            h1 { font-size: 2rem; }
+            .grid-2 { grid-template-columns: 1fr; gap: 2rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation -->
     <nav class="top-bar">
         <a href="/" class="nav-brand">
             <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Logo">
-            <span>Engineering Docs</span>
+            <span>Sanchara Intelligence</span>
         </a>
         <div class="nav-links">
             <a href="/dashboard">Dashboard</a>
-            <a href="/docs" style="color: #fff;">Architecture</a>
-            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank">GitHub</a>
+            <a href="#problem">Problem</a>
+            <a href="#approach">Approach</a>
+            <a href="#methodology">Methodology</a>
         </div>
     </nav>
 
-    <!-- Hero -->
-    <section class="hero-section">
-        <div class="hero-subtitle-hindi">सिस्टम संरचना</div>
-        <h1 class="hero-title">Technical Architecture</h1>
-        <p class="hero-desc">
-            A serverless, high-throughput pipeline engineered for massive scale. Leveraging GitHub Releases as a globally distributed CDN database.
-        </p>
-    </section>
-
-    <!-- Dark Technical Content -->
-    <section class="dark-section">
+    <header class="hero">
         <div class="container">
-            
-            <div class="section-header">
-                <h2 class="section-title">Core Principles</h2>
-                <div class="grid-cards">
-                    <div class="card">
-                        <h4><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Stateless Ingestion</h4>
-                        <p>Python workers on GitHub Actions perform ETL operations, eliminating the need for persistent intermediate servers.</p>
-                    </div>
-                    <div class="card">
-                        <h4><i class="fa-solid fa-server" style="color: #a855f7;"></i> Release-as-Database</h4>
-                        <p>Processed datasets are versioned and stored as immutable artifacts, serving as a high-speed read layer.</p>
-                    </div>
-                    <div class="card">
-                        <h4><i class="fa-solid fa-network-wired" style="color: #3b82f6;"></i> Proxy Layer</h4>
-                        <p>FastAPI acts as a thin authentication and redirection layer, ensuring PowerBI consumes optimized data streams.</p>
-                    </div>
+            <span class="section-label">UIDAI Data Hackathon – 2026</span>
+            <h1>Unlocking Societal Trends in Aadhaar Enrolment and Updates</h1>
+            <p class="lead">
+                Transforming raw enrolment and update data into a clean, consistent, and policy-ready dataset that enables accurate district-level analysis of societal trends across India.
+            </p>
+        </div>
+    </header>
+
+    <section id="problem">
+        <div class="container">
+            <span class="section-label">The Challenge</span>
+            <div class="grid-2">
+                <div>
+                    <h2>The Problem</h2>
+                    <p>
+                        Aadhaar is India’s primary digital identity system, yet in its raw form, the massive volumes of district-level data are often not suitable for direct analysis.
+                    </p>
+                    <p>
+                        Inconsistencies such as variable district names, state mapping conflicts, changed administrative boundaries, and incomplete geographic identifiers make it difficult to clearly understand regional trends or identify under-served areas.
+                    </p>
+                    <p>
+                        Without rigorous cleaning and validation, analytical insights can be misleading, failing to reflect ground reality.
+                    </p>
+                </div>
+                <div>
+                    <h3>Key Data Quality Issues</h3>
+                    <ul class="feature-list">
+                        <li>Inconsistent district naming conventions</li>
+                        <li>Same district name mapped to multiple states</li>
+                        <li>Changes in administrative boundaries over time</li>
+                        <li>Missing or unclear geographic identifiers</li>
+                        <li>Non-standardized location formats or null values</li>
+                    </ul>
                 </div>
             </div>
-
-            <div class="section-header">
-                <h2 class="section-title">Integration Points</h2>
-                
-                <div class="endpoint-block">
-                    <div>
-                        <span class="ep-method">GET</span>
-                        <span class="ep-path">/api/integration/powerbi</span>
-                    </div>
-                    <div class="ep-desc">
-                        <p><strong>Primary Integration Stream.</strong> Redirects to the master dataset artifact. Optimized for PowerBI web ingestion.</p>
-                        <pre>Header: x-api-key: YOUR_SECRET_KEY</pre>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer">
-                Engineered by <a href="https://sreecharandesu.in" style="color: #fff; text-decoration: none;">SreeCharan</a> • v2.4.0
-            </div>
-
         </div>
     </section>
+
+    <section id="objectives">
+        <div class="container">
+            <span class="section-label">Objectives</span>
+            <h2>Designing a Policy-Ready Solution</h2>
+            
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-icon"><i class="fa-solid fa-broom"></i></div>
+                    <h4>Clean & Standardize</h4>
+                    <p>Resolving district–state mismatches, formatting inconsistencies, and validating geographic records.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
+                    <h4>Transparent Pipeline</h4>
+                    <p>Creating a reproducible data-cleaning workflow that produces a trustworthy, analysis-ready dataset.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <h4>Actionable Insights</h4>
+                    <p>A unified dashboard that refreshes monthly to support decision-making with predictive trend analysis.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="approach">
+        <div class="container">
+            <span class="section-label">Approach</span>
+            <h2>Datasets & Integration Strategy</h2>
+            <p>
+                We process three major operational datasets to build a complete view of the ecosystem.
+            </p>
+
+            <div class="grid-3" style="margin-top: 3rem;">
+                <div class="card" style="border-left: 2px solid var(--brand-orange);">
+                    <h4>Enrolment Dataset</h4>
+                    <p>Captures new Aadhaar registrations. Used to assess overall reach, population onboarding, and coverage expansion.</p>
+                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+                        Key Fields: Age Groups (0-5, 5-17, 18+), Date, State, District
+                    </div>
+                </div>
+                <div class="card" style="border-left: 2px solid var(--brand-green);">
+                    <h4>Biometric Dataset</h4>
+                    <p>Reflects biometric updates (fingerprint, iris) and mandatory updates for children. Indicates infrastructure utilization.</p>
+                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+                        Key Fields: Biometric Age Tiers, Mandatory Updates
+                    </div>
+                </div>
+                <div class="card" style="border-left: 2px solid #3b82f6;">
+                    <h4>Demographic Dataset</h4>
+                    <p>Updates to name, address, DOB, gender. helps analyze migration, urbanization, and data maintenance behavior.</p>
+                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+                        Key Fields: Demographic Age Tiers, Mobile/Email Links
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="methodology">
+        <div class="container">
+            <span class="section-label">Methodology</span>
+            <h2>Two-Stage Cleaning Process</h2>
+            
+            <div class="grid-2">
+                <div>
+                    <h3>1. Pre-Integration</h3>
+                    <p>Each dataset is cleaned independently to prevent error propagation.</p>
+                    <ul class="feature-list">
+                        <li><strong>String Normalization:</strong> Custom lowercase and trim logic for state/district names.</li>
+                        <li><strong>Alias Resolution:</strong> Mapping historical names (e.g., Allahabad → Prayagraj).</li>
+                        <li><strong>Conflict Resolution:</strong> Using majority-vote logic and pincode validation to resolve district-state mismatches.</li>
+                        <li><strong>Feature Engineering:</strong> creating unified metrics like total enrolment or total activity.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>2. Post-Integration</h3>
+                    <p>Datasets are merged into a single national view.</p>
+                    <ul class="feature-list">
+                        <li><strong>Horizontal Consolidation:</strong> Concatenating records while preserving source lineage labels.</li>
+                        <li><strong>Strict Consensus:</strong> Applying conservative mapping philosophy—ambiguous records are quarantined.</li>
+                        <li><strong>Audit Framework:</strong> Automated row count verification to ensure zero silent data loss.</li>
+                        <li><strong>Final Dataset:</strong> A consistent, geographically validated master dataset ready for policy analytics.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="api">
+        <div class="container">
+            <span class="section-label">Technical Reference</span>
+            <h2>API Integration</h2>
+            <p>
+                The unified master dataset is exposed via a high-performance proxy for visualization engines.
+            </p>
+
+            <div class="api-block">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/api/integration/powerbi</span>
+                </div>
+                <div class="api-body">
+                    <p style="color: var(--text-primary);"><strong>Primary Data Stream</strong></p>
+                    <p>Redirects to the latest version-controlled `master_dataset_final.csv`. Optimized for high-throughput ingestion by PowerBI.</p>
+                    <code>
+                        Header: x-api-key: [YOUR_SECRET_KEY]<br>
+                        Response: 307 Temporary Redirect -> GitHub Release Asset
+                    </code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 4rem 0; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+        <div class="container">
+            <p>&copy; 2026 UIDAI Data Hackathon Project. Engineered for Policy Intelligence.</p>
+        </div>
+    </footer>
 
 </body>
 </html>
