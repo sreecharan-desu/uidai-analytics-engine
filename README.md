@@ -1,12 +1,7 @@
-# UIDAI Ecosystem Analytics API
-
-
+# UIDAI Aadhaar Intelligence Engine
 
 [![Monthly Raw Data Download](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml)
 [![Monthly Clean Data Processing](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml)
-
-
-
 
 ![GitHub Release](https://img.shields.io/github/v/release/sreecharan-desu/uidai-analytics-engine?style=for-the-badge&color=orange)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
@@ -14,125 +9,102 @@
 ![Vercel](https://img.shields.io/badge/Vercel-Serverless-black?style=for-the-badge&logo=vercel)
 ![Redis](https://img.shields.io/badge/Redis-Upstash-red?style=for-the-badge&logo=redis)
 
-> **A Flagship Project by Sreecharan Desu and Team**  
-> *Transforming Open Government Data into Real-Time, Actionable Intelligence.*
+> **UIDAI DATA HACKATHON 2026**
+> *Transforming raw Aadhaar enrolment and update data into a clean, consistent, and policy-ready dataset.*
 
-## Overview
+## 🏛️ Stateless Architecture Overview
 
-The **UIDAI Ecosystem Analytics API** is a high-performance, enterprise-grade serverless application designed to process, aggregate, and visualize massive datasets related to the Aadhaar ecosystem. By leveraging **Data.gov.in**'s open APIs, this system provides granular insights into Enrolment, Biometric Updates, and Demographic changes across India.
+Sanchara Intelligence uses a **Release-as-Database** (RaD) architecture. Instead of maintaining a persistent database server, the system leverages GitHub Releases as a highly available, versioned, and globally distributed storage layer.
 
-This project demonstrates an **Elite Controller-Service-Repository Architecture**, ensuring scalability, maintainability, and sub-millisecond response times via multi-layer caching.
+```mermaid
+graph TD
+    subgraph Data_Source ["Government Data Source"]
+        GovAPI["api.data.gov.in"]
+    end
 
-### Key Capabilities
-- **Zero-Latency Insights**: Sub-millisecond data retrieval using **Upstash Redis (L2)** and In-Memory (L1) caching.
-- **Deep Granularity**: Slice and dice data by **State, District, Age Group, and Time**.
-- **Intelligent Normalization**: Uses advanced Pincode-to-State mapping to recover 99% of malformed raw data.
-- **Automated Data Pipelines**: Self-healing CI/CD workflows that automatically fetch, clean, and publish new data monthly.
+    subgraph GitHub_Storage ["GitHub Ecosystem (Storage & compute)"]
+        GA_Raw["GH Action: Raw Download"]
+        GA_Process["GH Action: Process & Merge"]
+        Release_Raw[("Release: dataset-raw")]
+        Release_Latest[("Release: dataset-latest")]
+    end
 
----
+    subgraph API_Layer ["Delivery Layer (FastAPI)"]
+        Vercel["FastAPI on Vercel"]
+        Analytics["Vercel Analytics"]
+    end
 
-## Elite Architecture
+    subgraph Visualization ["User Interfaces"]
+        Dashboard["PowerBI Dashboard"]
+        Docs["Architecture Docs"]
+    end
 
-The codebase follows a strict **Domain-Driven Design (DDD)** principle, optimized for Serverless execution:
-
-```
-├── app
-│   ├── core          # Global Configuration & Security Settings
-│   ├── api           # V1 Endpoints & Interface Definitions
-│   ├── services      # Complex Business Logic & Aggregation Engines
-│   ├── schemas       # Pydantic Data Models (Request/Response validation)
-│   ├── models        # Database / Storage Entities
-│   └── utils         # Shared Utilities (Logger, Redis Client)
-├── scripts           # ETL Pipelines & Maintenance Jobs
-└── .github           # Automated CI/CD Workflows
-```
-
----
-
-## Technology Stack
-
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| **Core** | **Python 3.11** | High performance & rich data ecosystem |
-| **Framework** | **FastAPI** | Async-first, automatic OpenAPI docs |
-| **Deployment** | **Vercel Serverless** | 100% Uptime, infinite scalability |
-| **Caching** | **Upstash Redis** | Serverless-native, durable caching |
-| **Data Processing** | **Pandas / NumPy** | Vectorized cleaning & aggregation |
-| **CI/CD** | **GitHub Actions** | Automated data synchronization cron jobs |
-
----
-
-## API Reference
-
-### 1. Analytics Engine
-Get real-time aggregated metrics.
-```http
-GET /api/analytics/{dataset}?year=2025&format=json
+    GovAPI -->|Requests| GA_Raw
+    GA_Raw -->|Upload CSVs| Release_Raw
+    Release_Raw -->|Trigger / Download| GA_Process
+    GA_Process -->|Clean & Merge| Release_Latest
+    Vercel -->|Redirects| Release_Latest
+    Dashboard -->|Stream Data| Vercel
+    Analytics -->|Monitor| Vercel
 ```
 
-### 2. Deep Insights (Protected)
-Execute complex queries against the raw dataset.
-```http
-POST /api/insights/query
-x-api-key: YOUR_SECURE_KEY
+## 🚀 Key Innovation: Release-as-Database
+Traditional analytics engines rely on expensive RDS or NoSQL instances. This project eliminates that overhead by treating **GitHub Release Assets** as read-only DB tables:
+1. **Parallel Ingestion**: Multi-threaded Python workers fetch chunked data (1M+ rows) with exponential backoff.
+2. **Schema-on-Write**: Cleaning logic resolves district-state conflicts and administrative boundary changes *before* publishing.
+3. **CDN Redirection**: FastAPI acts as a lightweight proxy, performing logic-check redirections (307) so that visualization engines pull data directly from GitHub's infrastructure.
+
+## 📁 Repository Structure
+
 ```
-**Body:**
-```json
-{
-  "dataset": "biometric",
-  "filters": { "state": "Maharashtra" },
-  "limit": 100
-}
+├── app/
+│   ├── api/            # FastAPI Endpoint definitions
+│   ├── core/           # Security and configuration settings
+│   └── main.py         # Application entrypoint & routing
+├── public/
+│   ├── dashboard.html  # Minimalist research-lab dashboard
+│   ├── docs.html       # Sanchara-themed architecture documentation
+│   └── og-image.png    # Premium social share branding
+├── scripts/
+│   ├── download_full_data.py  # High-throughput ingestion script
+│   └── process_data.py        # Complex geographic normalization logic
+├── .github/workflows/
+│   ├── monthly-raw-download.yml
+│   └── monthly-clean-processing.yml
+└── vercel.json         # Serverless deployment configuration
 ```
 
----
+## 🛠️ Technology Stack
 
-## Getting Started
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Backend** | `FastAPI` (Python 3.11) | High-performance asynchronous delivery. |
+| **Compute** | `GitHub Actions` | Serverless ETL workers triggered by cron/events. |
+| **Data** | `Pandas` | Vectorized geographic conflict resolution. |
+| **Storage** | `GitHub Releases` | Globally distributed storage for 500MB+ CSVs. |
+| **Frontend** | `PowerBI` | Advanced demographic visualizations & trend prediction. |
+| **Analytics** | `Vercel Analytics` | Performance and engagement monitoring. |
+
+## 🧪 Getting Started
 
 ### Prerequisites
 - Python 3.11+
-- Redis (Local or Upstash)
-- Data.gov.in API Key
+- GitHub Token (with Release permissions)
+- `DATA_GOV_API_KEY` (from api.data.gov.in)
 
-### Installation
-
-1. **Clone the Repository**
+### Local Development
+1. **Setup Environment**:
    ```bash
-   git clone https://github.com/sreecharan-desu/uidai-analytics-engine.git
-   cd uidai-analytics-engine
-   ```
-
-2. **Setup Environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
    pip install -r requirements.txt
    ```
-
-3. **Configure Variables**
-   Create a `.env` file in the root directory:
-   ```env
-   DATA_GOV_API_KEY=your_key
-   CLIENT_API_KEY=your_secret
-   UPSTASH_REDIS_REST_URL=your_url
-   UPSTASH_REDIS_REST_TOKEN=your_token
-   ```
-
-4. **Launch Application**
+2. **Run API**:
    ```bash
    uvicorn app.main:app --reload
    ```
-
----
-
-## Automated Pipelines
-
-This project is fully autonomous. 
-- **Monthly Sync**: A GitHub Action wakes up on the 1st of every month, fetches new data from the government, cleans it, and updates the release artifacts.
-- **Cache Warming**: A Vercel Cron pre-warms the cache daily to ensure users never hit a cold start.
+   Access the dashboard at `http://localhost:8000/dashboard`.
 
 ---
 
 <p align="center">
-  Built with ❤️ for India's Open Data Ecosystem
+  Built with ❤️ for India's Digital Infrastructure
 </p>
