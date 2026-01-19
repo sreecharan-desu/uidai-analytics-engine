@@ -35,28 +35,36 @@
     
     <style>
         :root {
-            /* Clean Govt/SaaS Palette */
-            --bg-body: #f8fafc;
-            --bg-sidebar: #ffffff;
+            /* Floating SaaS Palette */
+            --bg-body: #f3f4f6;
             --bg-card: #ffffff;
-            --border-subtle: #e2e8f0;
+            --bg-sidebar: #ffffff;
+            
             --text-primary: #1e293b;
             --text-secondary: #64748b;
             --accent: #2563eb;
             --accent-soft: #eff6ff;
+            --border-subtle: transparent; /* Cleaner, borderless look */
+            
+            --radius-card: 24px;
+            --radius-pill: 50px;
+            
+            --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.08);
+            --shadow-card: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02);
+            --shadow-icon: 0 4px 12px rgba(0,0,0,0.05);
+            
+            --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            /* Keep usage of other vars compatible */
             --success: #10b981;
             --success-soft: #ecfdf5;
             --font-main: 'Inter', sans-serif;
-            
-            --radius-card: 16px;
-            --radius-sm: 8px;
-            
-            --shadow-subtle: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-sm: 12px;
+            --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.01);
+            --transition-smooth: var(--transition-spring);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         
         body {
             background-color: var(--bg-body);
@@ -65,86 +73,125 @@
             display: flex;
             overflow-x: hidden;
             font-size: 15px;
+            letter-spacing: -0.01em;
         }
 
-        /* Sidebar Navigation */
+        /* Floating Sidebar */
         .sidebar {
-            width: 260px; /* Expanded sidebar for "meaningful names" */
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-subtle);
-            height: 100vh;
             position: fixed;
-            left: 0; top: 0;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: auto;
+            min-height: 400px;
+            background: var(--bg-sidebar);
+            border-radius: var(--radius-pill);
+            box-shadow: var(--shadow-float);
             display: flex;
             flex-direction: column;
-            padding: 1.5rem 1rem;
-            z-index: 50;
-            transition: transform 0.3s ease;
-        }
-
-        .logo-area {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 0 0.5rem 2rem 0.5rem;
-            margin-bottom: 0.5rem;
+            padding: 2.5rem 0;
+            z-index: 100;
+            transition: var(--transition-spring);
+            border: none;
         }
-        .logo-area img {
-            width: 36px;
-            height: auto;
+        
+        .logo-area {
+            margin-bottom: auto;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding: 0;
         }
-        .logo-area span {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-        }
+        .logo-area img { width: 40px; height: 40px; }
+        .logo-area span, .sidebar-toggle, .nav-label { display: none; } /* Icon-only logic */
 
         .nav-items {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .nav-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            margin: 1.5rem 0 0.5rem 0.75rem;
+            gap: 1.5rem;
+            width: 100%;
+            align-items: center;
+            margin-bottom: auto;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-sm);
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             color: var(--text-secondary);
             text-decoration: none;
-            transition: all 0.2s ease;
-            font-weight: 500;
+            transition: var(--transition-spring);
+            position: relative;
+            padding: 0;
         }
 
         .nav-item:hover {
             color: var(--accent);
             background: var(--accent-soft);
+            transform: translateY(-2px);
         }
 
         .nav-item.active {
-            color: var(--accent);
-            background: var(--accent-soft);
-            font-weight: 600;
+            color: #fff;
+            background: var(--accent);
+            box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.5);
         }
-        .nav-item i { width: 20px; text-align: center; }
+        
+        .nav-item i { font-size: 1.25rem; width: auto; }
+        
+        /* Tooltip */
+        .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 140%;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .nav-item:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+        
+        /* Removed old collided classes */
 
-        /* Main Content Area */
+        /* Main Content */
         .main-wrapper {
             flex: 1;
-            margin-left: 260px; /* Matches sidebar width */
-            padding: 2rem 3rem;
-            max-width: 1920px;
+            margin-left: 140px; /* Space for floating sidebar */
+            padding: 3rem 4rem;
+            max-width: 1600px;
+            width: calc(100% - 140px);
+            opacity: 0;
+            animation: fadeInPage 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: var(--transition-smooth);
+        }
+        
+        /* Reset expanded/collapsed classes as they don't apply to floating layout */
+        .main-wrapper.expanded { margin-left: 140px; width: calc(100% - 140px); }
+        
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .view-section {
+            animation: fadeInView 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeInView { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+        
+        /* Mobile overrides for toggle */
+        @media (max-width: 768px) {
+            .sidebar-toggle { display: none; }
         }
 
         /* Header */
@@ -193,6 +240,7 @@
         }
 
         /* Content Card */
+        /* Content Card */
         .card {
             background: var(--bg-card);
             border-radius: var(--radius-card);
@@ -201,9 +249,13 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: box-shadow 0.3s ease;
+            transition: var(--transition-smooth);
         }
-        .card:hover { box-shadow: var(--shadow-hover); }
+        .card:hover { 
+            box-shadow: var(--shadow-hover); 
+            transform: translateY(-2px);
+            border-color: rgba(37, 99, 235, 0.15);
+        }
 
         .card-header {
             padding: 1.5rem 2rem;
@@ -256,78 +308,189 @@
         }
 
         /* Responsive */
+        /* Responsive */
         @media (max-width: 1024px) { 
-            .sidebar { width: 80px; padding: 1.5rem 0.5rem; align-items: center; }
-            .logo-area span, .nav-item span, .nav-label { display: none; }
-            .logo-area { padding-bottom: 1rem; justify-content: center; }
-            .nav-item { justify-content: center; padding: 1rem; }
-            .main-wrapper { margin-left: 80px; padding: 2rem; }
+            .sidebar { left: 12px; }
+            .main-wrapper { margin-left: 100px; width: calc(100% - 100px); padding: 2rem; }
         }
 
         @media (max-width: 768px) {
             .sidebar {
-                width: 100%; height: 64px;
-                bottom: 0; top: auto; left: 0;
-                flex-direction: row; justify-content: space-around;
+                top: auto; bottom: 24px; 
+                left: 50%; transform: translateX(-50%);
+                width: 90%; max-width: 320px; height: 64px; min-height: auto;
+                flex-direction: row; justify-content: space-evenly;
+                align-items: center;
                 padding: 0;
-                border-right: none; border-top: 1px solid var(--border-subtle);
-                box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.05);
+                border-radius: 20px;
             }
-            .logo-area { display: none; }
-            .nav-items { flex-direction: row; width: 100%; justify-content: space-around; gap: 0; }
-            .nav-item { flex-direction: column; gap: 4px; font-size: 0.7rem; padding: 0.5rem; border-radius: 0; }
-            .nav-item span { display: block; font-size: 0.65rem; }
-            .nav-item i { font-size: 1.1rem; width: auto; }
-            .nav-label { display: none; }
+            .sidebar .logo-area { display: none; }
+            .nav-items { 
+                flex-direction: row; 
+                justify-content: space-evenly; 
+                width: 100%; margin: 0;
+            }
+            .nav-item { width: 44px; height: 44px; }
+             /* Disable tooltip on mobile */
+            .nav-item::after { display: none; }
             
-            .main-wrapper { margin-left: 0; margin-bottom: 64px; padding: 1.5rem; }
-            .header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+            .main-wrapper { margin-left: 0; width: 100%; padding: 1.5rem; margin-bottom: 100px; }
+        }
+            .header { margin-bottom: 1.5rem; }
+            .header-title h1 { font-size: 1.5rem; }
             .header-actions { width: 100%; justify-content: flex-start; }
             
+            .card { border-radius: 16px; }
+            .card-header { padding: 1.25rem 1.5rem; }
+            .card > div:not(.card-header) { padding: 1.5rem !important; }
+            
             .viewport-frame { padding-bottom: 120%; }
+        
+        /* Vercel-style Documentation (No Fluff) */
+        .docs-container {
+            display: grid;
+            grid-template-columns: 1fr 240px;
+            gap: 5rem;
+            align-items: start;
+            margin-top: 2rem;
         }
         
-        /* Loading Shimmer */
-        .skeleton-loader {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            z-index: 10;
+        .docs-content {
+            max-width: 800px;
+            padding-bottom: 5rem;
         }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        .docs-nav {
+            position: sticky;
+            top: 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            border-left: 1px solid #e2e8f0;
+            padding-left: 1.5rem;
+        }
+        
+        .docs-nav-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .docs-nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+        
+        .docs-nav-link:hover { color: var(--accent); }
+        .docs-nav-link.active { color: var(--accent); font-weight: 500; }
+        
+        .docs-section {
+            margin-bottom: 6rem;
+            scroll-margin-top: 5rem;
+        }
+        
+        .docs-section h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.5rem;
+            color: #000;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 3rem;
+        }
+
+        .docs-section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
+            color: #000;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+        
+        .docs-section h3 {
+            font-size: 1.2rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
+        .docs-section p {
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* Clean Component Blocks */
+        .info-box {
+            padding: 1.5rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .tech-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .tech-card {
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: border-color 0.2s;
+        }
+        .tech-card:hover { border-color: var(--accent); }
+
+        @media (max-width: 1200px) {
+            .docs-container { grid-template-columns: 1fr; gap: 2rem; }
+            .docs-nav { display: none; }
         }
     </style>
+
 </head>
 <body>
 
     <!-- Sidebar Navigation -->
+    <!-- Floating Sidebar Navigation -->
     <aside class="sidebar">
         <div class="logo-area">
-            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="UIDAI Logo">
-            <span>Intelligence</span>
+            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="UIDAI Logo" id="sidebar-logo">
         </div>
         
         <div class="nav-items">
-            <span class="nav-label">Platform</span>
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" onclick="switchView('dashboard'); return false;" data-tooltip="Dashboard">
                 <i class="fa-solid fa-chart-pie"></i>
-                <span>Analytics Hub</span>
             </a>
             
-            <span class="nav-label">Resources</span>
-            <a href="/docs" class="nav-item">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Documentation</span>
+            <a href="#" class="nav-item" onclick="switchView('docs'); return false;" data-tooltip="Documentation">
+                <i class="fa-solid fa-book-bookmark"></i>
             </a>
-            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank" class="nav-item">
+            
+            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank" class="nav-item" data-tooltip="Source Code">
                 <i class="fa-brands fa-github"></i>
-                <span>Source Code</span>
             </a>
         </div>
+        
+
     </aside>
 
     <!-- Main Content -->
@@ -336,8 +499,8 @@
         <!-- Header -->
         <header class="header">
             <div class="header-title">
-                <h1>Ecosystem Overview</h1>
-                <p>Real-time insights on Aadhaar Enrolment & Update trends.</p>
+                <h1 id="page-title">Dashboard</h1>
+                <p id="page-subtitle">Real-time insights on Aadhaar Enrolment & Update trends.</p>
             </div>
             <div class="header-actions">
                 <div class="status-pill">
@@ -347,7 +510,8 @@
             </div>
         </header>
 
-        <!-- Main Card -->
+        <!-- View: Dashboard -->
+        <div id="view-dashboard" class="view-section">
         <div class="card">
             <div class="card-header">
                 <div class="icon-box">
@@ -368,18 +532,179 @@
                 ></iframe>
             </div>
         </div>
+        </div> <!-- End View Dashboard -->
+
+        <!-- View: Documentation (Clean Experience) -->
+        <div id="view-docs" class="view-section" style="display: none; min-height: 100vh;">
+            <div class="docs-container">
+                <!-- Document Body -->
+                <article class="docs-content">
+                    <section id="mission" class="docs-section">
+                        <h1>UIDAI Documentation</h1>
+                        <p class="last-updated">Last updated January 19, 2026</p>
+                        
+                        <p>Aadhaar is the world's largest biometric ID system. This documentation outlines the technical synchronization and analytics engine built to transform raw governmental data into policy-ready insights.</p>
+                        
+                        <h2>Get started with the Engine</h2>
+                        <p>The core objective is to handle raw enrolment and update data via a clean, consistent, and policy-ready pipeline. This enables accurate district-level analysis of societal trends.</p>
+                        
+                        <div class="info-box">
+                            <h3 style="margin-top: 0;">Problem Statement</h3>
+                            <p style="margin-bottom: 0;">How can raw Aadhaar data be transformed into a consistent dataset that enables accurate analysis to help in analyzing societal trends across India?</p>
+                        </div>
+                    </section>
+
+                    <section id="approach" class="docs-section">
+                        <h2>Technical Approach</h2>
+                        <p>We use a decentralized, automated pipeline to collect, clean, and visualize data from official UIDAI sources.</p>
+                        
+                        <div class="tech-list">
+                            <div class="tech-card">
+                                <i class="fa-solid fa-cloud-arrow-down" style="color: #64748b;"></i>
+                                <span style="font-size: 0.9rem; font-weight: 500;">Automated Collection</span>
+                            </div>
+                            <div class="tech-card">
+                                <i class="fa-solid fa-broom" style="color: #64748b;"></i>
+                                <span style="font-size: 0.9rem; font-weight: 500;">Geo-Standardization</span>
+                            </div>
+                            <div class="tech-card">
+                                <i class="fa-solid fa-microchip" style="color: #64748b;"></i>
+                                <span style="font-size: 0.9rem; font-weight: 500;">Predictive ML Models</span>
+                            </div>
+                        </div>
+
+                        <h3>System Architecture</h3>
+                        <p>The following diagram visualizes the data flow from Government APIs to the final Intelligence Report.</p>
+                        <div style="background: #ffffff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 1.5rem; box-shadow: var(--shadow-card);">
+                            <img src="architecture-diagram.png" alt="System Architecture Diagram" style="width: 100%; height: auto; border-radius: 8px;">
+                        </div>
+                    </section>
+
+                    <section id="dataset" class="docs-section">
+                        <h2>Dataset Lifecycle</h2>
+                        <p>The system integrates three high-granularity datasets, collectively representing the identity lifecycle of an Indian citizen.</p>
+                        
+                        <h3>1. Enrolment Data</h3>
+                        <p>Captures new generation activity across age groups. This is the primary entry point for new residents into the ecosystem.</p>
+                        
+                        <h3>2. Demographic Updates</h3>
+                        <p>Tracks mobility and profile maintenance including name, address, gender, and mobile updates.</p>
+                        
+                        <h3>3. Biometric Updates</h3>
+                        <p>Records fingerprint and iris transactions, highlighting mandatory child updates which are critical for identity persistence.</p>
+                    </section>
+
+                    <section id="methodology" class="docs-section">
+                        <h2>Post-Integration Methodology</h2>
+                        <p>Our processing engine ensures zero silent data loss through a strict consensus framework.</p>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                            <div>
+                                <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Integrity Audit</h4>
+                                <ul style="list-style: disc; padding-left: 1.25rem; font-size: 0.95rem; color: #444; line-height: 1.7;">
+                                    <li>Source Attribution Tagging</li>
+                                    <li>Horizontal Consolidation</li>
+                                    <li>Row count verification</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Strict Consensus</h4>
+                                <ul style="list-style: disc; padding-left: 1.25rem; font-size: 0.95rem; color: #444; line-height: 1.7;">
+                                    <li>Majority-Vote Logic</li>
+                                    <li>PIN-based Geo Validation</li>
+                                    <li>Quarantine of Ambiguity</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+
+                <!-- On this page Sidebar -->
+                <nav class="docs-nav">
+                    <div class="docs-nav-title">On this page</div>
+                    <a href="#mission" class="docs-nav-link active">UIDAI Documentation</a>
+                    <a href="#approach" class="docs-nav-link">Technical Approach</a>
+                    <a href="#dataset" class="docs-nav-link">Dataset Lifecycle</a>
+                    <a href="#methodology" class="docs-nav-link">Methodology</a>
+                    
+                    <div style="margin-top: 3rem;">
+                        <div class="docs-nav-title">Project</div>
+                        <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" target="_blank" class="docs-nav-link" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-brands fa-github"></i> github repository
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        </div> <!-- End View Documentation -->
 
     </main>
     
     <script>
-        // Smooth URL Cleaning
+        // View Switching Logic
+        const switchView = (viewName) => {
+            // Update Title
+            const titleEl = document.getElementById('page-title');
+            const subTitleEl = document.getElementById('page-subtitle');
+            
+            if (viewName === 'dashboard') {
+                document.getElementById('view-dashboard').style.display = 'block';
+                document.getElementById('view-docs').style.display = 'none';
+                
+                titleEl.textContent = 'Ecosystem Overview';
+                subTitleEl.textContent = 'Real-time insights on Aadhaar Enrolment & Update trends.';
+                
+                // Update Sidebar Active State
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector('.nav-item[onclick*="dashboard"]').classList.add('active');
+                
+            } else if (viewName === 'docs') {
+                document.getElementById('view-dashboard').style.display = 'none';
+                document.getElementById('view-docs').style.display = 'block';
+                
+                titleEl.textContent = 'System Documentation';
+                subTitleEl.textContent = 'Standard Operating Procedures & Architecture.';
+
+                // Update Sidebar Active State
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector('.nav-item[onclick*="docs"]').classList.add('active');
+            }
+        };
+
+        // Smooth URL Cleaning (kept from original)
         const cleanUrl = () => {
             if (window.location.pathname.endsWith('/dashboard.html')) {
                 const newPath = window.location.pathname.replace('/dashboard.html', '/dashboard');
                 window.history.replaceState({}, document.title, newPath);
             }
         };
-        document.addEventListener('DOMContentLoaded', cleanUrl);
+        
+        // Sidebar Toggle Removed (Floating design is static)
+        document.addEventListener('DOMContentLoaded', () => {
+            cleanUrl();
+            
+            // Intersection Observer for Docs TOC
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -80% 0px',
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        document.querySelectorAll('.docs-nav-link').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('section[id]').forEach((section) => {
+                observer.observe(section);
+            });
+        });
     </script>
     
     <!-- Vercel Analytics -->
