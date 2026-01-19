@@ -41,15 +41,14 @@ async def kill_switch_middleware(request: Request, call_next):
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    # Basic Content security policy to allow scripts/styles
+    # response.headers["X-Frame-Options"] = "SAMEORIGIN" # Relaxed for better social preview compatibility
     response.headers["Content-Security-Policy"] = (
          "default-src 'self'; "
          "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
          "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
          "img-src 'self' data: https:; "
-         "connect-src 'self';"
+         "connect-src 'self' https://*.vercel-analytics.com;"
          "frame-src 'self' https://app.powerbi.com;"
     )
     return response
@@ -61,7 +60,7 @@ app.include_router(api_router, prefix="/api")
 def read_root():
     return """
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="en" prefix="og: http://ogp.me/ns#">
     <head>
         <meta charset="UTF-8">
         <title>UIDAI Ecosystem - Intelligence Hub</title>
@@ -73,14 +72,19 @@ def read_root():
         <meta property="og:image:secure_url" content="https://uidai.sreecharandesu.in/og-image.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
+        <meta property="og:site_name" content="UIDAI Data Bridge">
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="UIDAI Ecosystem - Intelligence Hub">
         <meta name="twitter:description" content="Policy-ready analysis of Aadhaar enrolment and update trends across India.">
         <meta name="twitter:image" content="https://uidai.sreecharandesu.in/og-image.png">
         <meta http-equiv="refresh" content="0; url=/dashboard">
         <script>window.location.href = "/dashboard";</script>
+        <style>body { background: #0a0a0c; font-family: 'Courier Prime', monospace; color: #f2f2f3; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }</style>
     </head>
-    <body style="background: #000;">
+    <body>
+        <div style="text-align: center;">
+            <p>Initializing Secure Connection...</p>
+        </div>
     </body>
     </html>
     """

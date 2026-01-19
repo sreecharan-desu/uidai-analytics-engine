@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: http://ogp.me/ns#">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +19,7 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/png">
+    <meta property="og:site_name" content="UIDAI Data Bridge">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
@@ -27,37 +28,37 @@
     <meta name="twitter:image" content="https://uidai.sreecharandesu.in/og-image.png">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            /* Sanchara Dark Palette */
-            --bg-body: #050505;
-            --bg-card: #0f0f0f;
-            --bg-card-hover: #141414;
-            --border-subtle: #262626;
-            --text-primary: #ededed;
-            --text-secondary: #a1a1a1;
-            --accent: #ededed;
-            --brand-orange: #f97316;
-            --brand-green: #10b981;
+            /* Tactical Monochrome Palette */
+            --bg-body: #080808;
+            --bg-card: #111111;
+            --bg-card-hover: #161616;
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --text-primary: #f0f0f0;
+            --text-secondary: #888888;
+            --accent: #3b82f6; 
+            --font-main: 'Courier Prime', monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
         
         body {
             background-color: var(--bg-body);
             color: var(--text-primary);
             min-height: 100vh;
-            line-height: 1.6;
+            line-height: 1.5;
+            overflow-x: hidden;
         }
 
         /* Top Bar */
         .top-bar {
             height: 60px;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(8, 8, 8, 0.9);
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
@@ -74,143 +75,138 @@
             gap: 12px;
             text-decoration: none;
             color: var(--text-primary);
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
-        .nav-brand img { height: 24px; filter: grayscale(1) brightness(1.5); } 
+        .nav-brand img { height: 20px; filter: invert(1); } 
         
-        .nav-links { display: flex; gap: 2rem; margin-left: auto; }
+        .nav-links { display: flex; gap: 2rem; }
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
-            transition: color 0.2s;
-            font-size: 0.85rem;
-            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 0.8rem;
         }
         .nav-links a:hover { color: var(--text-primary); }
 
         /* General Layout */
         .container {
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 0 1.5rem;
+            padding: 0 2rem;
         }
 
         section {
-            padding: 5rem 0;
+            padding: 6rem 0;
             border-bottom: 1px solid var(--border-subtle);
         }
         section:last-child { border-bottom: none; }
 
         .section-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
             display: block;
         }
 
-        h1, h2, h3 { color: var(--text-primary); line-height: 1.2; }
-        h1 { font-size: 3rem; font-weight: 500; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
-        h2 { font-size: 2rem; font-weight: 500; margin-bottom: 2rem; }
-        h3 { font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem; margin-top: 2rem; }
+        h1, h2, h3, h4 { color: var(--text-primary); font-weight: 700; }
+        h1 { font-size: 2.5rem; line-height: 1.1; margin-bottom: 2rem; letter-spacing: -0.03em; }
+        h2 { font-size: 1.5rem; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 15px; }
+        h2::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+        h3 { font-size: 1.1rem; margin-bottom: 1.25rem; }
         
-        p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 1.05rem; max-width: 800px; }
-        ul { color: var(--text-secondary); margin-bottom: 1.5rem; padding-left: 1.5rem; }
-        li { margin-bottom: 0.5rem; }
+        p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+        ul { color: var(--text-secondary); margin-bottom: 1.5rem; list-style: none; }
+        li { margin-bottom: 0.75rem; font-size: 0.95rem; }
 
         /* Hero */
         .hero {
-            padding: 8rem 0 6rem 0;
-            background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, var(--bg-body) 60%);
+            padding: 10rem 0 6rem 0;
+            background: linear-gradient(180deg, #111 0%, #080808 100%);
         }
         .hero p.lead {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: var(--text-secondary);
-            max-width: 900px;
-            line-height: 1.5;
+            max-width: 800px;
+            border-left: 2px solid var(--accent);
+            padding-left: 2rem;
         }
 
-        /* Check Cards (Objectives) */
+        /* Grids */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 
         .feature-list li {
-            list-style: none;
             position: relative;
-            padding-left: 2rem;
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
+            padding-left: 1.5rem;
         }
         .feature-list li::before {
-            content: '✓';
+            content: '>';
             position: absolute;
             left: 0;
-            color: var(--text-primary);
+            color: var(--accent);
         }
 
-        /* Sanchara Cards */
+        /* Cards */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             padding: 2rem;
-            border-radius: 12px;
-            transition: border-color 0.2s;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
-        .card:hover { border-color: #404040; }
-        .card-icon {
-            width: 40px; height: 40px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-        }
-        .card h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); }
-        .card p { font-size: 0.95rem; margin-bottom: 0; color: var(--text-secondary); }
-
+        .card:hover { border-color: var(--accent); background: var(--bg-card-hover); transform: translateY(-2px); }
+        
         /* API Block */
         .api-block {
-            background: #0a0a0a;
+            background: #000;
             border: 1px solid var(--border-subtle);
-            border-radius: 8px;
+            border-radius: 4px;
             overflow: hidden;
-            margin-top: 2rem;
+            margin-top: 3rem;
         }
         .api-header {
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background: #101010;
+            gap: 1.5rem;
+            background: #0c0c0c;
         }
         .method {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #10b981;
+            border: 1px solid #10b981;
+            padding: 2px 8px;
+            border-radius: 2px;
         }
-        .endpoint { font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
-        .api-body { padding: 1.5rem; }
+        .endpoint { font-size: 0.85rem; color: var(--text-primary); }
+        .api-body { padding: 2rem; }
         .api-body code {
-            font-family: 'JetBrains Mono', monospace;
             display: block;
-            background: #1a1a1a;
-            padding: 1rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: #d4d4d4;
-            margin-top: 1rem;
+            background: #111;
+            padding: 1.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #ddd;
+            border-left: 2px solid var(--accent);
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+            .grid-2 { grid-template-columns: 1fr; gap: 3rem; }
             h1 { font-size: 2rem; }
-            .grid-2 { grid-template-columns: 1fr; gap: 2rem; }
+        }
+
+        @media (max-width: 600px) {
+            .top-bar { padding: 0 1.5rem; }
+            .nav-links { gap: 1rem; }
+            .nav-brand span { font-size: 0.75rem; }
+            section { padding: 4rem 0; }
+            .hero { padding: 6rem 0 4rem 0; }
         }
     </style>
 </head>
@@ -219,50 +215,46 @@
     <nav class="top-bar">
         <a href="/" class="nav-brand">
             <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Logo">
-            <span>Sanchara Intelligence</span>
+            <span>INTELLIGENCE-DOCS</span>
         </a>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="#problem">Problem</a>
-            <a href="#approach">Approach</a>
-            <a href="#methodology">Methodology</a>
+            <a href="/dashboard">HUB</a>
+            <a href="#problem">PROBLEM</a>
+            <a href="#methodology">LOGIC</a>
         </div>
     </nav>
 
     <header class="hero">
         <div class="container">
-            <span class="section-label">UIDAI Data Hackathon – 2026</span>
-            <h1>Unlocking Societal Trends in Aadhaar Enrolment and Updates</h1>
+            <span class="section-label">REF: HACKATHON_2026</span>
+            <h1>Unlocking Societal Trends in Aadhaar Data</h1>
             <p class="lead">
-                Transforming raw enrolment and update data into a clean, consistent, and policy-ready dataset that enables accurate district-level analysis of societal trends across India.
+                Transforming high-volume operational data into a validated, policy-ready intelligence layer for regional trend analysis.
             </p>
         </div>
     </header>
 
     <section id="problem">
         <div class="container">
-            <span class="section-label">The Challenge</span>
+            <span class="section-label">SIGNAL_NOISE_RATIO</span>
             <div class="grid-2">
                 <div>
-                    <h2>The Problem</h2>
+                    <h2>THE CHALLENGE</h2>
                     <p>
-                        Aadhaar is India’s primary digital identity system, yet in its raw form, the massive volumes of district-level data are often not suitable for direct analysis.
+                        Aadhaar operational logs contain massive district-level patterns, but inconsistencies in administrative boundaries and naming conventions obscure ground reality.
                     </p>
                     <p>
-                        Inconsistencies such as variable district names, state mapping conflicts, changed administrative boundaries, and incomplete geographic identifiers make it difficult to clearly understand regional trends or identify under-served areas.
-                    </p>
-                    <p>
-                        Without rigorous cleaning and validation, analytical insights can be misleading, failing to reflect ground reality.
+                        Without a rigorous verification pipeline, regional shifts in migration or infrastructure needs remain invisible to policy-makers.
                     </p>
                 </div>
                 <div>
-                    <h3>Key Data Quality Issues</h3>
+                    <h3>KEY DATA FRICTION</h3>
                     <ul class="feature-list">
-                        <li>Inconsistent district naming conventions</li>
-                        <li>Same district name mapped to multiple states</li>
-                        <li>Changes in administrative boundaries over time</li>
-                        <li>Missing or unclear geographic identifiers</li>
-                        <li>Non-standardized location formats or null values</li>
+                        <li>Inconsistent district mapping logic</li>
+                        <li>Overlapping state administration codes</li>
+                        <li>Shifting administrative boundaries</li>
+                        <li>Missing or null geographic markers</li>
+                        <li>Non-standardized activity logging</li>
                     </ul>
                 </div>
             </div>
@@ -271,65 +263,21 @@
 
     <section id="objectives">
         <div class="container">
-            <span class="section-label">Objectives</span>
-            <h2>Designing a Policy-Ready Solution</h2>
+            <span class="section-label">MISSION_PARAMETERS</span>
+            <h2>SYSTEM ARCHITECTURE</h2>
             
             <div class="grid-3">
                 <div class="card">
-                    <div class="card-icon"><i class="fa-solid fa-broom"></i></div>
-                    <h4>Clean & Standardize</h4>
-                    <p>Resolving district–state mismatches, formatting inconsistencies, and validating geographic records.</p>
+                    <h3>01 // PURGE</h3>
+                    <p>Standardizing district IDs and state mappings to eliminate administrative artifacts.</p>
                 </div>
                 <div class="card">
-                    <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
-                    <h4>Transparent Pipeline</h4>
-                    <p>Creating a reproducible data-cleaning workflow that produces a trustworthy, analysis-ready dataset.</p>
+                    <h3>02 // SYNC</h3>
+                    <p>Implementing a reproducible CLI-based pipeline for monthly data synchronization.</p>
                 </div>
                 <div class="card">
-                    <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
-                    <h4>Actionable Insights</h4>
-                    <p>A unified dashboard that refreshes monthly to support decision-making with predictive trend analysis.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="approach">
-        <div class="container">
-            <span class="section-label">Approach</span>
-            <h2>Datasets & Integration Strategy</h2>
-            <p>
-                We process three major operational datasets to build a complete view of the ecosystem.
-            </p>
-
-            <div class="grid-3" style="margin-top: 3rem;">
-                <div class="card" style="border-left: 2px solid var(--brand-orange);">
-                    <h4>Enrolment Dataset</h4>
-                    <p>Captures new Aadhaar registrations. Used to assess overall reach, population onboarding, and coverage expansion.</p>
-                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
-                        Key Fields: Age Groups (0-5, 5-17, 18+), Date, State, District
-                    </div>
-                </div>
-                <div class="card" style="border-left: 2px solid var(--brand-green);">
-                    <h4>Biometric Dataset</h4>
-                    <p>Reflects biometric updates (fingerprint, iris) and mandatory updates for children. Indicates infrastructure utilization.</p>
-                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
-                        Key Fields: Biometric Age Tiers, Mandatory Updates
-                    </div>
-                </div>
-                <div class="card" style="border-left: 2px solid #3b82f6;">
-                    <h4>Demographic Dataset</h4>
-                    <p>Updates to name, address, DOB, gender. helps analyze migration, urbanization, and data maintenance behavior.</p>
-                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
-                        Key Fields: Demographic Age Tiers, Mobile/Email Links
-                    </div>
-                </div>
-                <div class="card" style="border-left: 2px solid #ef4444;">
-                    <h4>Containerization</h4>
-                    <p>Full project portability via Docker. Enables rapid deployment across on-premise and cloud environments.</p>
-                    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
-                        Tools: Docker, Docker Compose
-                    </div>
+                    <h3>03 // VIZ</h3>
+                    <p>Broadcasting processed intelligence via a unified dashboard for trend detection.</p>
                 </div>
             </div>
         </div>
@@ -337,28 +285,28 @@
 
     <section id="methodology">
         <div class="container">
-            <span class="section-label">Methodology</span>
-            <h2>Two-Stage Cleaning Process</h2>
+            <span class="section-label">LOGIC_FLOW</span>
+            <h2>CLEANING PHASES</h2>
             
             <div class="grid-2">
                 <div>
-                    <h3>1. Pre-Integration</h3>
-                    <p>Each dataset is cleaned independently to prevent error propagation.</p>
+                    <h3>I. LOCAL AGGREGATION</h3>
+                    <p>Pre-processing individual source logs independently.</p>
                     <ul class="feature-list">
-                        <li><strong>String Normalization:</strong> Custom lowercase and trim logic for state/district names.</li>
-                        <li><strong>Alias Resolution:</strong> Mapping historical names (e.g., Allahabad → Prayagraj).</li>
-                        <li><strong>Conflict Resolution:</strong> Using majority-vote logic and pincode validation to resolve district-state mismatches.</li>
-                        <li><strong>Feature Engineering:</strong> creating unified metrics like total enrolment or total activity.</li>
+                        <li>String Normalization (L-Case/Trim)</li>
+                        <li>Alias Resolution (Historical Mapping)</li>
+                        <li>Boundary conflict detection</li>
+                        <li>Feature engineering (Total Activity)</li>
                     </ul>
                 </div>
                 <div>
-                    <h3>2. Post-Integration</h3>
-                    <p>Datasets are merged into a single national view.</p>
+                    <h3>II. GLOBAL CONCORDANCE</h3>
+                    <p>Merging sources into a validated master view.</p>
                     <ul class="feature-list">
-                        <li><strong>Horizontal Consolidation:</strong> Concatenating records while preserving source lineage labels.</li>
-                        <li><strong>Strict Consensus:</strong> Applying conservative mapping philosophy—ambiguous records are quarantined.</li>
-                        <li><strong>Audit Framework:</strong> Automated row count verification to ensure zero silent data loss.</li>
-                        <li><strong>Final Dataset:</strong> A consistent, geographically validated master dataset ready for policy analytics.</li>
+                        <li>Horizontal data consolidation</li>
+                        <li>Conservative mapping philosophy</li>
+                        <li>Automated row-count auditing</li>
+                        <li>Final Geo-validation (Pincodes)</li>
                     </ul>
                 </div>
             </div>
@@ -367,31 +315,28 @@
 
     <section id="api">
         <div class="container">
-            <span class="section-label">Technical Reference</span>
-            <h2>API Integration</h2>
-            <p>
-                The unified master dataset is exposed via a high-performance proxy for visualization engines.
-            </p>
-
+            <span class="section-label">EXTERNAL_INTERFACE</span>
+            <h2>DATA_STREAM_API</h2>
+            
             <div class="api-block">
                 <div class="api-header">
-                    <span class="method get">GET</span>
+                    <span class="method">GET</span>
                     <span class="endpoint">/api/integration/powerbi</span>
                 </div>
                 <div class="api-body">
-                    <p style="color: var(--text-primary);"><strong>Primary Data Stream</strong></p>
-                    <p>Redirects to the latest version-controlled `master_dataset_final.csv`. Optimized for high-throughput ingestion by PowerBI.</p>
+                    <p style="color: var(--text-primary);"><strong>SECURE INTEGRATION ENDPOINT</strong></p>
+                    <p>High-throughput proxy for the latest validated master dataset.</p>
                     <code>
-                        Header: x-api-key: [YOUR_SECRET_KEY]
+                        x-api-key: [SECURED_KEY_REQUIRED]
                     </code>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer style="padding: 4rem 0; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+    <footer style="padding: 6rem 0; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-secondary); font-size: 0.8rem;">
         <div class="container">
-            <p>&copy; 2026 UIDAI Data Hackathon Project. Engineered for Policy Intelligence.</p>
+            <p>// 2026 UIDAI INTELLIGENCE REPORT // END OF TRANSMISSION</p>
         </div>
     </footer>
 
@@ -402,11 +347,14 @@
     </script>
     
     <script>
-        // URL Cleaning
-        if (window.location.pathname.endsWith('/docs.html')) {
-            const newPath = window.location.pathname.replace('/docs.html', '/docs');
-            window.history.replaceState({}, document.title, newPath);
-        }
+        // Smooth Navigation & URL Cleaning
+        const init = () => {
+            if (window.location.pathname.endsWith('/docs.html')) {
+                const newPath = window.location.pathname.replace('/docs.html', '/docs');
+                window.history.replaceState({}, document.title, newPath);
+            }
+        };
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
