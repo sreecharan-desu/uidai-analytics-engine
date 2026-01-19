@@ -3,320 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UIDAI Aadhaar Insights API Docs</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <title>UIDAI Aadhaar Insights - Architecture Docs</title>
+    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Meta -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://uidai.sreecharandesu.in/docs">
-    <meta property="og:title" content="UIDAI API Documentation">
-    <meta property="og:description" content="Explore and test the UIDAI Aadhaar Insights API endpoints. High-performance data sync.">
-    <meta property="og:image" content="https://uidai.sreecharandesu.in/og-image.png">
+    <meta property="og:title" content="UIDAI Analytics Architecture">
+    <meta property="og:description" content="Technical documentation for the High-Reliability Caching & Analytics Engine.">
+    <meta name="theme-color" content="#0f172a">
 
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
-            --bg: #000000;
-            --card-bg: #000000;
-            --primary: #ffffff;
-            --text: #ffffff;
-            --text-dim: #999999;
-            --border: #333333;
-            --code-bg: #0a0a0a;
+            --bg-body: #020617; /* Slate 950 */
+            --bg-card: #0f172a; /* Slate 900 */
+            --bg-hover: #1e293b; /* Slate 800 */
+            --border: #1e293b;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6; /* Blue 500 */
+            --accent: #8b5cf6;  /* Violet 500 */
+            
+            --code-bg: #0f172a;
         }
 
         * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
         body {
             font-family: 'Outfit', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: var(--bg-body);
+            color: var(--text-main);
             line-height: 1.6;
         }
 
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* HEADER */
         header {
             border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
+            padding: 1.5rem 0;
+            margin-bottom: 3rem;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .header-inner {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            background: var(--bg);
+            align-items: center;
         }
 
         .logo {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo img { height: 28px; }
+
+        .nav-link {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            margin-left: 20px;
+        }
+        .nav-link:hover { color: var(--primary); }
+
+        /* CONTENT */
+        h1 { font-size: 2.5rem; font-weight: 700; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-main); }
+        h3 { font-size: 1.1rem; color: var(--text-main); margin-top: 1.5rem; display: flex; align-items: center; gap: 8px; }
+        p, li { color: var(--text-muted); font-size: 1rem; }
+        code { font-family: 'Fira Code', monospace; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+
+        /* DIAGRAMS / CARDS */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 4rem auto;
-            padding: 0 1.5rem;
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, border-color 0.2s;
         }
+        .card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .card h4 { margin: 0 0 0.5rem 0; color: var(--text-main); font-size: 1.1rem; }
+        .card p { font-size: 0.9rem; margin: 0; }
 
-        .section {
-            padding: 2rem 0;
-            margin-bottom: 3rem;
+        /* ENDPOINT BLOCK */
+        .endpoint-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+        .ep-header {
+            padding: 1rem;
+            background: var(--bg-hover);
             border-bottom: 1px solid var(--border);
-        }
-
-        .section:last-child { border-bottom: none; }
-
-        h1 { font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem 0; letter-spacing: -1px; }
-        h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 1.5rem 0; text-transform: uppercase; letter-spacing: 1px; }
-        h3 { font-size: 1rem; font-weight: 600; margin: 2rem 0 1rem 0; }
-
-        .endpoint-pill {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 1rem;
-            border: 1px solid var(--border);
-            padding: 0.75rem 1.25rem;
-            margin-bottom: 2rem;
             font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
         }
-
-        .method { font-weight: 700; }
-
-        .btn {
-            background: var(--primary);
-            color: var(--bg);
-            border: 1px solid var(--primary);
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
+        .method {
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
         }
-
-        .btn:hover {
-            background: transparent;
-            color: var(--primary);
-        }
-
-        .form-control {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 1rem;
-            width: 100%;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            transition: border-color 0.2s;
-        }
-
-        .form-control:focus { outline: none; border-color: var(--primary); }
-
+        .method.get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .ep-body { padding: 1.5rem; }
+        
         pre {
-            background: var(--code-bg);
-            padding: 1.5rem;
-            border: 1px solid var(--border);
+            background: #000;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            color: #d4d4d4;
             font-family: 'Fira Code', monospace;
             font-size: 0.85rem;
-            overflow-x: auto;
-            position: relative;
-            margin: 0;
+            border: 1px solid var(--border);
         }
 
-        .copy-abs {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--border);
-            border: none;
-            border-bottom: 1px solid var(--border);
-            border-left: 1px solid var(--border);
-            color: var(--text);
-            padding: 6px 12px;
+        /* STATUS BADGE */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 0.75rem;
-            cursor: pointer;
-            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
 
-        .copy-abs:hover { background: var(--text); color: var(--bg); }
-
-        .response-area { margin-top: 2rem; }
-        .hidden { display: none; }
-        
-        label { 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            color: var(--text-dim); 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            display: block; 
-            margin-bottom: 0.75rem; 
-        }
-
-        .footer-credit {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
             border-top: 1px solid var(--border);
-            color: var(--text-dim);
+            text-align: center;
+            color: var(--text-muted);
             font-size: 0.9rem;
         }
-
-        .author-link {
-            color: inherit;
-            text-decoration: none;
-            transition: color 0.2s ease;
-            position: relative;
-        }
-
-        .author-link:hover {
-            color: var(--primary);
-        }
-
-        .heart-icon {
-            color: #ef4444;
-            display: inline-block;
-            margin: 0 4px;
-            vertical-align: middle;
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.2); }
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-                padding: 1.5rem 1rem;
-            }
-
-            .container {
-                margin: 2rem auto;
-                padding: 0 1rem;
-            }
-
-            h1 { font-size: 1.8rem; }
-            h2 { font-size: 1.1rem; }
-
-            .endpoint-pill {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-                width: 100%;
-            }
-
-            .btn { width: 100%; }
-            
-            pre {
-                padding: 1rem;
-                font-size: 0.75rem;
-            }
-            
-            /* Make tables scrollable */
-            table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-        }
+        
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">UIDAI API <span style="color: white; font-weight: 300;">Explorer</span></div>
-    <div style="font-size: 0.85rem; color: var(--text-dim);">
-        Base: <span style="font-family: monospace; color: var(--primary);">https://uidai.sreecharandesu.in</span>
+    <div class="container header-inner">
+        <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Aadhaar">
+            <span>Engineering Docs</span>
+        </div>
+        <nav>
+            <a href="/dashboard" class="nav-link"><i class="fa-solid fa-chart-line"></i> Live Dashboard</a>
+            <a href="https://github.com/sreecharan-desu/uidai-analytics-engine" class="nav-link"><i class="fa-brands fa-github"></i> Repository</a>
+        </nav>
     </div>
 </header>
 
-<div class="container" id="main-content">
-    <div class="section">
-        <h1 style="color: white;">API Documentation</h1>
-        <p style="color: var(--text-dim); max-width: 700px;">
-            Harness the power of real-time Aadhaar data sync. Our API provides direct access to processed enrolment, demographic, and biometric insights via automated GitHub Release streaming.
-        </p>
-    </div>
+<div class="container">
 
-    <div class="section">
-        <h2>Power BI Integration</h2>
-        <p style="color: var(--text-dim); margin-bottom: 2rem;">The primary endpoint for business intelligence tools. This streams the fully merged and cleaned master dataset.</p>
-        
-        <div class="endpoint-pill">
-            <span class="method">GET</span>
-            <span class="path">/api/integration/powerbi</span>
+    <section>
+        <div class="status-pill" style="margin-bottom: 1rem;">
+            <span class="dot"></span>
+            <span>SYSTEM OPERATIONAL</span>
         </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Access URL:</p>
-        <pre id="pbi-url">https://uidai.sreecharandesu.in/api/integration/powerbi<button class="copy-abs" onclick="copySnippet('pbi-url')">Copy</button></pre>
-        
-        <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dim);">
-            <strong>Requirement:</strong> Requires <code>X-API-KEY</code> header for authentication.
+        <h1>Architecture Overview</h1>
+        <p style="font-size: 1.2rem; max-width: 800px;">
+            A high-performance, serverless data pipeline designed to ingest, process, and serve massive scale Aadhaar ecosystem metrics without database overhead.
         </p>
-    </div>
+    </section>
 
-    <div class="section">
-        <h2>Dataset Reference</h2>
-        <p style="color: var(--text-dim); margin-bottom: 2rem;">Fields available in the master dataset and individual files.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <div>
-                <h3>1. Master Metrics</h3>
-                <p style="font-size: 0.85rem; color: var(--text-dim);">Fields specific to the Master CSV</p>
-                <table>
-                    <tbody>
-                        <tr><td>total_activity</td><td>Sum of all updates</td></tr>
-                        <tr><td>source_dataset</td><td>Origin (Enrollment/Bio/Demo)</td></tr>
-                        <tr><td>state</td><td>Normalized State Name</td></tr>
-                        <tr><td>district</td><td>Normalized District Name</td></tr>
-                    </tbody>
-                </table>
+    <section>
+        <h2><i class="fa-solid fa-layer-group"></i> Core Components</h2>
+        <div class="grid-cards">
+            <div class="card">
+                <h4><i class="fa-solid fa-cloud-arrow-down" style="color: #3b82f6;"></i> Smart Ingestion</h4>
+                <p>Automated Python jobs running on GitHub Actions fetch partial updates from Data.gov.in using intelligent exponential backoff and parallel threading.</p>
             </div>
-
-            <div>
-                <h3>2. Column Schema</h3>
-                <p style="font-size: 0.85rem; color: var(--text-dim);">Standard fields across all files</p>
-                <table>
-                    <tbody>
-                        <tr><td>date</td><td>DD-MM-YYYY</td></tr>
-                        <tr><td>pincode</td><td>Area Pincode</td></tr>
-                        <tr><td>age_*</td><td>Age-banded metrics</td></tr>
-                    </tbody>
-                </table>
+            <div class="card">
+                <h4><i class="fa-solid fa-box-open" style="color: #a855f7;"></i> Release-as-Database</h4>
+                <p>Instead of a traditional DB, processed CSV bundles (Raw & Master) are versioned and stored in <strong>GitHub Releases</strong>, acting as an immutable, high-bandwidth CDN.</p>
+            </div>
+            <div class="card">
+                <h4><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Zero-Latency API</h4>
+                <p>FastAPI acts as a lightweight proxy, redirecting PowerBI streams directly to the pre-compressed assets in GitHub, eliminating server timeouts.</p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="footer-credit">
+    <section>
+        <h2><i class="fa-solid fa-terminal"></i> API Reference</h2>
+        
+        <div class="endpoint-block">
+            <div class="ep-header">
+                <span class="method get">GET</span>
+                <span style="color: #f8fafc;">/api/integration/powerbi</span>
+            </div>
+            <div class="ep-body">
+                <p><strong>Primary Integration Stream.</strong> Redirects to the latest `master_dataset_final.csv`. Used by the PowerBI Report to pull 500MB+ data in seconds.</p>
+                <div style="margin-top: 1rem;">
+                    <label style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Authentication</label>
+                    <pre>Header: x-api-key: YOUR_SECRET_KEY</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-block">
+            <div class="ep-header">
+                <span class="method get">GET</span>
+                <span style="color: #f8fafc;">/api/datasets/{filename}</span>
+            </div>
+            <div class="ep-body">
+                <p>Direct download access for raw monthly files.</p>
+                <ul>
+                    <li><code>enrolment.csv</code></li>
+                    <li><code>biometric.csv</code></li>
+                    <li><code>demographic.csv</code></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2><i class="fa-solid fa-database"></i> Data Schema</h2>
+        <div class="card" style="border-left: 4px solid var(--accent);">
+            <h4>Master Dataset Structure</h4>
+            <pre>
+state, district, pincode, date,
+age_0_5, age_5_17, age_18_plus,
+gender_male, gender_female, gender_transgender,
+mobile_linked, email_linked,
+packet_type, rejection_reason,
+resident_type, enrolment_type
+            </pre>
+        </div>
+    </section>
+
+    <div class="footer">
         <p>
-            Made with 
-            <span class="heart-icon">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 496 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"></path></svg>
-            </span> 
-            by <a href="https://sreecharandesu.in" target="_blank" class="author-link">SreeCharan</a>
+            Engineered by <a href="https://sreecharandesu.in" style="color: var(--text-main); text-decoration: none; font-weight: 600;">SreeCharan</a>
+        </p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">
+            System Version: v2.4.0 (Stateless Architecture)
         </p>
     </div>
-</div>
 
-<script>
-    function copySnippet(id) {
-        const text = document.getElementById(id).textContent.replace('Copy', '').trim();
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector(`#${id} .copy-abs`);
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = 'Copy', 2000);
-        });
-    }
-</script>
+</div>
 
 </body>
 </html>
