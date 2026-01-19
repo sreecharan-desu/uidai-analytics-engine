@@ -265,27 +265,6 @@
     </div>
 
     <div class="section">
-        <h2>Direct Dataset Access</h2>
-        <p style="color: var(--text-dim); margin-bottom: 2rem;">Access specific raw or year-wise split datasets. These endpoints redirect directly to the latest verified assets in GitHub Releases.</p>
-
-        <h3>1. Full Raw Dataset</h3>
-        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Method: <code style="color: var(--primary);">GET</code></p>
-        <pre id="dl-full">https://uidai.sreecharandesu.in/api/datasets/{dataset_name}
-<!-- Example -->
-https://uidai.sreecharandesu.in/api/datasets/biometric<button class="copy-abs" onclick="copySnippet('dl-full')">Copy</button></pre>
-
-        <h3>2. Split Dataset (Year-wise)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Method: <code style="color: var(--primary);">GET</code></p>
-        <pre id="dl-split">https://uidai.sreecharandesu.in/api/datasets/{dataset_name}?year={YYYY}
-<!-- Example -->
-https://uidai.sreecharandesu.in/api/datasets/enrolment?year=2025<button class="copy-abs" onclick="copySnippet('dl-split')">Copy</button></pre>
-
-        <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dim);">
-            <strong>Supported Datasets:</strong> <code style="color: var(--primary);">biometric</code>, <code style="color: var(--primary);">enrolment</code>, <code style="color: var(--primary);">demographic</code>
-        </p>
-    </div>
-
-    <div class="section">
         <h2>Dataset Reference</h2>
         <p style="color: var(--text-dim); margin-bottom: 2rem;">Fields available in the master dataset and individual files.</p>
 
@@ -329,8 +308,6 @@ https://uidai.sreecharandesu.in/api/datasets/enrolment?year=2025<button class="c
 </div>
 
 <script>
-
-
     function copySnippet(id) {
         const text = document.getElementById(id).textContent.replace('Copy', '').trim();
         navigator.clipboard.writeText(text).then(() => {
@@ -339,56 +316,6 @@ https://uidai.sreecharandesu.in/api/datasets/enrolment?year=2025<button class="c
             setTimeout(() => btn.textContent = 'Copy', 2000);
         });
     }
-
-    document.getElementById('btn-execute').addEventListener('click', async () => {
-        const apiKey = document.getElementById('api-key').value.trim();
-        const bodyStr = document.getElementById('body').value;
-        const respCode = document.getElementById('response-code');
-        const loading = document.getElementById('loading');
-        const container = document.getElementById('response-container');
-        const timing = document.getElementById('timing-badge');
-
-        if (!apiKey) {
-            alert('Please enter your X-API-KEY');
-            return;
-        }
-
-        container.classList.remove('hidden');
-        loading.classList.remove('hidden');
-        respCode.style.display = 'none';
-        timing.textContent = '';
-
-        try {
-            const body = JSON.parse(bodyStr);
-            const start = performance.now();
-            
-            const response = await fetch('/api/insights/query', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
-                body: JSON.stringify(body)
-            });
-
-            const duration = (performance.now() - start).toFixed(2);
-            const data = await response.json();
-
-            loading.classList.add('hidden');
-            respCode.style.display = 'block';
-            timing.textContent = `Completed in ${duration}ms • Status: ${response.status}`;
-            respCode.innerHTML = `<button class="copy-abs" id="btn-copy-resp">Copy JSON</button>` + JSON.stringify(data, null, 2);
-            
-            document.getElementById('btn-copy-resp').onclick = () => {
-                navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-                    document.getElementById('btn-copy-resp').textContent = 'Copied!';
-                    setTimeout(() => document.getElementById('btn-copy-resp').textContent = 'Copy JSON', 2000);
-                });
-            };
-
-        } catch (e) {
-            loading.classList.add('hidden');
-            respCode.style.display = 'block';
-            respCode.textContent = '// Client Error\n' + e.message;
-        }
-    });
 </script>
 
 </body>
