@@ -24,15 +24,8 @@ jobs:
         run: |
           pip install pandas requests python-dotenv
 
-      - name: Download Raw Data
+      - name: Download and Upload Raw Data
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
-        run: python scripts/download_full_data.py
-
-      - name: Upload to GitHub Release (dataset-raw)
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload dataset-raw public/datasets/enrolment.csv --clobber
-          gh release upload dataset-raw public/datasets/demographic.csv --clobber
-          gh release upload dataset-raw public/datasets/biometric.csv --clobber
+        run: python scripts/download_full_data.py
