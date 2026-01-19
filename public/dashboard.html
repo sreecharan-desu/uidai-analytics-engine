@@ -32,13 +32,13 @@
     
     <style>
         :root {
-            /* Intelligence Hub - Dark Sleek Palette */
-            --bg-body: #0a0a0c;
-            --bg-card: #121214;
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --text-primary: #f2f2f3;
-            --text-secondary: #94949e;
-            --accent: #3b82f6; /* Tactical Blue */
+            /* Intelligence Hub - Clean Light Palette */
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-subtle: rgba(0, 0, 0, 0.08); /* Dark subtle border */
+            --text-primary: #0f172a; /* Slate 900 */
+            --text-secondary: #64748b; /* Slate 500 */
+            --accent: #2563eb; /* Royal Blue */
             --font-main: 'Courier Prime', monospace;
         }
 
@@ -54,24 +54,25 @@
         }
 
         /* Animated Gradient Background */
+        /* Animated Gradient Background - Light Mode */
         .bg-animate {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
-                        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
+            background: radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.05), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
             animation: bgShift 15s ease-in-out infinite alternate;
         }
-        /* Scanlines */
+        /* Scanlines - Subtle for Light Mode */
         .bg-animate::after {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.02) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 2;
-            background-size: 100% 2px, 3px 100%;
+            background-size: 100% 4px, 6px 100%; /* Larger spacing for cleaner look */
             pointer-events: none;
         }
         @keyframes bgShift {
@@ -84,7 +85,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: #000;
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -124,12 +125,12 @@
             to { opacity: 0.5; }
         }
 
-        /* Top Navigation - Ultra Minimal */
+        /* Top Navigation - Ultra Minimal Light */
         .top-bar {
             height: 64px;
-            background: rgba(10, 10, 12, 0.7);
+            background: rgba(255, 255, 255, 0.85); /* Frosty White */
             backdrop-filter: blur(24px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -137,7 +138,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
         }
         
         .nav-brand {
@@ -149,9 +150,9 @@
             font-weight: 700;
             letter-spacing: -0.01em;
             font-size: 1.1rem;
-            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+            text-shadow: none;
         }
-        .nav-brand img { height: 26px; filter: invert(1) drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
+        .nav-brand img { height: 26px; filter: none; } 
         
         .nav-links {
             display: flex;
@@ -161,7 +162,7 @@
             color: var(--text-secondary);
             text-decoration: none;
             transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            font-weight: 400;
+            font-weight: 500;
             font-size: 0.8rem;
             letter-spacing: 0.05em;
             position: relative;
@@ -169,7 +170,7 @@
         }
         .nav-links a:hover { 
             color: var(--text-primary); 
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            text-shadow: none;
         }
         .nav-links a::after {
             content: '';
@@ -177,9 +178,9 @@
             bottom: 0;
             left: 0;
             width: 0%;
-            height: 1px;
+            height: 2px;
             background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
+            box-shadow: none;
             transition: width 0.3s ease;
         }
         .nav-links a:hover::after { width: 100%; }
@@ -204,14 +205,14 @@
             gap: 12px;
             padding: 8px 16px;
             border-radius: 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
         }
         .status-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
             transform: translateY(-1px);
         }
         .pulse {
@@ -253,7 +254,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 4px; /* Sharper corners */
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
             overflow: hidden;
             transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease;
         }
@@ -279,8 +280,8 @@
         
         .viewport-frame:hover {
             transform: scale(1.005);
-            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
-            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.1);
+            border-color: rgba(0, 0, 0, 0.2);
         }
         
         /* Adjust for very large screens or portrait monitors */
