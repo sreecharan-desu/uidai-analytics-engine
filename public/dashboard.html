@@ -8,6 +8,13 @@
     <!-- Meta -->
     <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg">
     <meta name="theme-color" content="#ffffff">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="UIDAI Ecosystem - Intelligence Hub">
+    <meta property="og:description" content="Policy-ready analysis of Aadhaar enrolment and update trends across India.">
+    <meta property="og:image" content="/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -163,6 +170,12 @@
             const newPath = window.location.pathname.replace('/dashboard.html', '/dashboard');
             window.history.replaceState({}, document.title, newPath);
         }
+    </script>
+    
+    <!-- Vercel Analytics -->
+    <script type="module">
+        import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics/+esm';
+        inject();
     </script>
 </body>
 </html>
