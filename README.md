@@ -3,11 +3,6 @@
 [![Monthly Raw Data Download](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-raw-download.yml)
 [![Monthly Clean Data Processing](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml/badge.svg)](https://github.com/sreecharan-desu/uidai-analytics-engine/actions/workflows/monthly-clean-processing.yml)
 
-![GitHub Release](https://img.shields.io/github/v/release/sreecharan-desu/uidai-analytics-engine?style=for-the-badge&color=orange)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)
-![Vercel](https://img.shields.io/badge/Vercel-Serverless-black?style=for-the-badge&logo=vercel)
-![Redis](https://img.shields.io/badge/Redis-Upstash-red?style=for-the-badge&logo=redis)
 
 > **UIDAI DATA HACKATHON 2026**
 > *Transforming raw Aadhaar enrolment and update data into a clean, consistent, and policy-ready dataset.*
