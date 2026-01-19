@@ -1,0 +1,38 @@
+name: Monthly Raw Data Download
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # Run on 1st of every month at 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  download-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required for creating/updating releases
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas requests python-dotenv
+
+      - name: Download Raw Data
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: python scripts/download_full_data.py
+
+      - name: Upload to GitHub Release (dataset-raw)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload dataset-raw public/datasets/enrolment.csv --clobber
+          gh release upload dataset-raw public/datasets/demographic.csv --clobber
+          gh release upload dataset-raw public/datasets/biometric.csv --clobber
