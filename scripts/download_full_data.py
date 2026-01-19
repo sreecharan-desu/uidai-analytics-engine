@@ -13,7 +13,7 @@ if not DATA_GOV_API_KEY:
     raise ValueError("DATA_GOV_API_KEY not found in environment")
 
 RESOURCES = {
-    "enrolment": "ecd49b12-3084-4521-8f7e-ca8bf72069ba",
+    "enrollment": "ecd49b12-3084-4521-8f7e-ca8bf72069ba",
     "demographic": "19eac040-0b94-49fa-b239-4f2fd8677d53",
     "biometric": "65454dab-1517-40a3-ac1d-47d4dfe6891c",
 }
