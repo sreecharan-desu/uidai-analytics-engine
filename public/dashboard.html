@@ -176,5 +176,12 @@
         fetchAllData();
 
     </script>
+    <script>
+        // URL Cleaning: Ensure browser bar shows '/dashboard' instead of '/dashboard.html'
+        if (window.location.pathname.endsWith('/dashboard.html')) {
+            const newPath = window.location.pathname.replace('/dashboard.html', '/dashboard');
+            window.history.replaceState({}, document.title, newPath);
+        }
+    </script>
 </body>
 </html>
