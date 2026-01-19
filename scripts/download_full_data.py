@@ -22,6 +22,45 @@ OUTPUT_DIR = "public/datasets"
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
+import concurrent.futures
+import subprocess
+import sys
+
+def upload_to_release(file_path):
+    """
+    Uploads a file to the dataset-raw release using gh cli.
+    """
+    if not os.path.exists(file_path):
+        return
+    
+    print(f"Uploading {file_path} to dataset-raw release...")
+    try:
+        # Check if gh is available
+        subprocess.run(["gh", "release", "upload", "dataset-raw", file_path, "--clobber"], check=True)
+        print(f"Successfully uploaded {file_path}")
+    except Exception as e:
+        print(f"Failed to upload {file_path}: {e}")
+
+def check_existing_file(file_path, expected_total):
+    """
+    Checks if the local file already exists and has reasonably close record count.
+    Used for resuming or skipping.
+    """
+    if not os.path.exists(file_path):
+        return False
+    
+    try:
+        # Rough check using pandas
+        # This is expensive for huge files but safe
+        df = pd.read_csv(file_path, nrows=1) # check it's a valid csv
+        # Count lines
+        row_count = sum(1 for _ in open(file_path)) - 1 # subtracting header
+        if row_count >= expected_total:
+            return True
+    except:
+        pass
+    return False
+
 def get_session():
     """
     Creates a requests session with retry logic.
@@ -39,23 +78,26 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-def fetch_chunk(session, resource_id, offset, limit=5000):
+def fetch_chunk(session, resource_id, offset, limit=10000, sort_order="asc"):
     """
-    Fetches a chunk of data with retries handled by the session and explicit logic.
+    Fetches a chunk of data with retries. Adds sort params for stability.
     """
     url = f"https://api.data.gov.in/resource/{resource_id}"
     params = {
         "api-key": DATA_GOV_API_KEY,
         "format": "json",
         "limit": limit,
-        "offset": offset
+        "offset": offset,
+        # Standard UIDAI fields for stable sorting
+        "sort[date]": sort_order,
+        "sort[state]": sort_order,
+        "sort[district]": sort_order,
+        "sort[pincode]": sort_order
     }
     
-    # Additional manual retries for non-standard errors (like partial reads that might pass the adapter)
     max_retries = 3
     for i in range(max_retries):
         try:
-            # timeout=(connect_timeout, read_timeout)
             resp = session.get(url, params=params, timeout=(10, 60))
             resp.raise_for_status()
             
@@ -68,7 +110,7 @@ def fetch_chunk(session, resource_id, offset, limit=5000):
         except Exception as e:
             print(f"Error fetching offset {offset} (Attempt {i+1}/{max_retries}): {e}")
             if i < max_retries - 1:
-                time.sleep(5 * (i + 1)) # Aggressive backoff
+                time.sleep(5 * (i + 1))
             
     return [], 0
 
@@ -76,53 +118,88 @@ def download_resource(session, name, resource_id):
     print(f"\nStarting download for {name} ({resource_id})...")
     output_file = os.path.join(OUTPUT_DIR, f"{name}.csv")
     
-    # Use a smaller chunk size to reduce probability of IncompleteRead
-    chunk_size = 5000 
+    chunk_size = 10000 
     
     # Initial fetch to get total count
     records, total_count = fetch_chunk(session, resource_id, 0, chunk_size)
     if not records and total_count == 0:
-        # We expect data for these resources. 0 means connection failure or API issue.
-        raise Exception(f"No records found for {name} or initial fetch failed. Cannot proceed.")
+        raise Exception(f"No records found for {name} or initial fetch failed.")
 
     print(f"Total records to fetch: {total_count}")
     
-    df = pd.DataFrame(records)
-    df.to_csv(output_file, index=False)
-    fetched_count = len(records)
-    print(f"fetched {fetched_count}/{total_count}")
-
-    # Start loop for remaining data
-    current_offset = chunk_size
-    
-    # Keep track of columns to ensure consistency
-    msg_cols = df.columns
-    
-    with open(output_file, 'a') as f:
+    if total_count <= 5000000:
+        # Standard forward download
+        df_all = []
+        df_all.append(pd.DataFrame(records))
+        fetched_count = len(records)
+        
+        current_offset = chunk_size
         while current_offset < total_count:
             chunk_records, _ = fetch_chunk(session, resource_id, current_offset, chunk_size)
-            
             if chunk_records:
-                df_chunk = pd.DataFrame(chunk_records)
-                
-                # Align columns
-                df_chunk = df_chunk.reindex(columns=msg_cols)
-                
-                df_chunk.to_csv(f, header=False, index=False)
+                df_all.append(pd.DataFrame(chunk_records))
                 fetched_count += len(chunk_records)
                 print(f"fetched {fetched_count}/{total_count}", end='\r')
-                
                 current_offset += chunk_size
             else:
-                print(f"\nFailed to fetch chunk at offset {current_offset}. Stopping download for {name} to avoid gaps.")
-                # We stop here. Better partial data than corrupted/gapped data? 
-                # Or maybe we should retry indefinitely? 
-                # Given the "monthly" nature, we probably want to fail hard if we can't get it all, 
-                # but for now, exiting breaks the loop.
-                # To ensure the workflow fails, we might want to raise an exception.
                 raise Exception(f"Download incomplete for {name}. Stopped at {current_offset}/{total_count}")
+        
+        final_df = pd.concat(df_all)
+        final_df.to_csv(output_file, index=False)
+    else:
+        # Bi-directional download to bypass 5M offset limit
+        print(f"Large dataset detected ({total_count}). Using bi-directional download...")
+        
+        # Part 1: First 4,000,000 records (ASC)
+        df_asc = []
+        df_asc.append(pd.DataFrame(records))
+        fetched_asc = len(records)
+        limit_asc = 4000000
+        
+        current_offset = chunk_size
+        while current_offset < limit_asc:
+            chunk_records, _ = fetch_chunk(session, resource_id, current_offset, chunk_size, sort_order="asc")
+            if chunk_records:
+                df_asc.append(pd.DataFrame(chunk_records))
+                fetched_asc += len(chunk_records)
+                print(f"Phase 1 (ASC): fetched {fetched_asc}/{total_count}", end='\r')
+                current_offset += chunk_size
+            else:
+                break
+        
+        # Part 2: Remaining records from the end (DESC)
+        # We fetch (Total - 4,000,000) + a small overlap to be safe
+        df_desc = []
+        limit_desc = total_count - limit_asc + chunk_size
+        fetched_desc = 0
+        current_offset = 0
+        
+        while current_offset < limit_desc:
+            chunk_records, _ = fetch_chunk(session, resource_id, current_offset, chunk_size, sort_order="desc")
+            if chunk_records:
+                df_desc.append(pd.DataFrame(chunk_records))
+                fetched_desc += len(chunk_records)
+                print(f"Phase 2 (DESC): fetched {fetched_asc + fetched_desc}/{total_count} (Desc Offset: {current_offset})", end='\r')
+                current_offset += chunk_size
+            else:
+                break
+
+        print("\nMerging and de-duplicating...")
+        df_1 = pd.concat(df_asc)
+        df_2 = pd.concat(df_desc)
+        
+        # Combined
+        final_df = pd.concat([df_1, df_2])
+        # Sorting and de-duplicating on all columns ensures consistency
+        final_df = final_df.drop_duplicates().sort_values(["date", "state", "district", "pincode"])
+        
+        final_df.to_csv(output_file, index=False)
+        print(f"Final record count after de-duplication: {len(final_df)}")
 
     print(f"\nDownload complete for {name}. Saved to {output_file}")
+    
+    # Immediate upload after download
+    upload_to_release(output_file)
 
 
 if __name__ == "__main__":
@@ -136,19 +213,35 @@ if __name__ == "__main__":
     failed_resources = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-        # Create a future for each download
-        future_to_name = {
-            executor.submit(download_resource, session, name, rid): name 
-            for name, rid in RESOURCES.items()
-        }
-        
-        for future in concurrent.futures.as_completed(future_to_name):
-            name = future_to_name[future]
-            try:
-                future.result()
-            except Exception as e:
-                print(f"CRITICAL: Failed to download {name}: {e}")
-                failed_resources.append(name)
+        # Step 1: Check which files need download
+        to_download = {}
+        for name, rid in RESOURCES.items():
+            output_file = os.path.join(OUTPUT_DIR, f"{name}.csv")
+            
+            # Fast check for total count
+            _, total_count = fetch_chunk(session, rid, 0, 1)
+            
+            if check_existing_file(output_file, total_count):
+                print(f"Skipping {name}: already complete ({total_count} records).")
+                # Still try to upload just in case it wasn't uploaded before
+                upload_to_release(output_file)
+            else:
+                to_download[name] = rid
+
+        # Step 2: Download remaining
+        if to_download:
+            future_to_name = {
+                executor.submit(download_resource, session, name, rid): name 
+                for name, rid in to_download.items()
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_name):
+                name = future_to_name[future]
+                try:
+                    future.result()
+                except Exception as e:
+                    print(f"CRITICAL: Failed to download {name}: {e}")
+                    failed_resources.append(name)
     
     if failed_resources:
         print(f"Failed downloads: {', '.join(failed_resources)}")
