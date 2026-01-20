@@ -37,13 +37,13 @@ jobs:
       - name: Run Processing Script
         run: python scripts/process_data.py
 
-      - name: Upload to GitHub Release (dataset-latest)
+      - name: Install Boto3
+        run: pip install boto3
+
+      - name: Upload to Cloudflare R2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload dataset-latest \
-            public/master_dataset_final.csv \
-            public/datasets/biometric_full.csv \
-            public/datasets/enrollment_full.csv \
-            public/datasets/demographic_full.csv \
-            --clobber
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: python scripts/upload_to_r2.py
