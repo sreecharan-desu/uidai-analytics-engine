@@ -334,17 +334,24 @@
              /* Disable tooltip on mobile */
             .nav-item::after { display: none; }
             
-            .main-wrapper { margin-left: 0; width: 100%; padding: 1.5rem; margin-bottom: 100px; }
-        }
+            .main-wrapper { margin-left: 0; width: 100%; padding: 1rem; margin-bottom: 100px; }
+
             .header { margin-bottom: 1.5rem; }
             .header-title h1 { font-size: 1.5rem; }
             .header-actions { width: 100%; justify-content: flex-start; }
             
             .card { border-radius: 16px; }
             .card-header { padding: 1.25rem 1.5rem; }
-            .card > div:not(.card-header) { padding: 1.5rem !important; }
             
-            .viewport-frame { padding-bottom: 120%; }
+            /* Exclude viewport-frame from generic padding to prevent height collapse */
+            .card > div:not(.card-header):not(.viewport-frame) { padding: 1.5rem !important; }
+            
+            .viewport-frame { 
+                padding-bottom: 130%; /* Optimized vertical ratio for mobile */
+                width: 100%;
+                display: block;
+            }
+        }
         
         /* Vercel-style Documentation (No Fluff) */
         .docs-container {
@@ -523,13 +530,7 @@
             <div class="viewport-frame">
                 <div class="skeleton-loader" id="loader"></div>
                 <!-- PowerBI Embed -->
-                <iframe 
-                    id="report-frame"
-                    title="report_trail" 
-                    src="https://app.powerbi.com/view?r=eyJrIjoiMmM3OGUyMDEtZDY1NC00ZTBlLWFkZTktMTQyNTY2NDIwZWJhIiwidCI6IjNmYTA1YWI1LWY1ODgtNGY2Yy05N2I5LTBmNmExZGZkNThmYyJ9&embedImagePlaceholder=true&pageName=890b8f06ce442059839e" 
-                    allowFullScreen="true"
-                    onload="document.getElementById('loader').style.display='none';"
-                ></iframe>
+             <iframe title="report_trail" width="1024" height="1060" src="https://app.powerbi.com/view?r=eyJrIjoiMmM3OGUyMDEtZDY1NC00ZTBlLWFkZTktMTQyNTY2NDIwZWJhIiwidCI6IjNmYTA1YWI1LWY1ODgtNGY2Yy05N2I5LTBmNmExZGZkNThmYyJ9&pageName=890b8f06ce442059839e" frameborder="0" allowFullScreen="true"></iframe>
             </div>
         </div>
         </div> <!-- End View Dashboard -->
