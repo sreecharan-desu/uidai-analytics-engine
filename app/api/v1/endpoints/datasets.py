@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 import os
 from typing import Optional
+from app.dependencies import validate_api_key
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ DATASET_MAP = {
     "master": "master_dataset_final.csv"
 }
 
-@router.get("/{dataset_name}")
+@router.get("/{dataset_name}", dependencies=[Depends(validate_api_key)])
 async def get_dataset(dataset_name: str):
     """
     Redirects to the latest version of the requested dataset stored in GitHub Releases.
