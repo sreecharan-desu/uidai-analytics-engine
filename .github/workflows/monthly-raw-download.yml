@@ -6,10 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  download-and-release:
+  download-and-upload-r2:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Required for creating/updating releases
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -24,18 +22,9 @@ jobs:
         run: |
           pip install pandas requests python-dotenv boto3
 
-      - name: Download Existing Assets (to Resume)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p public/datasets
-          gh release download dataset-raw --pattern "*.csv" --dir public/datasets --clobber || true
-          ls -lh public/datasets/
-
       - name: Download and Upload Raw Data
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
