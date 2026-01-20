@@ -539,6 +539,41 @@
             transform: scale(1.02);
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15);
         }
+
+        /* Footer */
+        .page-footer {
+            margin-top: auto;
+            padding: 3rem 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.8;
+            transition: var(--transition-smooth);
+        }
+        .page-footer:hover { opacity: 1; }
+        .page-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+        }
+        .page-footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: var(--transition-smooth);
+        }
+        .page-footer a:hover::after { width: 100%; }
+        .page-footer i { color: #e11d48; margin: 0 4px; animation: heartBeat 1.5s ease-in-out infinite; }
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
     </style>
 
 </head>
@@ -723,6 +758,10 @@
         </div>
         </div> <!-- End View Documentation -->
 
+
+        <footer class="page-footer">
+            made with <i class="fa-solid fa-heart"></i> by <a href="https://sreecharandesu.in" target="_blank">sreecharan</a>
+        </footer>
     </main>
     
     <script>
