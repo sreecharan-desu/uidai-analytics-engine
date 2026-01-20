@@ -1,5 +1,9 @@
 import os
 import requests
+import sys
+# Add scripts directory to path to import utils
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from r2_utils import upload_to_r2
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import pandas as pd
@@ -199,7 +203,7 @@ def download_resource(session, name, resource_id):
     print(f"\nDownload complete for {name}. Saved to {output_file}")
     
     # Immediate upload after download
-    # upload_to_release(output_file)
+    upload_to_r2(output_file)
 
 
 if __name__ == "__main__":
@@ -224,7 +228,7 @@ if __name__ == "__main__":
             if check_existing_file(output_file, total_count):
                 print(f"Skipping {name}: already complete ({total_count} records).")
                 # Still try to upload just in case it wasn't uploaded before
-                # upload_to_release(output_file)
+                upload_to_r2(output_file)
             else:
                 to_download[name] = rid
 
