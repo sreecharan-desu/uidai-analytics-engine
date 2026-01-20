@@ -57,26 +57,6 @@ Traditional analytics engines struggle with balancing public access and data sec
 2.  **Ephemerally Public**: The FastAPI layer validates a user's `API_KEY` and generates a temporary, cryptographically signed URL (valid for 1 hour) that allows direct high-speed download from the edge.
 3.  **Serverless & Cost-Effective**: We avoid expensive database instances while maintaining strict access control.
 
-## Repository Structure
-
-```
-├── app/
-│   ├── api/            # FastAPI Endpoint definitions
-│   ├── core/           # Security and configuration settings
-│   └── main.py         # Application entrypoint & routing
-├── public/
-│   ├── dashboard.html  # Minimalist research-lab dashboard
-│   ├── docs.html       # Sanchara-themed architecture documentation
-│   └── og-image.png    # Premium social share branding
-├── scripts/
-│   ├── download_full_data.py  # High-throughput ingestion script
-│   └── process_data.py        # Complex geographic normalization logic
-├── .github/workflows/
-│   ├── monthly-raw-download.yml
-│   └── monthly-clean-processing.yml
-└── vercel.json         # Serverless deployment configuration
-```
-
 ## Technology Stack
 
 | Layer | Technology | Purpose |
