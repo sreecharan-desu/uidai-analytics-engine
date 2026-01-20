@@ -705,12 +705,21 @@
 
         <div class="info-box" style="margin-top: 2rem;">
             <h3 style="margin-top: 0; font-size: 1rem;">Direct Data Access</h3>
-            <p style="margin-bottom: 1rem; font-size: 0.9rem;">You can programmatically access the normalized datasets using our API. Authentication is required.</p>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem;">You can programmatically access both normalized and raw datasets using our API. Authentication is required.</p>
             
             <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; border: 1px solid #e2e8f0; overflow-x: auto;">
-                <div style="margin-bottom: 0.5rem; color: #64748b;"># Example Request</div>
-                <div style="color: #0f172a;">GET https://uidai.sreecharandesu.in/api/datasets/master?api_key=YOUR_KEY</div>
+                <div style="margin-bottom: 0.5rem; color: #64748b;"># 1. Cleaned & Processed Data</div>
+                <div style="color: #0f172a; margin-bottom: 1rem;">GET /api/datasets/{dataset_name}?api_key=YOUR_KEY</div>
+                
+                <div style="margin-bottom: 0.5rem; color: #64748b;"># 2. Raw Source Data</div>
+                <div style="color: #0f172a;">GET /api/datasets/raw/{dataset_name}?api_key=YOUR_KEY</div>
             </div>
+            
+            <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                <strong>Supported Datasets:</strong> <br>
+                Processed: <code>master</code>, <code>biometric</code>, <code>enrollment</code>, <code>demographic</code> <br>
+                Raw: <code>biometric</code>, <code>enrollment</code>, <code>demographic</code>
+            </p>
         </div>
                     </section>
 
