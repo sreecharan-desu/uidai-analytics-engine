@@ -25,20 +25,20 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pandas numpy requests python-dotenv
+          pip install pandas numpy requests python-dotenv boto3
 
-      - name: Download Raw Data from Release
+      - name: Download Raw Data from R2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p public/datasets
-          gh release download dataset-raw --repo ${{ github.repository }} --pattern "*.csv" --dir public/datasets
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: python scripts/download_raw_from_r2.py
 
       - name: Run Processing Script
         run: python scripts/process_data.py
 
-      - name: Install Boto3
-        run: pip install boto3
+
 
       - name: Upload to Cloudflare R2
         env:
