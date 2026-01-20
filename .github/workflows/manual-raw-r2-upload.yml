@@ -21,10 +21,12 @@ jobs:
         run: |
           pip install pandas requests python-dotenv boto3
 
-      - name: Download Raw Data (from Gov API)
+      - name: Download Raw Data from GitHub Release
         env:
-          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
-        run: python scripts/download_full_data.py
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p public/datasets
+          gh release download dataset-raw --repo ${{ github.repository }} --pattern "*.csv" --dir public/datasets
 
       - name: Upload Raw Data to Cloudflare R2
         env:
