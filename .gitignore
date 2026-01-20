@@ -6,6 +6,8 @@ coverage
 .vercel
 .env*.local
 venv
+.agent
+.agent/workflows
 
 # Ignore all large CSVs to prevent GitHub rejection (using Releases instead)
 *.csv
