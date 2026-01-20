@@ -26,7 +26,7 @@ def upload_raw_to_r2():
 
     # Raw Datasets to upload
     files_to_upload = [
-        "public/datasets/enrollment.csv",
+        "public/datasets/enrolment.csv",
         "public/datasets/demographic.csv",
         "public/datasets/biometric.csv"
     ]
