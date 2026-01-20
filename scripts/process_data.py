@@ -638,8 +638,31 @@ if __name__ == "__main__":
     
     # Final cleanup of columns if needed
     
-    # Save
+    # Save Master Dataset
     output_path = "public/master_dataset_final.csv"
     print(f"Saving Master Dataset to {output_path}...")
     master_df.to_csv(output_path, index=False)
+    
+    # Save Individual Normalized Datasets (Split by source)
+    print("Saving Individual Normalized Datasets...")
+    datasets_map = {
+        'Biometric': 'biometric_full.csv',
+        'Enrollment': 'enrollment_full.csv', 
+        'Demographic': 'demographic_full.csv'
+    }
+    
+    # Ensure output directory exists (it should, but safety first)
+    os.makedirs("public/datasets", exist_ok=True)
+    
+    for source_name, filename in datasets_map.items():
+        # Filter
+        subset_df = master_df[master_df['source_dataset'] == source_name].copy()
+        
+        if not subset_df.empty:
+            file_path = os.path.join("public/datasets", filename)
+            print(f"Saving {source_name} dataset to {file_path} ({len(subset_df)} rows)...")
+            subset_df.to_csv(file_path, index=False)
+        else:
+            print(f"Warning: No data found for source {source_name}")
+
     print("Processing Complete.")

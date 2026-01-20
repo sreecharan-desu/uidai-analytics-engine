@@ -471,10 +471,84 @@
             .docs-container { grid-template-columns: 1fr; gap: 2rem; }
             .docs-nav { display: none; }
         }
+
+        /* Image Viewer Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .image-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 4px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            object-fit: contain;
+        }
+        
+        .image-modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            z-index: 2001;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.25);
+            transform: rotate(90deg);
+        }
+        
+        .zoomable-image {
+            cursor: zoom-in;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .zoomable-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15);
+        }
     </style>
 
 </head>
 <body>
+
+    <!-- Image View Modal -->
+    <div id="imgModal" class="image-modal" onclick="closeModal(event)">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="img01">
+    </div>
 
     <!-- Sidebar Navigation -->
     <!-- Floating Sidebar Navigation -->
@@ -577,7 +651,7 @@
                         <h3>System Architecture</h3>
                         <p>The following diagram visualizes the data flow from Government APIs to the final Intelligence Report.</p>
                         <div style="background: #ffffff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 1.5rem; box-shadow: var(--shadow-card);">
-                            <img src="architecture-diagram.png" alt="System Architecture Diagram" style="width: 100%; height: auto; border-radius: 8px;">
+                            <img src="architecture-diagram.png" alt="System Architecture Diagram" class="zoomable-image" style="width: 100%; height: auto; border-radius: 8px;">
                         </div>
                     </section>
 
@@ -705,7 +779,29 @@
             document.querySelectorAll('section[id]').forEach((section) => {
                 observer.observe(section);
             });
+
+            // Initialize Image Modal Logic
+            const modal = document.getElementById("imgModal");
+            const modalImg = document.getElementById("img01");
+
+            document.querySelectorAll('.zoomable-image').forEach(img => {
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation(); // prevent immediate close if bubbling
+                    modal.classList.add('show');
+                    modalImg.src = this.src;
+                    document.body.style.overflow = 'hidden';
+                });
+            });
         });
+        
+        // Global close function
+        const closeModal = (e) => {
+            // Close if clicked on backdrop (imgModal) or the close button
+            if (e.target.id === 'imgModal' || e.target.classList.contains('close-modal')) {
+                document.getElementById("imgModal").classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        };
     </script>
     
     <!-- Vercel Analytics -->

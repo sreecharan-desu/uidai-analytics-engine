@@ -41,4 +41,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload dataset-latest public/master_dataset_final.csv --clobber
+          gh release upload dataset-latest \
+            public/master_dataset_final.csv \
+            public/datasets/biometric_full.csv \
+            public/datasets/enrollment_full.csv \
+            public/datasets/demographic_full.csv \
+            --clobber
