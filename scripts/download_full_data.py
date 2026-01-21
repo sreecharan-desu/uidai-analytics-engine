@@ -30,17 +30,17 @@ import concurrent.futures
 import subprocess
 import sys
 
-def upload_to_release(file_path):
+def upload_to_release(file_path, tag_name="dataset-raw"):
     """
-    Uploads a file to the dataset-raw release using gh cli.
+    Uploads a file to the release using gh cli.
     """
     if not os.path.exists(file_path):
         return
     
-    print(f"Uploading {file_path} to dataset-raw release...")
+    print(f"Uploading {file_path} to {tag_name} release...")
     try:
         # Check if gh is available
-        subprocess.run(["gh", "release", "upload", "dataset-raw", file_path, "--clobber"], check=True)
+        subprocess.run(["gh", "release", "upload", tag_name, file_path, "--clobber"], check=True)
         print(f"Successfully uploaded {file_path}")
     except Exception as e:
         print(f"Failed to upload {file_path}: {e}")
