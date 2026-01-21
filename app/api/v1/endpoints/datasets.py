@@ -8,7 +8,7 @@ from app.dependencies import validate_api_key
 router = APIRouter()
 
 # Config
-STORAGE_REPO = "sreecharan-desu/uidai-data-storage"
+STORAGE_REPO = "sreecharan-desu/uidai-analytics-engine"
 GH_PAT = os.getenv("GH_PAT") or os.getenv("GH_TOKEN")
 
 # Dataset Maps
