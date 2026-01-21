@@ -4,7 +4,7 @@ import sys
 import time
 
 # Repo name for storage
-STORAGE_REPO = "sreecharan-desu/uidai-analytics-engine"
+STORAGE_REPO = "sreecharan-desu/uidai-data-storage"
 
 def retry_command(cmd, max_retries=3, delay=5):
     """Retries a subprocess command several times."""

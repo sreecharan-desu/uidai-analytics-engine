@@ -8,7 +8,7 @@ from app.dependencies import validate_api_key
 router = APIRouter()
 
 # Config
-STORAGE_REPO = "sreecharan-desu/uidai-analytics-engine"
+STORAGE_REPO = "sreecharan-desu/uidai-data-storage"
 GH_PAT = os.getenv("GH_PAT") or os.getenv("GH_TOKEN")
 
 # Dataset Maps
@@ -61,7 +61,7 @@ async def stream_from_github(filename: str, tag: str):
     # 2. Define Stream Generator (Manages its own client)
     async def iterfile():
         # Use a fresh client for the stream to ensure context is kept open during iteration
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
              # We need to set Accept header for binary stream
             stream_headers = headers.copy()
             stream_headers["Accept"] = "application/octet-stream"
