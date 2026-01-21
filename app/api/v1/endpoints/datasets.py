@@ -88,7 +88,7 @@ async def get_raw_dataset(dataset_name: str):
     if clean_name not in RAW_DATASET_MAP:
         raise HTTPException(status_code=404, detail=f"Raw dataset '{dataset_name}' not found.")
     
-    return stream_from_github(RAW_DATASET_MAP[clean_name], tag="dataset-raw")
+    return await stream_from_github(RAW_DATASET_MAP[clean_name], tag="dataset-raw")
 
 @router.get("/{dataset_name}", dependencies=[Depends(validate_api_key)])
 async def get_processed_dataset(dataset_name: str):
@@ -100,6 +100,6 @@ async def get_processed_dataset(dataset_name: str):
     if clean_name not in PROCESSED_DATASET_MAP:
         raise HTTPException(status_code=404, detail=f"Processed dataset '{dataset_name}' not found.")
     
-    return stream_from_github(PROCESSED_DATASET_MAP[clean_name], tag="dataset-latest")
+    return await stream_from_github(PROCESSED_DATASET_MAP[clean_name], tag="dataset-latest")
 
 
