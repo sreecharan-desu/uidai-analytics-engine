@@ -3,7 +3,29 @@ from fastapi.responses import StreamingResponse
 import os
 import httpx
 
-# ... (imports)
+from app.dependencies import validate_api_key
+
+router = APIRouter()
+
+# Config
+STORAGE_REPO = "sreecharan-desu/uidai-data-storage"
+GH_PAT = os.getenv("GH_PAT") or os.getenv("GH_TOKEN")
+
+# Dataset Maps
+PROCESSED_DATASET_MAP = {
+    "biometric": "biometric_full.csv",
+    "enrollment": "enrollment_full.csv",
+    "enrolment": "enrollment_full.csv", 
+    "demographic": "demographic_full.csv",
+    "master": "master_dataset_final.csv"
+}
+
+RAW_DATASET_MAP = {
+    "biometric": "biometric.csv",
+    "enrollment": "enrolment.csv",
+    "enrolment": "enrolment.csv",
+    "demographic": "demographic.csv"
+}
 
 async def stream_from_github(filename: str, tag: str):
     """Streams a file from a private GitHub release using async httpx."""
