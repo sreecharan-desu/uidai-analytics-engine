@@ -37,8 +37,11 @@ async def stream_from_github(filename: str, tag: str):
         "Accept": "application/vnd.github.v3+json"
     }
     
+    asset_url = None
+    
+    # 1. Get Asset ID (Fast one-off request)
     async with httpx.AsyncClient() as client:
-        # 1. Get Release Assets to find ID
+        # Get Release Assets
         api_url = f"https://api.github.com/repos/{STORAGE_REPO}/releases/tags/{tag}"
         resp = await client.get(api_url, headers=headers)
         
@@ -47,34 +50,33 @@ async def stream_from_github(filename: str, tag: str):
             raise HTTPException(status_code=404, detail="Release not found.")
             
         assets = resp.json().get("assets", [])
-        asset_id = None
         for asset in assets:
             if asset["name"] == filename:
-                asset_id = asset["id"]
+                asset_url = asset["url"] # This is the API url for the asset
                 break
                 
-        if not asset_id:
+        if not asset_url:
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found in release '{tag}'.")
 
-        # 2. Stream Asset
-        asset_url = f"https://api.github.com/repos/{STORAGE_REPO}/releases/assets/{asset_id}"
-        headers["Accept"] = "application/octet-stream"
-        
-        # We need a new client/request for the stream that stays open
-        # But StreamingResponse expects an async generator.
-        # We need to be careful: httpx stream context manager closes when we exit the block.
-        # We need to yield from the stream.
-        
-        req = client.build_request("GET", asset_url, headers=headers)
-        r = await client.send(req, stream=True)
-        r.raise_for_status()
-        
-        async def async_generator():
+    # 2. Define Stream Generator (Manages its own client)
+    async def iterfile():
+        # Use a fresh client for the stream to ensure context is kept open during iteration
+        async with httpx.AsyncClient() as client:
+             # We need to set Accept header for binary stream
+            stream_headers = headers.copy()
+            stream_headers["Accept"] = "application/octet-stream"
+            
+            # Using client.stream context manager ensures proper cleanup
+            req = client.build_request("GET", asset_url, headers=stream_headers)
+            r = await client.send(req, stream=True)
+            r.raise_for_status()
+            
             async for chunk in r.aiter_bytes():
                 yield chunk
+            
             await r.aclose()
 
-    return StreamingResponse(async_generator(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    return StreamingResponse(iterfile(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 @router.get("/raw/{dataset_name}", dependencies=[Depends(validate_api_key)])
 async def get_raw_dataset(dataset_name: str):
