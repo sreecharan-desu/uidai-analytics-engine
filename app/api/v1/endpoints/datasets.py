@@ -1,84 +1,81 @@
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import RedirectResponse
+from fastapi.responses import StreamingResponse
 import os
-from typing import Optional
-from app.dependencies import validate_api_key
+import httpx
 
-router = APIRouter()
+# ... (imports)
 
-# Dataset Mapping
-# Dataset Maps
-PROCESSED_DATASET_MAP = {
-    "biometric": "biometric_full.csv",
-    "enrollment": "enrollment_full.csv",
-    "enrolment": "enrollment_full.csv", 
-    "demographic": "demographic_full.csv",
-    "master": "master_dataset_final.csv"
-}
+async def stream_from_github(filename: str, tag: str):
+    """Streams a file from a private GitHub release using async httpx."""
+    if not GH_PAT:
+        raise HTTPException(status_code=500, detail="Server configuration error: Missing GitHub Token.")
 
-RAW_DATASET_MAP = {
-    "biometric": "biometric.csv",
-    "enrollment": "enrolment.csv", # Map enrollment -> enrolment.csv
-    "enrolment": "enrolment.csv",
-    "demographic": "demographic.csv"
-}
-
-def generate_r2_url(file_key: str):
-    """Generates a presigned URL for a file in R2."""
-    r2_account_id = os.getenv("R2_ACCOUNT_ID")
-    r2_access_key = os.getenv("R2_ACCESS_KEY_ID")
-    r2_secret_key = os.getenv("R2_SECRET_ACCESS_KEY")
-    r2_bucket_name = os.getenv("R2_BUCKET_NAME")
+    headers = {
+        "Authorization": f"token {GH_PAT}",
+        "Accept": "application/vnd.github.v3+json"
+    }
     
-    if not all([r2_account_id, r2_access_key, r2_secret_key, r2_bucket_name]):
-         raise HTTPException(status_code=500, detail="Server misconfiguration: R2 credentials missing.")
+    async with httpx.AsyncClient() as client:
+        # 1. Get Release Assets to find ID
+        api_url = f"https://api.github.com/repos/{STORAGE_REPO}/releases/tags/{tag}"
+        resp = await client.get(api_url, headers=headers)
+        
+        if resp.status_code != 200:
+            print(f"GitHub API Error: {resp.text}")
+            raise HTTPException(status_code=404, detail="Release not found.")
+            
+        assets = resp.json().get("assets", [])
+        asset_id = None
+        for asset in assets:
+            if asset["name"] == filename:
+                asset_id = asset["id"]
+                break
+                
+        if not asset_id:
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found in release '{tag}'.")
 
-    try:
-        import boto3
-        from botocore.config import Config
+        # 2. Stream Asset
+        asset_url = f"https://api.github.com/repos/{STORAGE_REPO}/releases/assets/{asset_id}"
+        headers["Accept"] = "application/octet-stream"
         
-        s3_client = boto3.client(
-            's3',
-            endpoint_url=f"https://{r2_account_id}.r2.cloudflarestorage.com",
-            aws_access_key_id=r2_access_key,
-            aws_secret_access_key=r2_secret_key,
-            config=Config(signature_version='s3v4')
-        )
+        # We need a new client/request for the stream that stays open
+        # But StreamingResponse expects an async generator.
+        # We need to be careful: httpx stream context manager closes when we exit the block.
+        # We need to yield from the stream.
         
-        url = s3_client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': r2_bucket_name, 'Key': file_key},
-            ExpiresIn=3600
-        )
-        return url
-    except Exception as e:
-        print(f"Error generating R2 link: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate secure download link.")
+        req = client.build_request("GET", asset_url, headers=headers)
+        r = await client.send(req, stream=True)
+        r.raise_for_status()
+        
+        async def async_generator():
+            async for chunk in r.aiter_bytes():
+                yield chunk
+            await r.aclose()
+
+    return StreamingResponse(async_generator(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 @router.get("/raw/{dataset_name}", dependencies=[Depends(validate_api_key)])
 async def get_raw_dataset(dataset_name: str):
     """
-    Redirects to the RAW (unprocessed) version of the requested dataset.
+    Streams the RAW (unprocessed) version of the requested dataset from Private GitHub Release.
     """
     clean_name = dataset_name.lower().replace(".csv", "")
     
     if clean_name not in RAW_DATASET_MAP:
-        raise HTTPException(status_code=404, detail=f"Raw dataset '{dataset_name}' not found. Available: {list(RAW_DATASET_MAP.keys())}")
+        raise HTTPException(status_code=404, detail=f"Raw dataset '{dataset_name}' not found.")
     
-    url = generate_r2_url(RAW_DATASET_MAP[clean_name])
-    return RedirectResponse(url=url)
+    return stream_from_github(RAW_DATASET_MAP[clean_name], tag="dataset-raw")
 
 @router.get("/{dataset_name}", dependencies=[Depends(validate_api_key)])
 async def get_processed_dataset(dataset_name: str):
     """
-    Redirects to the LATEST PROCESSED version of the requested dataset.
+    Streams the LATEST PROCESSED version of the requested dataset from Private GitHub Release.
     """
     clean_name = dataset_name.lower().replace(".csv", "")
     
     if clean_name not in PROCESSED_DATASET_MAP:
-        raise HTTPException(status_code=404, detail=f"Processed dataset '{dataset_name}' not found. Available: {list(PROCESSED_DATASET_MAP.keys())}")
+        raise HTTPException(status_code=404, detail=f"Processed dataset '{dataset_name}' not found.")
     
-    url = generate_r2_url(PROCESSED_DATASET_MAP[clean_name])
-    return RedirectResponse(url=url)
+    return stream_from_github(PROCESSED_DATASET_MAP[clean_name], tag="dataset-latest")
 
 
