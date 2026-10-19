@@ -68,10 +68,10 @@ def upload_to_release(file_path, tag_name="dataset-raw"):
     ]
     
     if retry_command(cmd):
-        print(f"✅ Successfully uploaded {os.path.basename(file_path)}")
+        print(f"Successfully uploaded {os.path.basename(file_path)}")
         return True
     else:
-        print(f"❌ Failed to upload {file_path} after multiple attempts.")
+        print(f"Failed to upload {file_path} after multiple attempts.")
         return False
 
 def download_from_release(filename, output_dir, tag_name="dataset-raw"):
@@ -90,8 +90,8 @@ def download_from_release(filename, output_dir, tag_name="dataset-raw"):
     ]
     
     if retry_command(cmd):
-        print(f"✅ Successfully downloaded {filename}")
+        print(f"Successfully downloaded {filename}")
         return True
     else:
-        print(f"❌ Failed to download {filename} after multiple attempts.")
+        print(f"Failed to download {filename} after multiple attempts.")
         return False
