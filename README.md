@@ -33,3 +33,7 @@ docker-compose up --build           # or with docker
 ## env
 
 copy `.env.example` to `.env`. the etl scripts need `DATA_GOV_API_KEY` and a github token.
+
+---
+
+built by [sreecharan desu](https://www.sreecharandesu.in) · [more projects](https://www.sreecharandesu.in/work)
